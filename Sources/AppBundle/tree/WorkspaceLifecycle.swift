@@ -242,8 +242,8 @@ func closeWorkspaceIfEmptiedByLastWindowClosure(_ workspace: Workspace?) {
     }
 
     let isLastWorkspaceInProject = projectWorkspaces(projectId: workspace.projectId)
-        .filter { !$0.isArchived }
-        .count == 1
+        .filter { $0 !== workspace }
+        .allSatisfy { !workspaceAnchorsEmptySlot($0) }
     let replacement: Workspace?
     if isLastWorkspaceInProject {
         let fallbackProjectId = workspaceProjectFallbackForDeletion(excluding: workspace.projectId)
@@ -274,6 +274,11 @@ func closeWorkspaceIfEmptiedByLastWindowClosure(_ workspace: Workspace?) {
         }
     }
     removeWorkspaceFromRegistry(workspace)
+    if isLastWorkspaceInProject {
+        for placeholder in projectWorkspaces(projectId: workspace.projectId) {
+            removeWorkspaceFromRegistry(placeholder)
+        }
+    }
     pruneEmptyWorkspaceTabGroups()
     checkWorkspaceHierarchyInvariants()
 }

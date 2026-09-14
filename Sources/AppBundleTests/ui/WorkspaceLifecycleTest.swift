@@ -276,7 +276,7 @@ final class WorkspaceLifecycleTest: XCTestCase {
         XCTAssertTrue(emptyUserFacingWorkspaces(in: sourceWorkspace.projectId).isEmpty)
     }
 
-    func testMovingLastFolderWindowAwayKeepsEmptySidebarFolder() async throws {
+    func testMovingLastProjectWindowAwayDeletesEmptyProject() async throws {
         let defaultTarget = Workspace.get(byName: "default-target")
         _ = TestWindow.new(id: 5, parent: defaultTarget.rootTilingContainer)
         let project = createWorkspaceProject()
@@ -292,11 +292,11 @@ final class WorkspaceLifecycleTest: XCTestCase {
         )
         Workspace.reconcileWorkspaceState()
 
-        XCTAssertEqual(mainMonitor.activeWorkspace.projectId, project.id)
+        XCTAssertEqual(mainMonitor.activeWorkspace.projectId, workspaceProjectDefaultId)
         XCTAssertEqual(projectWindow.nodeWorkspace?.projectId, workspaceProjectDefaultId)
-        XCTAssertTrue(Workspace.existing(byName: projectWorkspace.name) === projectWorkspace)
-        XCTAssertNotNil(winMuxWorkspaceState.workspaceFoldersById[project.unfoldedFolderId])
-        XCTAssertEqual(emptyUserFacingWorkspaces(in: project.id), [projectWorkspace])
+        XCTAssertFalse(Workspace.existing(byName: projectWorkspace.name) === projectWorkspace)
+        XCTAssertNil(winMuxWorkspaceState.workspaceFoldersById[project.unfoldedFolderId])
+        XCTAssertNil(winMuxWorkspaceState.projectsById[project.id])
     }
 
     func testWorkspaceNextFromExistingBlankDoesNotCreateAnotherBlank() async throws {

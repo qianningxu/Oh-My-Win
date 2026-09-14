@@ -883,12 +883,19 @@ func pruneEmptyWorkspaceTabGroups() {
 
 @MainActor
 func pruneEmptyWorkspaceProjects() {
+    // Restored workspaces can be temporarily empty before their windows rebind.
+    guard !isRestoringStartupLayout else { return }
     let emptyProjectIds = winMuxWorkspaceState.projectsById.keys.filter { projectId in
-        !winMuxWorkspaceState.workspaceById.values.contains {
-            $0.projectId == projectId && !$0.isArchived
-        }
+        let workspaces = projectWorkspaces(projectId: projectId)
+        guard !workspaces.contains(where: workspaceAnchorsEmptySlot) else { return false }
+        // Keep a fresh blank project available for its first window. Once left,
+        // or once its used workspace becomes empty, placeholders do not keep it alive.
+        return !workspaces.contains(where: \.isVisible) || workspaces.contains { $0.lifecycle == .durable }
     }
     for projectId in emptyProjectIds {
+        for workspace in projectWorkspaces(projectId: projectId) {
+            removeWorkspaceFromRegistry(workspace)
+        }
         winMuxWorkspaceState.removeProject(projectId)
         try? clearWorkspaceSidebarProjectMetadata(projectId)
     }

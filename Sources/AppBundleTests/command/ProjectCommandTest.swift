@@ -139,6 +139,34 @@ final class ProjectCommandTest: XCTestCase {
         XCTAssertEqual(workspaceProjects().map(\.name), ["Default"])
     }
 
+    func testClosingLastWindowDeletesProjectWithBlankPlaceholders() {
+        let project = createWorkspaceProject()
+        let tab = projectWorkspaces(projectId: project.id).singleOrNil().orDie()
+        let window = TestWindow.new(id: 23, parent: tab.rootTilingContainer)
+        _ = createBlankWorkspace(projectId: project.id, monitor: mainMonitor)
+
+        window.closeAxWindow()
+
+        XCTAssertNil(winMuxWorkspaceState.projectsById[project.id])
+        XCTAssertTrue(projectWorkspaces(projectId: project.id).isEmpty)
+    }
+
+    func testEmptyProjectIsRemovedAfterLeavingItsBlankWorkspace() {
+        let occupied = focus.workspace
+        _ = TestWindow.new(id: 24, parent: occupied.rootTilingContainer)
+        let project = createWorkspaceProject()
+        _ = switchWorkspaceProject(project.id, on: mainMonitor)
+        pruneEmptyWorkspaceProjects()
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[project.id])
+
+        _ = occupied.focusWorkspace()
+        pruneEmptyWorkspaceProjects()
+
+        XCTAssertNil(winMuxWorkspaceState.projectsById[project.id])
+        XCTAssertTrue(projectWorkspaces(projectId: project.id).isEmpty)
+        XCTAssertEqual(mainMonitor.activeWorkspace, occupied)
+    }
+
     func testMovingActiveTabToProjectFallsBackWithinSourceAndAppendsToUnfolded() throws {
         let source = Workspace.get(byName: "source")
         source.markAsAutomaticallyNamed()
