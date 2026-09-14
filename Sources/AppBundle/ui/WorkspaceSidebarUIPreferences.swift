@@ -19,10 +19,36 @@ func workspaceSidebarAppearancePreference(rawValue: String) -> AppearanceTheme? 
 
 @MainActor
 func restoreWorkspaceSidebarAppearancePreference() {
+    WorkspaceSidebarAppearanceObserver.shared.startObserving()
     guard let rawValue = UserDefaults.standard.string(forKey: workspaceSidebarAppearancePreferenceKey),
           let theme = workspaceSidebarAppearancePreference(rawValue: rawValue)
     else { return }
     applyWorkspaceSidebarAppearance(theme, persist: false)
+}
+
+@MainActor
+final class WorkspaceSidebarAppearanceObserver {
+    static let shared = WorkspaceSidebarAppearanceObserver {
+        WorkspaceCanvasBackgroundPanel.refreshAll()
+    }
+
+    private var observation: NSKeyValueObservation?
+    private let refresh: @MainActor () -> Void
+
+    init(refresh: @escaping @MainActor () -> Void) {
+        self.refresh = refresh
+    }
+
+    func startObserving() {
+        guard observation == nil else { return }
+        observation = NSApplication.shared.observe(\.effectiveAppearance, options: [.new]) { [weak self] _, _ in
+            // Refresh after AppKit has propagated the new effective appearance,
+            // including when an explicit override is cleared to follow the system.
+            Task { @MainActor [weak self] in
+                self?.refresh()
+            }
+        }
+    }
 }
 
 func currentWorkspaceSidebarAppearancePreference() -> AppearanceTheme? {
