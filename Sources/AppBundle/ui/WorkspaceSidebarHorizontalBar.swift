@@ -370,15 +370,6 @@ struct WorkspaceSidebarHorizontalBar: View {
             beginProjectRename(project)
         }
         Menu("Project color") {
-            Button {
-                actions.send(.setProjectColor(project.id, colorHex: nil))
-            } label: {
-                if project.colorHex == nil {
-                    Label("Automatic", systemImage: "checkmark")
-                } else {
-                    Text("Automatic")
-                }
-            }
             ForEach(workspaceSidebarProjectColorPresets) { preset in
                 Button {
                     actions.send(.setProjectColor(project.id, colorHex: preset.hex))
