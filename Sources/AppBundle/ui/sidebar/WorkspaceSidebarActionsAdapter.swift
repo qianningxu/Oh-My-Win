@@ -108,6 +108,8 @@ func handleWorkspaceSidebarAction(
             moveWorkspaceToProjectFromSidebar(workspaceName, projectId: projectId)
         case .reorderFolder(let folderId, let placement):
             reorderWorkspaceSidebarFolder(folderId, placement: placement)
+        case .setAutoHide(let isEnabled):
+            setWorkspaceSidebarAutoHide(isEnabled, viewModel: viewModel)
         case .setPinnedExpanded(let isPinned):
             setWorkspaceSidebarPinnedExpanded(isPinned, viewModel: viewModel)
         case .moveWindow(let windowId, let workspaceName):

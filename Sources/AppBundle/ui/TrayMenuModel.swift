@@ -25,6 +25,7 @@ public final class TrayMenuModel: ObservableObject {
     @Published var windowTabStrips: [WindowTabStripViewModel] = []
     @Published var windowTabReentryPreview: WindowTabPendingReorderDrop? = nil
     @Published var isWorkspaceSidebarExpanded: Bool = false
+    @Published var isWorkspaceSidebarAutoHideEnabled: Bool = workspaceSidebarAutoHidePreference()
     @Published var isWorkspaceSidebarPinnedExpanded: Bool = workspaceSidebarPinnedExpandedPreference()
     @Published var workspaceSidebarVisibleWidth: CGFloat = 0
     @Published var workspaceSidebarTopPadding: CGFloat = standardGap * 4

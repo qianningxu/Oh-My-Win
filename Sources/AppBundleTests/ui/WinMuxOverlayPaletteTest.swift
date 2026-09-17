@@ -264,16 +264,19 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         XCTAssertEqual(frame, NSRect(x: 0, y: 40, width: 1512, height: 914))
     }
 
-    func testCanvasBackgroundFrameFillsPhysicalScreenBeyondVisibleFrame() {
-        let sidebarFrame = NSRect(x: 72, y: 40, width: 1440, height: 914)
-        let screenFrame = NSRect(x: 0, y: 0, width: 1512, height: 982)
+    func testBarSurfaceUsesProjectColorFillAndStrokeSteps() {
+        for theme in [AppearanceTheme.light, .dark] {
+            let palette = WinMuxOverlayPalette(theme: theme, projectThemeFamily: .blue)
 
-        let frame = workspaceCanvasBackgroundFrame(
-            sidebarFrame: sidebarFrame,
-            screenFrame: screenFrame
-        )
-
-        XCTAssertEqual(frame, screenFrame)
+            assertSameColor(
+                NSColor(winMuxBarSurfaceFill(palette)),
+                GeistColorSystem.color(.blue, .color3, theme: theme)
+            )
+            assertSameColor(
+                NSColor(winMuxBarSurfaceStroke(palette)),
+                GeistColorSystem.color(.blue, .color5, theme: theme)
+            )
+        }
     }
 
     func testSidebarSideAreaVisualFrameIsInsetWithinHostFrame() {

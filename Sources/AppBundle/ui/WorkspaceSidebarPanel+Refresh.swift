@@ -2,25 +2,28 @@ import AppKit
 
 extension WorkspaceSidebarPanel {
     func refresh() {
-        refresh(on: workspaceSidebarResolvedPanelMonitor())
+        refresh(on: workspaceSidebarLocalPanelMonitor())
     }
 
     func refresh(on monitor: Monitor) {
         guard let layout = currentSidebarPanelLayout(on: monitor) else {
             resetHiddenSidebarState()
-            WorkspaceCanvasBackgroundPanel.hideAll()
             return
         }
 
         if frame != layout.frame {
             setFrame(layout.frame, display: true, animate: false)
         }
-        viewModel.workspaceSidebarVisibleWidth = layout.frame.width
-        viewModel.isWorkspaceSidebarExpanded = true
         updateProjectPresentationLayout()
-        ignoresMouseEvents = false
-        orderFrontRegardless()
-        stopHoverMonitoring()
+        if viewModel.isWorkspaceSidebarAutoHideEnabled {
+            updateAutoHideVisibility(at: NSEvent.mouseLocation)
+        } else {
+            stopHoverMonitoring()
+            viewModel.workspaceSidebarVisibleWidth = layout.frame.width
+            viewModel.isWorkspaceSidebarExpanded = true
+            ignoresMouseEvents = false
+            orderFrontRegardless()
+        }
     }
 
     func refreshForCurrentDragIfNeeded() {
@@ -37,6 +40,7 @@ extension WorkspaceSidebarPanel {
         viewModel.setIfChanged(\.isWorkspaceSidebarExpanded, to: false)
         projectActionMenuPresentationExtraWidth = 0
         projectMenuPresentationExtraHeight = 0
+        autoHideGeneration &+= 1
         orderOut(nil)
     }
 }

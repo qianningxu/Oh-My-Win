@@ -18,28 +18,27 @@ final class MenuBarBoundsTest: XCTestCase {
         XCTAssertEqual(panel.level, WinMuxPanelLayer.projectTabs.level)
     }
 
-    func testWidgetRowOccupiesMenuStripAndTabsSitImmediatelyBelow() {
+    func testWidgetRowOccupiesMenuStripAndProjectBarFloatsAtBottom() {
         for height: CGFloat in [24, 32] {
             let screen = NSRect(x: -1920, y: 120, width: 1920, height: 1080)
-            let left = workspaceSidebarTopBarPanelFrame(
+            let visible = NSRect(x: -1920, y: 145, width: 1920, height: 1055 - height)
+            let left = workspaceSidebarFloatingProjectBarPanelFrame(
                 screenFrame: screen,
-                visibleFrame: NSRect(x: -1920, y: 120, width: 1920, height: 1080 - height),
-                auxiliaryTopLeftArea: nil,
-                barHeight: height
+                visibleFrame: visible,
+                barSize: CGSize(width: 420, height: 32)
             )
             let right = menuBarStatusWidgetRegionFrame(
                 screenFrame: screen,
                 auxiliaryTopRightArea: nil,
                 barHeight: height
             )
-            XCTAssertEqual(left.minY, screen.maxY - height - WinMuxBarStyle.projectBarHeight)
-            XCTAssertEqual(left.height, WinMuxBarStyle.projectBarHeight)
-            XCTAssertEqual(left.maxY, right.minY)
+            XCTAssertEqual(left.minY, visible.minY + WinMuxBarStyle.projectTabsBarOuterInset)
+            XCTAssertEqual(left.height, 32)
             XCTAssertEqual(right.maxY, screen.maxY)
             XCTAssertEqual(right.minX, screen.minX)
             XCTAssertEqual(right.width, screen.width)
-            XCTAssertEqual(left.maxX, right.maxX)
-            XCTAssertEqual(left.width, screen.width)
+            XCTAssertEqual(left.midX, screen.midX)
+            XCTAssertEqual(left.width, 420)
         }
     }
 

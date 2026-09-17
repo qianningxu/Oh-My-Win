@@ -102,23 +102,28 @@ func showWorkspaceSidebarError(_ body: String) {
 }
 
 @MainActor
+func setWorkspaceSidebarAutoHide(
+    _ isEnabled: Bool,
+    viewModel: TrayMenuModel = TrayMenuModel.shared,
+) {
+    guard workspaceSidebarAutoHidePreference() != isEnabled else { return }
+    setWorkspaceSidebarAutoHidePreference(isEnabled)
+    viewModel.isWorkspaceSidebarAutoHideEnabled = isEnabled
+    viewModel.isWorkspaceSidebarPinnedExpanded = !isEnabled
+    for panel in WorkspaceSidebarPanel.allPanels {
+        panel.viewModel.isWorkspaceSidebarAutoHideEnabled = isEnabled
+        panel.viewModel.isWorkspaceSidebarPinnedExpanded = !isEnabled
+    }
+    WorkspaceSidebarPanel.refreshAll()
+    scheduleRefreshSession(.workspaceSidebarWidthChanged)
+}
+
+@MainActor
 func setWorkspaceSidebarPinnedExpanded(
     _ isPinned: Bool,
     viewModel: TrayMenuModel = TrayMenuModel.shared,
 ) {
-    // Horizontal top-bar mode is always expanded. Keep the legacy action
-    // callable for old bindings, but normalize every request to the new
-    // invariant instead of collapsing the panel.
-    let normalizedPinnedState = true
-    setWorkspaceSidebarPinnedExpandedPreference(normalizedPinnedState)
-    viewModel.isWorkspaceSidebarPinnedExpanded = normalizedPinnedState
-    for panel in WorkspaceSidebarPanel.visiblePanels {
-        panel.viewModel.isWorkspaceSidebarPinnedExpanded = normalizedPinnedState
-        panel.viewModel.isWorkspaceSidebarExpanded = true
-        panel.orderFrontRegardless()
-        panel.updateMousePassthrough()
-    }
-    WorkspaceSidebarPanel.refreshAll()
+    setWorkspaceSidebarAutoHide(!isPinned, viewModel: viewModel)
 }
 
 @MainActor

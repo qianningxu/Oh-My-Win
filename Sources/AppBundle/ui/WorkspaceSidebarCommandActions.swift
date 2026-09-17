@@ -8,19 +8,19 @@ func openWorkspaceSidebarFromCommand() {
     let focusedScopeId = TrayMenuModel.shared.workspaceSidebarFocusedMonitorScopeId
     let panel = WorkspaceSidebarPanel.panel(for: focusedScopeId)
         ?? WorkspaceSidebarPanel.visiblePanels.first
+        ?? WorkspaceSidebarPanel.allPanels.first
         ?? WorkspaceSidebarPanel.shared
-    panel.viewModel.isWorkspaceSidebarExpanded = true
-    panel.viewModel.isWorkspaceSidebarPinnedExpanded = true
-    panel.orderFrontRegardless()
-    panel.updateMousePassthrough()
+    if panel.viewModel.isWorkspaceSidebarAutoHideEnabled {
+        panel.revealProjectBarFromCommand()
+        installWorkspaceSidebarCommandMouseUnlockMonitor(panel)
+    } else {
+        panel.expandSidebar(to: panel.frame.width, animated: false)
+    }
 }
 
 @MainActor
 func closeWorkspaceSidebarFromCommand(_ panel: WorkspaceSidebarPanel) {
-    panel.viewModel.isWorkspaceSidebarExpanded = true
-    panel.viewModel.isWorkspaceSidebarPinnedExpanded = true
-    panel.orderFrontRegardless()
-    panel.updateMousePassthrough()
+    panel.releaseCommandProjectBarReveal()
 }
 
 @MainActor

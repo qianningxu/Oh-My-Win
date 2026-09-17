@@ -12,6 +12,7 @@ func workspaceSidebarSnapshot(from model: TrayMenuModel) -> WorkspaceSidebarSnap
         targetMonitorScopeId: model.workspaceSidebarTargetMonitorScopeId,
         focusedMonitorScopeId: model.workspaceSidebarFocusedMonitorScopeId,
         visibleWidth: model.workspaceSidebarVisibleWidth,
+        isAutoHideEnabled: model.isWorkspaceSidebarAutoHideEnabled,
         isPinnedExpanded: model.isWorkspaceSidebarPinnedExpanded,
         hoveredWorkspaceName: model.workspaceSidebarHoveredWorkspaceName,
         dropPreview: model.workspaceSidebarDropPreview,

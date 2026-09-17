@@ -5,13 +5,11 @@ struct WorkspaceSidebarPanelLayout {
     let expandedWidth: CGFloat
     let collapsedWidth: CGFloat
     let metrics: WorkspaceSidebarSideAreaMetrics
-    let topBarRegion: NSRect
-    let barHeight: CGFloat
 }
 
 extension WorkspaceSidebarPanel {
     func currentSidebarPanelLayout() -> WorkspaceSidebarPanelLayout? {
-        currentSidebarPanelLayout(on: workspaceSidebarResolvedPanelMonitor())
+        currentSidebarPanelLayout(on: workspaceSidebarLocalPanelMonitor())
     }
 
     func currentSidebarPanelLayout(on monitor: Monitor) -> WorkspaceSidebarPanelLayout? {
@@ -21,15 +19,18 @@ extension WorkspaceSidebarPanel {
         else { return nil }
         guard !shouldSuppressWorkspaceSidebarForFullscreenContent() else { return nil }
 
-        let barHeight = workspaceSidebarTopBarHeight(for: screen)
-        let topBarRegion = workspaceSidebarTopBarRegion(for: screen, barHeight: barHeight)
-        guard topBarRegion.width > 0, barHeight > 0 else { return nil }
-        let frame = workspaceSidebarTopBarPanelFrame(
+        hostingView.layoutSubtreeIfNeeded()
+        let fittingSize = hostingView.fittingSize
+        let contentSize = projectBarContentSize == .zero
+            ? CGSize(
+                width: max(fittingSize.width, standardGap * 24),
+                height: max(fittingSize.height, WinMuxBarStyle.projectBarHeight - WinMuxBarStyle.projectTabsBarOuterInset)
+            )
+            : projectBarContentSize
+        let frame = workspaceSidebarFloatingProjectBarPanelFrame(
             screenFrame: screen.frame,
             visibleFrame: screen.visibleFrame,
-            auxiliaryTopLeftArea: screen.auxiliaryTopLeftArea,
-            auxiliaryTopRightArea: screen.auxiliaryTopRightArea,
-            barHeight: barHeight,
+            barSize: contentSize,
             extraWidth: projectActionMenuPresentationExtraWidth,
             extraHeight: projectMenuPresentationExtraHeight,
         )
@@ -39,17 +40,19 @@ extension WorkspaceSidebarPanel {
             expandedWidth: frame.width,
             collapsedWidth: frame.width,
             metrics: .standard,
-            topBarRegion: topBarRegion,
-            barHeight: WinMuxBarStyle.projectBarHeight,
         )
     }
 
     func workspaceSidebarPanelScreen() -> NSScreen? {
-        workspaceSidebarPanelScreen(for: workspaceSidebarResolvedPanelMonitor())
+        workspaceSidebarPanelScreen(for: workspaceSidebarLocalPanelMonitor())
     }
 
     func workspaceSidebarPanelScreen(for monitor: Monitor) -> NSScreen? {
         workspaceSidebarScreen(for: monitor)
+    }
+
+    func workspaceSidebarLocalPanelMonitor() -> Monitor {
+        workspaceSidebarMonitor(forScopeId: monitorScopeId) ?? workspaceSidebarResolvedPanelMonitor()
     }
 }
 
@@ -89,13 +92,16 @@ func menuBarStatusWidgetRegion(for screen: NSScreen, barHeight: CGFloat? = nil) 
 }
 
 @MainActor
-func workspaceSidebarTopBarVisibleOverlap(for monitor: Monitor) -> CGFloat {
-    guard let screen = workspaceSidebarScreen(for: monitor) else { return 0 }
-    let barHeight = workspaceSidebarTopBarHeight(for: screen)
+func workspaceSidebarProjectBarVisibleReservation(for _: Monitor) -> CGFloat {
     guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled,
           !shouldSuppressWorkspaceSidebarForFullscreenContent() else { return 0 }
-    let visualSurfaceBottom = screen.frame.maxY - barHeight - WinMuxBarStyle.projectBarHeight
-    return max(screen.visibleFrame.maxY - visualSurfaceBottom, 0)
+    return workspaceSidebarProjectBarVisibleReservation(
+        autoHideEnabled: workspaceSidebarAutoHidePreference()
+    )
+}
+
+func workspaceSidebarProjectBarVisibleReservation(autoHideEnabled: Bool) -> CGFloat {
+    autoHideEnabled ? 0 : WinMuxBarStyle.projectBarHeight
 }
 
 func workspaceSidebarTopBarRegionFrame(
@@ -104,8 +110,8 @@ func workspaceSidebarTopBarRegionFrame(
     barHeight: CGFloat,
 ) -> NSRect {
     let resolvedBarHeight = max(barHeight, 1)
-    // The workspace tabs span the screen immediately below the widget row,
-    // where the camera notch no longer constrains their width.
+    // Preserve the full-width menu-adjacent region for compatibility with
+    // callers that still use this geometry independently of the bottom bar.
     return NSRect(
         x: screenFrame.minX,
         y: screenFrame.maxY - resolvedBarHeight - WinMuxBarStyle.projectBarHeight,
@@ -130,33 +136,26 @@ func menuBarStatusWidgetRegionFrame(
     )
 }
 
-func workspaceSidebarTopBarPanelFrame(
+func workspaceSidebarFloatingProjectBarPanelFrame(
     screenFrame: NSRect,
-    visibleFrame _: NSRect,
-    auxiliaryTopLeftArea: NSRect?,
-    auxiliaryTopRightArea: NSRect? = nil,
-    barHeight: CGFloat,
+    visibleFrame: NSRect,
+    barSize: CGSize,
     extraWidth: CGFloat = 0,
     extraHeight: CGFloat = 0,
 ) -> NSRect {
-    let resolvedBarHeight = max(barHeight, 1)
-    let baseRegion = workspaceSidebarTopBarRegionFrame(
-        screenFrame: screenFrame,
-        auxiliaryTopLeftArea: auxiliaryTopLeftArea,
-        barHeight: resolvedBarHeight,
+    let horizontalMargin = WinMuxSpacing.comfortable
+    let maximumWidth = max(screenFrame.width - horizontalMargin * 2, 1)
+    let width = min(max(barSize.width + max(extraWidth, 0), 1), maximumWidth)
+    let height = max(barSize.height + max(extraHeight, 0), 1)
+    let x = min(
+        max(screenFrame.midX - width / 2, screenFrame.minX),
+        screenFrame.maxX - width
     )
-
-    let top = min(max(baseRegion.maxY, screenFrame.minY + 1), screenFrame.maxY)
-    let barBottom = min(max(baseRegion.minY, screenFrame.minY), top - 1)
-    let bottom = max(screenFrame.minY, barBottom - max(extraHeight, 0))
-    let maxWidth = max(screenFrame.maxX - baseRegion.minX, 1)
-    let width = min(max(baseRegion.width + max(extraWidth, 0), 1), maxWidth)
-    return NSRect(
-        x: baseRegion.minX,
-        y: bottom,
-        width: width,
-        height: max(top - bottom, 1),
+    let y = min(
+        max(visibleFrame.minY + WinMuxBarStyle.projectTabsBarOuterInset, screenFrame.minY),
+        screenFrame.maxY - height
     )
+    return NSRect(x: x, y: max(y, screenFrame.minY), width: width, height: height)
 }
 
 func workspaceSidebarPanelFrame(

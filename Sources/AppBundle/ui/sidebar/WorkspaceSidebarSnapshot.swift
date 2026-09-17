@@ -10,6 +10,7 @@ struct WorkspaceSidebarSnapshot: Equatable {
     var targetMonitorScopeId: String
     var focusedMonitorScopeId: String
     var visibleWidth: CGFloat
+    var isAutoHideEnabled: Bool = false
     var isPinnedExpanded: Bool
     var hoveredWorkspaceName: String?
     var dropPreview: WorkspaceSidebarDropPreviewViewModel?
@@ -25,7 +26,8 @@ struct WorkspaceSidebarSnapshot: Equatable {
         targetMonitorScopeId: workspaceSidebarDefaultScopeId,
         focusedMonitorScopeId: "",
         visibleWidth: 0,
-        isPinnedExpanded: false,
+        isAutoHideEnabled: false,
+        isPinnedExpanded: true,
         hoveredWorkspaceName: nil,
         dropPreview: nil,
         configuration: .empty,
@@ -76,6 +78,7 @@ enum WorkspaceSidebarAction: Equatable {
     case moveWorkspace(String, toWorkspace: String)
     case moveWorkspaceToProject(String, projectId: WorkspaceProjectId)
     case reorderFolder(WorkspaceFolderId, placement: WorkspaceSidebarFolderReorderPlacement)
+    case setAutoHide(Bool)
     case setPinnedExpanded(Bool)
     case moveWindow(UInt32, toWorkspace: String)
     case moveTabGroup(UInt32, toWorkspace: String)

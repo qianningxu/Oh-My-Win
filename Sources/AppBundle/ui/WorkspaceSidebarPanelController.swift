@@ -33,6 +33,8 @@ final class WorkspaceSidebarPanel: NSPanelHud {
     var commandMouseUnlockMonitors: [Any] = []
     var projectActionMenuPresentationExtraWidth: CGFloat = 0
     var projectMenuPresentationExtraHeight: CGFloat = 0
+    var projectBarContentSize: CGSize = .zero
+    var autoHideGeneration: UInt64 = 0
     var menuTrackingObservers: [NSObjectProtocol] = []
     var lastEdgeTrapSample: MousePointerSample?
     var edgeTrapStartedAt: TimeInterval?
@@ -76,12 +78,16 @@ final class WorkspaceSidebarPanel: NSPanelHud {
     }
 
     override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
-        // This panel intentionally occupies the native menu-bar strip.
+        // This panel intentionally floats above the display's bottom work area.
         frameRect
     }
 
     static var visiblePanels: [WorkspaceSidebarPanel] {
         panelsByMonitorScopeId.values.filter(\.isVisible)
+    }
+
+    static var allPanels: [WorkspaceSidebarPanel] {
+        Array(panelsByMonitorScopeId.values)
     }
 
     static func panel(containing point: CGPoint) -> WorkspaceSidebarPanel? {
@@ -98,7 +104,6 @@ final class WorkspaceSidebarPanel: NSPanelHud {
 
     static func refreshAll() {
         guard !isRestoringStartupLayout else { return }
-        WorkspaceCanvasBackgroundPanel.refreshAll()
         MenuBarStatusWidgetsController.shared.refreshIfInstalled()
         guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled else {
             removeCachedPanels()
@@ -130,7 +135,6 @@ final class WorkspaceSidebarPanel: NSPanelHud {
         activeInlineTextEditingPanel = nil
         shared.resetForTests()
         removeCachedPanels()
-        WorkspaceCanvasBackgroundPanel.removeAll()
     }
 
     private static func removeCachedPanels() {
@@ -142,10 +146,19 @@ final class WorkspaceSidebarPanel: NSPanelHud {
     }
 
     func syncModelFromShared() {
-        viewModel.setIfChanged(\.workspaceSidebarWorkspaces, to: TrayMenuModel.shared.workspaceSidebarWorkspaces)
-        viewModel.setIfChanged(\.workspaceSidebarProjects, to: TrayMenuModel.shared.workspaceSidebarProjects)
+        let workspacesChanged = viewModel.setIfChanged(
+            \.workspaceSidebarWorkspaces,
+            to: TrayMenuModel.shared.workspaceSidebarWorkspaces
+        )
+        let projectsChanged = viewModel.setIfChanged(
+            \.workspaceSidebarProjects,
+            to: TrayMenuModel.shared.workspaceSidebarProjects
+        )
         viewModel.setIfChanged(\.workspaceSidebarFolders, to: TrayMenuModel.shared.workspaceSidebarFolders)
-        viewModel.setIfChanged(\.workspaceSidebarActiveProjectId, to: resolvedLocalActiveProjectId())
+        let activeProjectChanged = viewModel.setIfChanged(
+            \.workspaceSidebarActiveProjectId,
+            to: resolvedLocalActiveProjectId()
+        )
         viewModel.setIfChanged(\.workspaceSidebarMonitorScopes, to: TrayMenuModel.shared.workspaceSidebarMonitorScopes)
         viewModel.setIfChanged(\.workspaceSidebarSelectedMonitorScopeId, to: resolvedLocalSelectedMonitorScopeId())
         viewModel.setIfChanged(\.workspaceSidebarTargetMonitorScopeId, to: monitorScopeId)
@@ -153,7 +166,21 @@ final class WorkspaceSidebarPanel: NSPanelHud {
         viewModel.setIfChanged(\.workspaceSidebarShowsMonitorSelector, to: TrayMenuModel.shared.workspaceSidebarShowsMonitorSelector)
         viewModel.setIfChanged(\.workspaceSidebarDropPreview, to: TrayMenuModel.shared.workspaceSidebarDropPreview)
         viewModel.setIfChanged(\.workspaceSidebarTopPadding, to: TrayMenuModel.shared.workspaceSidebarTopPadding)
+        viewModel.setIfChanged(\.isWorkspaceSidebarAutoHideEnabled, to: TrayMenuModel.shared.isWorkspaceSidebarAutoHideEnabled)
+        viewModel.setIfChanged(\.isWorkspaceSidebarPinnedExpanded, to: TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded)
         viewModel.setIfChanged(\.workspaceSidebarHoveredWorkspaceName, to: resolvedLocalHoveredWorkspaceName())
+        if workspacesChanged || projectsChanged || activeProjectChanged {
+            projectBarContentSize = .zero
+        }
+    }
+
+    func setProjectBarContentSize(_ size: CGSize) {
+        let normalized = CGSize(width: ceil(max(size.width, 1)), height: ceil(max(size.height, 1)))
+        guard projectBarContentSize != normalized else { return }
+        projectBarContentSize = normalized
+        guard let layout = currentSidebarPanelLayout(), frame != layout.frame else { return }
+        setFrame(layout.frame, display: true, animate: false)
+        viewModel.workspaceSidebarVisibleWidth = isVisible ? layout.frame.width : 0
     }
 
     private func resolvedLocalActiveProjectId() -> WorkspaceProjectId {
@@ -200,6 +227,8 @@ final class WorkspaceSidebarPanel: NSPanelHud {
         splitBrowseCollapseSuppressedUntil = .distantPast
         projectActionMenuPresentationExtraWidth = 0
         projectMenuPresentationExtraHeight = 0
+        projectBarContentSize = .zero
+        autoHideGeneration = 0
         resetHiddenSidebarState()
         ignoresMouseEvents = false
     }

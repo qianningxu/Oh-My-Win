@@ -34,6 +34,14 @@ struct WinMuxBarDivider: View {
     }
 }
 
+func winMuxBarSurfaceFill(_ palette: WinMuxOverlayPalette) -> Color {
+    palette.color(palette.activeGeistFamily, .color3)
+}
+
+func winMuxBarSurfaceStroke(_ palette: WinMuxOverlayPalette) -> Color {
+    palette.color(palette.activeGeistFamily, .color5)
+}
+
 extension View {
     func winMuxBarSurface(
         _ palette: WinMuxOverlayPalette,
@@ -51,10 +59,10 @@ extension View {
             style: cornerStyle
         )
         return self
-            .background(palette.color(palette.activeGeistFamily, .color3))
+            .background(winMuxBarSurfaceFill(palette))
             .clipShape(shape)
             .overlay {
-                shape.strokeBorder(palette.color(palette.activeGeistFamily, .color5), lineWidth: WinMuxBarStyle.strokeWidth)
+                shape.strokeBorder(winMuxBarSurfaceStroke(palette), lineWidth: WinMuxBarStyle.strokeWidth)
                     .allowsHitTesting(false)
             }
     }

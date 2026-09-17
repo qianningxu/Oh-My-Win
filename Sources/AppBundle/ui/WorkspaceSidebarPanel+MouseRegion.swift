@@ -2,9 +2,7 @@ import AppKit
 
 extension WorkspaceSidebarPanel {
     func updateMousePassthrough() {
-        // The panel now owns only the top-bar region. Keep it interactive so
-        // project/workspace buttons and their popovers receive the full click
-        // sequence without relying on the old edge-rail passthrough logic.
+        // The panel frame hugs the visible bar, so every point is interactive.
         ignoresMouseEvents = false
     }
 

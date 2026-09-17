@@ -11,9 +11,9 @@ A macOS window manager, forked from [ZimengXiong/winmux](https://github.com/Zime
 - **Window stack:** a group of windows stacked together within a tab.
 - **Stack tabs:** the controls for switching windows within a window stack.
 
-Both bars sit within the system menu-bar area. The tab bar does not expand into a vertical sidebar.
+The widget bar sits within the system menu-bar area; the project tabs bar floats at the bottom of the work area and does not expand into a vertical sidebar.
 
-Projects and folders organize tabs without combining their window layouts. Use the project menu to switch projects, and drag tabs to reorder them. Each display has its own tab bar; a tab can be visible on only one display at a time.
+Projects and folders organize tabs without combining their window layouts. Use the project menu to switch projects, drag tabs to reorder them, or enable **Config → Auto hide** for a bottom-edge-revealed bar. Each display has its own tab bar; a tab can be visible on only one display at a time.
 
 ## Configuration and shortcuts
 

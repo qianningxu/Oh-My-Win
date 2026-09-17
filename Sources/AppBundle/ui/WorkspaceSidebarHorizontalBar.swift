@@ -20,6 +20,15 @@ struct WorkspaceSidebarHorizontalTabFramePreferenceKey: PreferenceKey {
     }
 }
 
+private struct WorkspaceSidebarProjectBarSizePreferenceKey: PreferenceKey {
+    static let defaultValue = CGSize.zero
+
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        let next = nextValue()
+        if next != .zero { value = next }
+    }
+}
+
 struct WorkspaceSidebarHorizontalReorderTarget: Equatable {
     let workspaceName: String
     let folderId: WorkspaceFolderId
@@ -142,7 +151,6 @@ struct WorkspaceSidebarHorizontalBar: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.displayScale) private var displayScale
 
 
     private var activeProject: WorkspaceSidebarProjectViewModel? {
@@ -189,58 +197,40 @@ struct WorkspaceSidebarHorizontalBar: View {
         WorkspaceSidebarPanel.panel(for: snapshot.targetMonitorScopeId)
     }
 
-    private var projectCornerRadius: CGFloat {
-        guard let monitor = sortedMonitors.first(where: {
-            workspaceSidebarMonitorScopeId(for: $0) == snapshot.targetMonitorScopeId
-        }) else { return 0 }
-        return projectFrameCornerRadius(on: monitor)
-    }
-
     var body: some View {
-        GeometryReader { geometry in
-            let surfaceHeight = max(geometry.size.height, 1)
-            let outerInset = WinMuxBarStyle.projectTabsBarOuterInset
-            let barHeight = max(surfaceHeight - outerInset, 1)
-            let innerPadding = WinMuxBarStyle.innerSpacing
-            let contentHeight = barHeight
-            let surfaceWidth = max(geometry.size.width, 1)
-            let barWidth = max(surfaceWidth - outerInset * 2, 1)
-
-
-            ZStack(alignment: .topLeading) {
-                HStack(spacing: WinMuxBarStyle.innerSpacing) {
-                    projectControl(contentHeight: contentHeight)
-                    workspaceTabStrip(contentHeight: contentHeight)
-                }
-                .fixedSize(horizontal: true, vertical: false)
-                .frame(
-                    width: max(barWidth - innerPadding * 2, 1),
-                    height: contentHeight,
-                    alignment: .center
+        let contentHeight = max(
+            WinMuxBarStyle.projectBarHeight - WinMuxBarStyle.projectTabsBarOuterInset,
+            1
+        )
+        HStack(spacing: WinMuxBarStyle.innerSpacing) {
+            projectControl(contentHeight: contentHeight)
+            workspaceTabStrip(contentHeight: contentHeight)
+        }
+        .fixedSize(horizontal: true, vertical: false)
+        .frame(height: contentHeight)
+        .padding(.horizontal, WinMuxBarStyle.innerSpacing)
+        .winMuxBarSurface(palette, cornerRadius: WinMuxBarStyle.cornerRadius)
+        .background {
+            GeometryReader { geometry in
+                WinMuxDesignTokens.transparent.preference(
+                    key: WorkspaceSidebarProjectBarSizePreferenceKey.self,
+                    value: geometry.size
                 )
-                .padding(.horizontal, innerPadding)
-                .offset(x: outerInset, y: outerInset)
-            }
-            // Offsets do not expand layout bounds; include the outer inset
-            // before clipping so the lower border remains inside the frame.
-            .frame(width: surfaceWidth, height: surfaceHeight, alignment: .topLeading)
-            .clipShape(UnevenRoundedRectangle(
-                topLeadingRadius: projectCornerRadius,
-                bottomLeadingRadius: 0, bottomTrailingRadius: 0,
-                topTrailingRadius: projectCornerRadius, style: .continuous))
-            .coordinateSpace(name: "workspaceSidebarContent")
-            .onPreferenceChange(WorkspaceSidebarHorizontalTabFramePreferenceKey.self) { frames in
-                workspaceReorderFrames = frames
-            }
-            .onPreferenceChange(WorkspaceSidebarDropTargetPreferenceKey.self) { frames in
-                actions.setDropTargets(frames)
-            }
-            .onAppear {
-                actions.setDropTargets([])
             }
         }
-        // The canvas panel supplies the project frame surface and rounded border.
-        // Keep this higher panel transparent so it cannot cover the top edge.
+        .coordinateSpace(name: "workspaceSidebarContent")
+        .onPreferenceChange(WorkspaceSidebarProjectBarSizePreferenceKey.self) { size in
+            currentPanel?.setProjectBarContentSize(size)
+        }
+        .onPreferenceChange(WorkspaceSidebarHorizontalTabFramePreferenceKey.self) { frames in
+            workspaceReorderFrames = frames
+        }
+        .onPreferenceChange(WorkspaceSidebarDropTargetPreferenceKey.self) { frames in
+            actions.setDropTargets(frames)
+        }
+        .onAppear {
+            actions.setDropTargets([])
+        }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Project tabs bar")
         .onDisappear { clearWorkspaceReorderState() }
@@ -276,10 +266,6 @@ struct WorkspaceSidebarHorizontalBar: View {
                 finishWorkspaceRename(cancelled: true)
             }
         }
-    }
-
-    private var barSurface: some View {
-        Rectangle().fill(palette.color(palette.activeGeistFamily, .color3))
     }
 
     @ViewBuilder
@@ -328,6 +314,12 @@ struct WorkspaceSidebarHorizontalBar: View {
                 setWorkspaceSidebarAppearance(theme)
             }
         })]
+        items.append(Item(
+            title: "Auto hide",
+            symbol: snapshot.isAutoHideEnabled ? "checkmark" : nil
+        ) {
+            actions.send(.setAutoHide(!snapshot.isAutoHideEnabled))
+        })
         if projectsAreEnabled(), let project = activeProject {
             items.append(Item(title: "Rename project") { beginProjectRename(project) })
             items.append(Item(title: "Project color", children: workspaceSidebarProjectColorPresets.map { preset in

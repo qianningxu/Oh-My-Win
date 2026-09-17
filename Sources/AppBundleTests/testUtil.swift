@@ -84,7 +84,8 @@ private func resetTrayMenuModelForTests() {
     model.windowTabStrips = []
     model.windowTabReentryPreview = nil
     model.isWorkspaceSidebarExpanded = false
-    model.isWorkspaceSidebarPinnedExpanded = false
+    model.isWorkspaceSidebarAutoHideEnabled = false
+    model.isWorkspaceSidebarPinnedExpanded = true
     model.workspaceSidebarVisibleWidth = 0
     model.workspaceSidebarTopPadding = 8
     model.workspaceSidebarHoveredWorkspaceName = nil

@@ -3,6 +3,7 @@ import Common
 import Foundation
 
 private let workspaceSidebarPinnedExpandedPreferenceKey = "workspaceSidebar.pinnedExpanded"
+private let workspaceSidebarAutoHidePreferenceKey = "workspaceSidebar.autoHide"
 private let workspaceSidebarCollapsedFolderIdsPreferenceKey = "workspaceSidebar.collapsedFolderIds"
 private let workspaceSidebarLegacyCollapsedTabGroupIdsPreferenceKey = "workspaceSidebar.collapsedTabGroupIds"
 private let workspaceSidebarAppearancePreferenceKey = "workspaceSidebar.appearance"
@@ -29,7 +30,7 @@ func restoreWorkspaceSidebarAppearancePreference() {
 @MainActor
 final class WorkspaceSidebarAppearanceObserver {
     static let shared = WorkspaceSidebarAppearanceObserver {
-        WorkspaceCanvasBackgroundPanel.refreshAll()
+        WorkspaceSidebarPanel.refreshAll()
     }
 
     private var observation: NSKeyValueObservation?
@@ -65,7 +66,7 @@ func setWorkspaceSidebarAppearance(_ theme: AppearanceTheme?) {
 @MainActor
 private func applyWorkspaceSidebarAppearance(_ theme: AppearanceTheme?, persist: Bool) {
     NSApplication.shared.appearance = theme.map { NSAppearance(named: $0 == .dark ? .darkAqua : .aqua) } ?? nil
-    WorkspaceCanvasBackgroundPanel.refreshAll(themeOverride: theme)
+    WorkspaceSidebarPanel.refreshAll()
     guard persist else { return }
     if let theme {
         UserDefaults.standard.setValue(theme == .dark ? "dark" : "light", forKey: workspaceSidebarAppearancePreferenceKey)
@@ -75,13 +76,24 @@ private func applyWorkspaceSidebarAppearance(_ theme: AppearanceTheme?, persist:
 }
 
 func workspaceSidebarPinnedExpandedPreference() -> Bool {
-    UserDefaults.standard.bool(forKey: workspaceSidebarPinnedExpandedPreferenceKey)
+    !workspaceSidebarAutoHidePreference()
 }
 
 @MainActor
 func setWorkspaceSidebarPinnedExpandedPreference(_ isPinned: Bool) {
-    UserDefaults.standard.setValue(isPinned, forKey: workspaceSidebarPinnedExpandedPreferenceKey)
-    TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded = isPinned
+    setWorkspaceSidebarAutoHidePreference(!isPinned)
+}
+
+func workspaceSidebarAutoHidePreference() -> Bool {
+    UserDefaults.standard.bool(forKey: workspaceSidebarAutoHidePreferenceKey)
+}
+
+@MainActor
+func setWorkspaceSidebarAutoHidePreference(_ isEnabled: Bool) {
+    UserDefaults.standard.setValue(isEnabled, forKey: workspaceSidebarAutoHidePreferenceKey)
+    UserDefaults.standard.removeObject(forKey: workspaceSidebarPinnedExpandedPreferenceKey)
+    TrayMenuModel.shared.isWorkspaceSidebarAutoHideEnabled = isEnabled
+    TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded = !isEnabled
 }
 
 func collapsedWorkspaceSidebarFolderIdsPreference() -> Set<String> {
@@ -94,13 +106,15 @@ func collapsedWorkspaceSidebarFolderIdsPreference() -> Set<String> {
 @MainActor
 func resetWorkspaceSidebarUIPreferencesForTests() {
     UserDefaults.standard.removeObject(forKey: workspaceSidebarPinnedExpandedPreferenceKey)
+    UserDefaults.standard.removeObject(forKey: workspaceSidebarAutoHidePreferenceKey)
     UserDefaults.standard.removeObject(forKey: workspaceSidebarCollapsedFolderIdsPreferenceKey)
     UserDefaults.standard.removeObject(forKey: workspaceSidebarLegacyCollapsedTabGroupIdsPreferenceKey)
     UserDefaults.standard.removeObject(forKey: workspaceSidebarAppearancePreferenceKey)
     UserDefaults.standard.removeObject(forKey: workspaceSidebarShowsNotePadPreferenceKey)
     UserDefaults.standard.removeObject(forKey: workspaceSidebarShowsTasksPreferenceKey)
     UserDefaults.standard.synchronize()
-    TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded = false
+    TrayMenuModel.shared.isWorkspaceSidebarAutoHideEnabled = false
+    TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded = true
 }
 
 @MainActor

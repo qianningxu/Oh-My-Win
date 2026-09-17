@@ -3,7 +3,7 @@ import AppKit
 import XCTest
 
 final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
-    func testNotchedDisplayUsesFullWidthWidgetAndProjectRows() {
+    func testNotchedDisplayUsesFullWidthWidgetRowAndCenteredProjectBar() {
         let screenFrame = NSRect(x: 0, y: 0, width: 1728, height: 1117)
         let leftSafeArea = NSRect(x: 0, y: 1085, width: 771, height: 32)
         let rightSafeArea = NSRect(x: 957, y: 1085, width: 771, height: 32)
@@ -18,20 +18,17 @@ final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
             auxiliaryTopRightArea: rightSafeArea,
             barHeight: 32,
         )
-        let panel = workspaceSidebarTopBarPanelFrame(
+        let panel = workspaceSidebarFloatingProjectBarPanelFrame(
             screenFrame: screenFrame,
             visibleFrame: NSRect(x: 0, y: 0, width: 1728, height: 1085),
-            auxiliaryTopLeftArea: leftSafeArea,
-            auxiliaryTopRightArea: rightSafeArea,
-            barHeight: 32,
-            extraWidth: 400,
+            barSize: CGSize(width: 420, height: 32)
         )
 
         XCTAssertEqual(left, NSRect(x: 0, y: 1041, width: 1728, height: 44))
         XCTAssertEqual(right, NSRect(x: 0, y: 1085, width: 1728, height: 32))
-        XCTAssertEqual(panel.minX, left.minX)
-        XCTAssertEqual(panel.maxY, right.minY)
-        XCTAssertEqual(panel.maxX, screenFrame.maxX)
+        XCTAssertEqual(panel.width, 420)
+        XCTAssertEqual(panel.midX, screenFrame.midX)
+        XCTAssertEqual(panel.minY, WinMuxBarStyle.projectTabsBarOuterInset)
     }
 
     func testNonNotchedDisplayUsesTwoFullWidthRows() {
@@ -58,20 +55,71 @@ final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
 
     func testSecondaryDisplayKeepsNegativeScreenOrigin() {
         let screenFrame = NSRect(x: -1440, y: 120, width: 1440, height: 900)
-        let leftSafeArea = NSRect(x: -1432, y: 990, width: 420, height: 30)
-        let rightSafeArea = NSRect(x: -920, y: 990, width: 480, height: 30)
 
-        let panel = workspaceSidebarTopBarPanelFrame(
+        let panel = workspaceSidebarFloatingProjectBarPanelFrame(
             screenFrame: screenFrame,
             visibleFrame: NSRect(x: -1432, y: 145, width: 1432, height: 875),
-            auxiliaryTopLeftArea: leftSafeArea,
-            auxiliaryTopRightArea: rightSafeArea,
-            barHeight: 30,
+            barSize: CGSize(width: 420, height: 32)
         )
 
-        XCTAssertEqual(panel.minX, -1440)
-        XCTAssertEqual(panel.maxY, screenFrame.maxY - 30)
-        XCTAssertEqual(panel.maxX, screenFrame.maxX)
+        XCTAssertEqual(panel.midX, screenFrame.midX)
+        XCTAssertEqual(panel.minY, 145 + WinMuxBarStyle.projectTabsBarOuterInset)
+        XCTAssertEqual(panel.width, 420)
+    }
+
+    func testFloatingProjectBarIsCenteredAboveBottomEdge() {
+        let frame = workspaceSidebarFloatingProjectBarPanelFrame(
+            screenFrame: NSRect(x: -1440, y: 120, width: 1440, height: 900),
+            visibleFrame: NSRect(x: -1440, y: 120, width: 1440, height: 870),
+            barSize: CGSize(width: 420, height: 32)
+        )
+
+        XCTAssertEqual(frame.width, 420)
+        XCTAssertEqual(frame.height, 32)
+        XCTAssertEqual(frame.midX, -720)
+        XCTAssertEqual(frame.minY, 120 + WinMuxBarStyle.projectTabsBarOuterInset)
+    }
+
+    func testAutoHideReclaimsBottomBarReservation() {
+        XCTAssertEqual(
+            workspaceSidebarProjectBarVisibleReservation(autoHideEnabled: false),
+            WinMuxBarStyle.projectBarHeight
+        )
+        XCTAssertEqual(workspaceSidebarProjectBarVisibleReservation(autoHideEnabled: true), 0)
+    }
+
+    func testAutoHideBottomEdgeRevealAndKeepVisibleRegions() {
+        let screen = NSRect(x: 0, y: 0, width: 1000, height: 800)
+        let bar = NSRect(x: 300, y: 38, width: 400, height: 32)
+
+        XCTAssertTrue(workspaceSidebarAutoHideShouldShow(
+            isCurrentlyVisible: false,
+            pointer: CGPoint(x: 50, y: 1),
+            screenFrame: screen,
+            barFrame: bar,
+            isInteractionLocked: false
+        ))
+        XCTAssertTrue(workspaceSidebarAutoHideShouldShow(
+            isCurrentlyVisible: true,
+            pointer: CGPoint(x: 500, y: 50),
+            screenFrame: screen,
+            barFrame: bar,
+            isInteractionLocked: false
+        ))
+        XCTAssertFalse(workspaceSidebarAutoHideShouldShow(
+            isCurrentlyVisible: true,
+            pointer: CGPoint(x: 500, y: 100),
+            screenFrame: screen,
+            barFrame: bar,
+            isInteractionLocked: false
+        ))
+        XCTAssertTrue(workspaceSidebarAutoHideShouldShow(
+            isCurrentlyVisible: true,
+            pointer: CGPoint(x: 500, y: 100),
+            screenFrame: screen,
+            barFrame: bar,
+            isInteractionLocked: true
+        ))
     }
 
     func testHorizontalReorderUsesTabMidpointsAndKeepsFolderDestination() {
