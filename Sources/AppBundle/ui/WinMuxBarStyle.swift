@@ -20,15 +20,12 @@ enum WinMuxBarStyle {
     static let projectTabsBarFontSize = fontSize + WinMuxSpacing.hairline
     static let projectBarCornerRadius = projectTabsBarContentHeight / 2
     static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
-    static let projectBarTintOpacity: CGFloat = 0.25
     static let projectBarStrokeOpacity: CGFloat = 0.28
     static let workspaceTabContentHeight = standardGap * 8
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = cornerRadius
     static let workspaceTabBarCornerRadius = cornerRadius + innerSpacing
-    static let workspaceBarTintOpacity: CGFloat = 0.15
     static let workspaceBarStrokeOpacity: CGFloat = 0.24
-    static let topBarTintOpacity: CGFloat = 0.20
     static let topBarStrokeOpacity: CGFloat = 0.2
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.25
@@ -70,7 +67,6 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
     let palette: WinMuxOverlayPalette
     let cornerRadius: CGFloat
     let material: NSVisualEffectView.Material
-    let tintOpacity: CGFloat
     let strokeOpacity: CGFloat
 
     @ViewBuilder
@@ -89,10 +85,7 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
                 }
         } else if #available(macOS 26.0, *) {
             content
-                .glassEffect(
-                    .clear.tint(winMuxBarSurfaceFill(palette).opacity(tintOpacity)),
-                    in: shape
-                )
+                .glassEffect(.clear, in: shape)
                 .overlay {
                     shape.strokeBorder(
                         winMuxBarSurfaceStroke(palette).opacity(strokeOpacity),
@@ -103,10 +96,7 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
         } else {
             content
                 .background {
-                    ZStack {
-                        VisualEffectBlur(material: material, blendingMode: .behindWindow)
-                        winMuxBarSurfaceFill(palette).opacity(tintOpacity)
-                    }
+                    VisualEffectBlur(material: material, blendingMode: .behindWindow)
                     .clipShape(shape)
                 }
                 .clipShape(shape)
@@ -126,14 +116,12 @@ extension View {
         _ palette: WinMuxOverlayPalette,
         cornerRadius: CGFloat = WinMuxBarStyle.projectBarCornerRadius,
         material: NSVisualEffectView.Material = .underWindowBackground,
-        tintOpacity: CGFloat = WinMuxBarStyle.projectBarTintOpacity,
         strokeOpacity: CGFloat = WinMuxBarStyle.projectBarStrokeOpacity
     ) -> some View {
         modifier(WinMuxGlassBarSurfaceModifier(
             palette: palette,
             cornerRadius: cornerRadius,
             material: material,
-            tintOpacity: tintOpacity,
             strokeOpacity: strokeOpacity
         ))
     }

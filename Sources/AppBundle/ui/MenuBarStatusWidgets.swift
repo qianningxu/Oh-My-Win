@@ -323,7 +323,6 @@ private struct MenuBarStatusWidgetGroup: View {
             palette,
             cornerRadius: WinMuxSpacing.none,
             material: .underWindowBackground,
-            tintOpacity: WinMuxBarStyle.topBarTintOpacity,
             strokeOpacity: WinMuxBarStyle.topBarStrokeOpacity
         )
         .environment(\.colorScheme, palette.colorScheme)

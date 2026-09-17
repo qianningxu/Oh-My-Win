@@ -18,7 +18,6 @@ struct WindowTabGroupVisualView: View {
                 .winMuxGlassBarSurface(
                     palette,
                     cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
-                    tintOpacity: WinMuxBarStyle.workspaceBarTintOpacity,
                     strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
                 )
                 .padding(.top, windowTabBarOuterInset())
