@@ -372,7 +372,7 @@ func workspacePreviewPlacedWindows(
     windows: [WorkspacePreviewWindowItem],
     workspaceAspectRatio: CGFloat,
     in size: CGSize,
-    inset: CGFloat = 8,
+    inset: CGFloat = 0,
 ) -> [WorkspacePreviewPlacedWindow] {
     let canvasRect = workspacePreviewCanvasRect(
         workspaceAspectRatio: workspaceAspectRatio,
@@ -489,16 +489,6 @@ private struct WorkspacePreviewCard: View {
         VStack(alignment: .leading, spacing: 10) {
             WorkspacePreviewLayoutCanvas(windows: item.windows, workspaceAspectRatio: item.workspaceAspectRatio)
                 .frame(width: 284, height: 178)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .strokeBorder(
-                            palette.workspacePreviewContrastingFill(
-                                darkOpacity: isSelected ? 0.28 : 0.10,
-                                lightOpacity: isSelected ? 0.20 : 0.08
-                            ),
-                            lineWidth: isSelected ? 1 : 0.5
-                        )
-                }
 
             HStack(spacing: 7) {
                 Text(item.displayName)
@@ -506,6 +496,7 @@ private struct WorkspacePreviewCard: View {
                     .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
                     .lineLimit(1)
             }
+            .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 2)
         }
         .padding(8)
@@ -624,10 +615,6 @@ private struct WorkspacePreviewWindowTile: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .strokeBorder(palette.workspacePreviewContrastingFill(darkOpacity: 0.32, lightOpacity: 0.20), lineWidth: 0.6)
-        }
         .shadow(color: palette.workspacePreviewShadow(0.24, lightOpacity: 0.14), radius: 5, x: 0, y: 2)
         .task(id: window.id) {
             guard let image = await captureExposeThumbnail(window.id) else { return }
