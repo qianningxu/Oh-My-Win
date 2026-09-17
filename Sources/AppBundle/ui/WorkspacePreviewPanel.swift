@@ -526,14 +526,6 @@ private struct WorkspacePreviewSwitcherSurface: View {
         ZStack {
             WorkspacePreviewNativeMaterial()
                 .opacity(1)
-            shape
-                .fill(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.10), Color.white.opacity(0.025)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
             shape.strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
         }
         .compositingGroup()
