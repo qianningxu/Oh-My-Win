@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Shared visual rules for project tabs, workspace tabs, and the widget bar.
@@ -6,20 +7,31 @@ enum WinMuxBarStyle {
     static let topBarCornerRadius = standardGap * 4
     static let topBarSurfaceCornerRadius = standardGap * 4
     static let innerSpacing = standardGap * 0.75
-    // The outer bar sits 3pt beyond its 16pt tabs, so add that inset to keep
-    // the nested continuous curves concentric.
-    static let workspaceTabBarCornerRadius = cornerRadius + innerSpacing
     static let containerInset = WinMuxSpacing.comfortable
-    static let topBarContentInset = WinMuxSpacing.comfortable
+    static let topBarContentInset = WinMuxSpacing.compact
     static let contentInset = innerSpacing * 4
     static let iconSpacing = innerSpacing
     static let strokeWidth = standardGap * 0.25
     static let fontSize: CGFloat = 14
     static let maximumTabWidth = standardGap * 50
     static let projectTabsBarOuterInset = WinMuxSpacing.comfortable
-    static let projectTabsBarSurfaceHeight = standardGap * 8 + innerSpacing * 2
-    static let projectBarHeight = projectTabsBarSurfaceHeight - innerSpacing * 2 + projectTabsBarOuterInset
-    static let workspaceBarHeight = standardGap * 8 + windowTabStripContentPaddingValue * 2
+    static let projectTabsBarContentHeight = standardGap * 10
+    static let projectTabsBarHorizontalInset = WinMuxSpacing.section
+    static let projectTabsBarFontSize = fontSize + strokeWidth
+    static let projectBarCornerRadius = projectTabsBarContentHeight / 2
+    static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
+    static let projectBarTintOpacity: CGFloat = 0.28
+    static let projectBarStrokeOpacity: CGFloat = 0.72
+    static let workspaceTabContentHeight = standardGap * 10
+    static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
+    static let workspaceTabCornerRadius = workspaceTabContentHeight / 2
+    static let workspaceTabBarCornerRadius = workspaceBarHeight / 2
+    static let workspaceBarTintOpacity: CGFloat = 0.22
+    static let workspaceBarStrokeOpacity: CGFloat = 0.68
+    static let topBarTintOpacity: CGFloat = 0.24
+    static let topBarStrokeOpacity: CGFloat = 0.56
+    static let selectedSegmentOpacity: CGFloat = 0.76
+    static let hoveredSegmentOpacity: CGFloat = 0.42
 }
 
 struct WinMuxBarDivider: View {
@@ -42,7 +54,58 @@ func winMuxBarSurfaceStroke(_ palette: WinMuxOverlayPalette) -> Color {
     palette.color(palette.activeGeistFamily, .color5)
 }
 
+private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    let palette: WinMuxOverlayPalette
+    let cornerRadius: CGFloat
+    let material: NSVisualEffectView.Material
+    let tintOpacity: CGFloat
+    let strokeOpacity: CGFloat
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        content
+            .background {
+                if reduceTransparency {
+                    winMuxBarSurfaceFill(palette)
+                } else {
+                    ZStack {
+                        VisualEffectBlur(material: material, blendingMode: .behindWindow)
+                        winMuxBarSurfaceFill(palette).opacity(tintOpacity)
+                    }
+                }
+            }
+            .clipShape(shape)
+            .overlay {
+                shape.strokeBorder(
+                    winMuxBarSurfaceStroke(palette).opacity(
+                        reduceTransparency ? 1 : strokeOpacity
+                    ),
+                    lineWidth: WinMuxBarStyle.strokeWidth
+                )
+                .allowsHitTesting(false)
+            }
+    }
+}
+
 extension View {
+    func winMuxGlassBarSurface(
+        _ palette: WinMuxOverlayPalette,
+        cornerRadius: CGFloat = WinMuxBarStyle.projectBarCornerRadius,
+        material: NSVisualEffectView.Material = .popover,
+        tintOpacity: CGFloat = WinMuxBarStyle.projectBarTintOpacity,
+        strokeOpacity: CGFloat = WinMuxBarStyle.projectBarStrokeOpacity
+    ) -> some View {
+        modifier(WinMuxGlassBarSurfaceModifier(
+            palette: palette,
+            cornerRadius: cornerRadius,
+            material: material,
+            tintOpacity: tintOpacity,
+            strokeOpacity: strokeOpacity
+        ))
+    }
+
     func winMuxBarSurface(
         _ palette: WinMuxOverlayPalette,
         joinedToWindow: Bool = false,
@@ -70,9 +133,14 @@ extension View {
     func winMuxBarSegment(_ palette: WinMuxOverlayPalette, isSelected: Bool, isHovered: Bool) -> some View {
         background {
             if isSelected {
-                Rectangle().fill(palette.geistBackground(.primary))
+                Rectangle().fill(
+                    palette.geistBackground(.primary).opacity(WinMuxBarStyle.selectedSegmentOpacity)
+                )
             } else if isHovered {
-                Rectangle().fill(palette.color(palette.activeGeistFamily, .color2))
+                Rectangle().fill(
+                    palette.color(palette.activeGeistFamily, .color2)
+                        .opacity(WinMuxBarStyle.hoveredSegmentOpacity)
+                )
             }
         }
     }

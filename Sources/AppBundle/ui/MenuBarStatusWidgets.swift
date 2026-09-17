@@ -7,7 +7,7 @@ let menuBarWidgetIcon = winMuxOverlayContent(.primary)
 let menuBarWidgetText = winMuxOverlayContent(.primary)
 private let menuBarWidgetDataPath = defaultWorkspaceSidebarDataPath
 let menuBarWidgetSpacing: CGFloat = WinMuxBarStyle.iconSpacing
-let menuBarWidgetFontSize = NSFont.menuBarFont(ofSize: 0).pointSize
+let menuBarWidgetFontSize = NSFont.menuBarFont(ofSize: 0).pointSize + WinMuxBarStyle.strokeWidth
 let menuBarWidgetFontWeight: Font.Weight = .regular
 let menuBarWidgetIconSize = menuBarWidgetFontSize
 let menuBarWidgetIconFrame = menuBarWidgetIconSize + standardGap * 0.5
@@ -319,7 +319,13 @@ private struct MenuBarStatusWidgetGroup: View {
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
-        .background(palette.color(palette.activeGeistFamily, .color1))
+        .winMuxGlassBarSurface(
+            palette,
+            cornerRadius: WinMuxSpacing.none,
+            material: .menu,
+            tintOpacity: WinMuxBarStyle.topBarTintOpacity,
+            strokeOpacity: WinMuxBarStyle.topBarStrokeOpacity
+        )
         .environment(\.colorScheme, palette.colorScheme)
         .environment(\.workspaceSidebarProjectThemeFamily, projectThemeFamily)
     }

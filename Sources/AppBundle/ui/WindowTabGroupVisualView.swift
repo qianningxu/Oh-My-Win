@@ -10,14 +10,16 @@ struct WindowTabGroupVisualView: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: WinMuxSpacing.none) {
-                RoundedRectangle(
-                    cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
-                    style: .continuous
-                )
-                .fill(palette.color(palette.activeGeistFamily, .color5))
+                WinMuxDesignTokens.transparent
                 .frame(
                     width: max(geometry.size.width - windowTabGroupShellHorizontalInset() * 2, 0),
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
+                )
+                .winMuxGlassBarSurface(
+                    palette,
+                    cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
+                    tintOpacity: WinMuxBarStyle.workspaceBarTintOpacity,
+                    strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
                 )
                 .padding(.top, windowTabBarOuterInset())
 

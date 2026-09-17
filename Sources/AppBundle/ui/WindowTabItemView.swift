@@ -30,7 +30,7 @@ struct WindowTabItemView: View {
         .padding(.horizontal, showsTitle ? max(WinMuxBarStyle.contentInset, reservesCloseButtonSpace ? windowTabStripCloseButtonReservedWidth : 0) : WinMuxSpacing.none)
         .frame(width: width, height: height, alignment: .center)
         .winMuxBarSegment(palette, isSelected: tab.isActive || isDragSource, isHovered: isHovered)
-        .clipShape(RoundedRectangle(cornerRadius: WinMuxBarStyle.cornerRadius, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: WinMuxBarStyle.workspaceTabCornerRadius, style: .continuous))
         .opacity(isDragSource ? 0.55 : 1.0)
         .contentShape(Rectangle())
     }

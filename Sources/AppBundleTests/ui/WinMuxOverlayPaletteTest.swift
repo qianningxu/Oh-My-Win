@@ -279,6 +279,14 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         }
     }
 
+    func testGlassBarsUseExpandedDimensions() {
+        XCTAssertEqual(WinMuxBarStyle.projectTabsBarContentHeight, 40)
+        XCTAssertEqual(WinMuxBarStyle.projectBarHeight, 46)
+        XCTAssertEqual(WinMuxBarStyle.workspaceTabContentHeight, 40)
+        XCTAssertEqual(WinMuxBarStyle.workspaceBarHeight, 42)
+        XCTAssertGreaterThan(menuBarWidgetFontSize, NSFont.menuBarFont(ofSize: 0).pointSize)
+    }
+
     func testSidebarSideAreaVisualFrameIsInsetWithinHostFrame() {
         let metrics = WorkspaceSidebarSideAreaMetrics.standard
         let hostFrame = NSRect(x: 0, y: 40, width: 490, height: 914)

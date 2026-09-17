@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-private let projectTabsBarFontSize: CGFloat = 14
+private let projectTabsBarFontSize = WinMuxBarStyle.projectTabsBarFontSize
 
 struct WorkspaceSidebarHorizontalTabFrame: Equatable {
     let workspaceName: String
@@ -198,18 +198,15 @@ struct WorkspaceSidebarHorizontalBar: View {
     }
 
     var body: some View {
-        let contentHeight = max(
-            WinMuxBarStyle.projectBarHeight - WinMuxBarStyle.projectTabsBarOuterInset,
-            1
-        )
+        let contentHeight = WinMuxBarStyle.projectTabsBarContentHeight
         HStack(spacing: WinMuxBarStyle.innerSpacing) {
             projectControl(contentHeight: contentHeight)
             workspaceTabStrip(contentHeight: contentHeight)
         }
         .fixedSize(horizontal: true, vertical: false)
         .frame(height: contentHeight)
-        .padding(.horizontal, WinMuxBarStyle.innerSpacing)
-        .winMuxBarSurface(palette, cornerRadius: WinMuxBarStyle.cornerRadius)
+        .padding(.horizontal, WinMuxBarStyle.projectTabsBarHorizontalInset)
+        .winMuxGlassBarSurface(palette)
         .background {
             GeometryReader { geometry in
                 WinMuxDesignTokens.transparent.preference(
