@@ -523,7 +523,7 @@ private struct WorkspacePreviewSwitcherSurface: View {
                 blendingMode: .behindWindow,
                 opacity: 1
             )
-            shape.fill(Color.white.opacity(0.25))
+            shape.fill(Color.white.opacity(0.10))
             shape.strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
         }
         .compositingGroup()
