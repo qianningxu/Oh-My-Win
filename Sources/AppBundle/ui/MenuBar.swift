@@ -27,18 +27,6 @@ private struct WorkspaceProjectMenuBarContent: View {
     var body: some View {
         ForEach(viewModel.workspaceSidebarProjects) { project in
             Menu {
-                Button {
-                    handleWorkspaceSidebarAction(.selectProject(project.id), viewModel: viewModel)
-                } label: {
-                    if project.id == selectedProjectId {
-                        Label("Use project", systemImage: "checkmark")
-                    } else {
-                        Text("Use project")
-                    }
-                }
-
-                Divider()
-
                 let workspaces = workspaces(in: project)
                 if workspaces.isEmpty {
                     Text("No workspaces")
@@ -99,12 +87,13 @@ private struct WorkspaceProjectMenuBarContent: View {
     @ViewBuilder
     private func workspaceMenu(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> some View {
         Menu {
-            Button("Switch to workspace") {
+            Button("Switch") {
                 handleWorkspaceSidebarAction(.selectWorkspace(workspace.name), viewModel: viewModel)
             }
 
             Divider()
 
+            Text("Rename")
             TextField("Workspace name", text: workspaceNameBinding(for: workspace))
                 .textFieldStyle(.plain)
                 .frame(width: standardGap * 45)

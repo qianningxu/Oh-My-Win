@@ -61,7 +61,7 @@ public final class TrayMenuModel: ObservableObject {
     let focus = focus
     TrayMenuModel.shared.setIfChanged(
         \.trayText,
-        to: activeMode?.takeIf { $0 != mainModeId }?.first.map { "(\($0.uppercased()))" } ?? "A"
+        to: activeMode?.takeIf { $0 != mainModeId }?.first.map { "(\($0.uppercased()))" } ?? ""
     )
     let workspaces = userFacingWorkspaces(Workspace.all, focusedWorkspace: focus.workspace).filter {
         $0.projectId == activeWorkspaceProjectId(for: $0.workspaceMonitor)
