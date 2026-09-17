@@ -54,7 +54,7 @@ enum WinMuxGlassStyle {
             case .clear:
                 WinMuxGlassRecipe(
                     blurOpacity: 0.85,
-                    whiteTintOpacity: 0.12,
+                    whiteTintOpacity: 0.20,
                     shadowOpacity: 0,
                     shadowRadius: 0,
                     shadowY: 0
@@ -62,7 +62,7 @@ enum WinMuxGlassStyle {
             case .regular:
                 WinMuxGlassRecipe(
                     blurOpacity: 1,
-                    whiteTintOpacity: 0.20,
+                    whiteTintOpacity: 0.28,
                     shadowOpacity: 0.12,
                     shadowRadius: WinMuxSpacing.comfortable,
                     shadowY: WinMuxSpacing.hairline
