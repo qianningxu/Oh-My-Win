@@ -20,7 +20,7 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
 
     final class ProjectButton: NSButton, NSTextFieldDelegate {
         private let rowHeight = standardGap * 6
-        private let titleInset = standardGap * 8
+        private let titleInset = standardGap * 4
         private let minimumMenuWidth = standardGap * 46
         var model: WorkspaceSidebarProjectMenu?
         private let menuBuilder = WorkspaceSidebarNativeContextMenu.MenuView()
@@ -56,6 +56,7 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
                 let container = NSView(frame: NSRect(x: 0, y: 0, width: rowWidth, height: rowHeight))
                 let button = NSButton(title: "New project", target: self, action: #selector(createProject))
                 button.isBordered = false
+                button.isEnabled = true
                 button.alignment = .left
                 button.font = .menuFont(ofSize: 0)
                 button.focusRingType = .none
@@ -67,6 +68,7 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
                 )
                 container.addSubview(button)
                 row.view = container
+                row.isEnabled = true
                 menu.addItem(row)
             }
             trackingMenu = menu
