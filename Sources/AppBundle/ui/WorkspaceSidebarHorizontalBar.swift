@@ -125,6 +125,7 @@ struct WorkspaceSidebarHorizontalBar: View {
     let snapshot: WorkspaceSidebarSnapshot
     let actions: WorkspaceSidebarActions
 
+    @State private var isProjectMenuOpen = false
     @State private var renamingProjectId: WorkspaceProjectId?
     @State private var renamingProjectText = ""
     @State private var renamingWorkspaceName: String?
@@ -303,20 +304,29 @@ struct WorkspaceSidebarHorizontalBar: View {
             )
             .frame(width: controlWidth, height: contentHeight)
         } else {
-            ProjectMenuAppearanceHost(colorScheme: colorScheme) {
-                Menu {
-                    ForEach(snapshot.projects) { project in
-                        Button {
-                            actions.send(.selectProject(project.id))
-                        } label: {
-                            if project.id == snapshot.activeProjectId {
-                                Label(project.displayName, systemImage: "checkmark")
-                            } else {
-                                Text(project.displayName)
-                            }
-                        }
+            Button { isProjectMenuOpen.toggle() } label: {
+                Image(systemName: "square.stack.3d.up")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(palette.content(.secondary))
+                    .frame(width: contentHeight, height: contentHeight)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Project: \(name) — Switch project")
+            .accessibilityLabel("Project: \(name)")
+            .popover(isPresented: $isProjectMenuOpen, arrowEdge: .bottom) {
+                WorkspaceSidebarProjectMenu(
+                    projects: snapshot.projects,
+                    selectedProjectId: snapshot.activeProjectId,
+                    allowsCreation: projectsAreEnabled(),
+                    onSelect: { projectId in
+                        isProjectMenuOpen = false
+                        actions.send(.selectProject(projectId))
+                    },
+                    onCreate: { name in
+                        actions.send(.createProject(displayName: name))
                     }
-                    Divider()
+                ) {
                     Menu("Config") {
                         Menu("Theme") {
                             themeOption("Light", theme: .light)
@@ -327,25 +337,9 @@ struct WorkspaceSidebarHorizontalBar: View {
                             projectActions(for: project)
                         }
                     }
-                    if projectsAreEnabled() {
-                        Button("New project") {
-                            actions.send(.createProject(displayName: nil))
-                        }
-                    }
-                } label: {
-                    Image(systemName: "square.stack.3d.up")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(palette.content(.secondary))
-                        .frame(width: contentHeight, height: contentHeight)
-                    .contentShape(Rectangle())
+                    .menuStyle(.borderlessButton)
                 }
-                .menuStyle(.button)
-                .buttonStyle(.plain)
-                .menuIndicator(.hidden)
-                .fixedSize()
-                .layoutPriority(1)
-                .help("Project: \(name) — Switch project")
-                .accessibilityLabel("Project: \(name)")
+                .environment(\.colorScheme, colorScheme)
             }
             .frame(width: contentHeight, height: contentHeight)
         }
@@ -518,6 +512,7 @@ struct WorkspaceSidebarHorizontalBar: View {
     }
 
     private func beginProjectRename(_ project: WorkspaceSidebarProjectViewModel) {
+        isProjectMenuOpen = false
         finishWorkspaceRename(cancelled: true)
         renamingProjectId = project.id
         renamingProjectText = project.displayName

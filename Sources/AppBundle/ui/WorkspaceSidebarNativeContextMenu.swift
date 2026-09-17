@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Present outside SwiftUI's tab/scroll-view layout so refreshes cannot resize an open menu.
+/// Keep context commands in a separate popover, outside native menu scrolling constraints.
 struct WorkspaceSidebarNativeContextMenu: NSViewRepresentable {
     let items: [Item]
     let colorScheme: ColorScheme
@@ -22,11 +22,14 @@ struct WorkspaceSidebarNativeContextMenu: NSViewRepresentable {
 
     func updateNSView(_ view: MenuView, context: Context) {
         view.items = items
+        view.colorScheme = colorScheme
         view.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
     }
 
     final class MenuView: NSView {
         var items: [Item] = []
+        var colorScheme: ColorScheme = .light
+        private var popover: NSPopover?
 
         override func hitTest(_ point: NSPoint) -> NSView? {
             guard let event = NSApp.currentEvent,
@@ -37,39 +40,76 @@ struct WorkspaceSidebarNativeContextMenu: NSViewRepresentable {
         }
 
         override func rightMouseDown(with event: NSEvent) {
-            // Build a separate, stable menu for the duration of native menu tracking.
-            NSMenu.popUpContextMenu(makeMenu(items), with: event, for: self)
+            popover?.close()
+            let popover = NSPopover()
+            popover.behavior = .transient
+            popover.animates = false
+            popover.contentViewController = NSHostingController(rootView:
+                WorkspaceSidebarContextCommands(items: items) { [weak popover] in
+                    popover?.close()
+                }
+                .environment(\.colorScheme, colorScheme)
+            )
+            self.popover = popover
+            popover.show(relativeTo: bounds, of: self, preferredEdge: .minY)
         }
 
         override func mouseDown(with event: NSEvent) {
             rightMouseDown(with: event)
         }
+    }
+}
 
-        private func makeMenu(_ items: [Item]) -> NSMenu {
-            let menu = NSMenu()
-            menu.autoenablesItems = false
-            for item in items {
-                if item.title.isEmpty {
-                    menu.addItem(.separator())
-                    continue
+private struct WorkspaceSidebarContextCommands: View {
+    let items: [WorkspaceSidebarNativeContextMenu.Item]
+    let dismiss: () -> Void
+    @State private var submenu: WorkspaceSidebarNativeContextMenu.Item?
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var palette: WinMuxOverlayPalette {
+        WinMuxOverlayPalette(colorScheme: colorScheme)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: WinMuxSpacing.hairline) {
+            if let submenu {
+                Button { self.submenu = nil } label: {
+                    Label(submenu.title, systemImage: "chevron.left")
                 }
-                let row = NSMenuItem(title: item.title, action: #selector(performMenuAction(_:)), keyEquivalent: "")
-                row.target = self
-                row.representedObject = item
-                row.isEnabled = item.isEnabled
-                if let symbol = item.symbol {
-                    row.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-                }
-                if let children = item.children {
-                    row.submenu = makeMenu(children)
-                }
-                menu.addItem(row)
+                .buttonStyle(.plain)
+                .padding(.vertical, standardGap)
+                Divider()
             }
-            return menu
+            ForEach(Array((submenu?.children ?? items).enumerated()), id: \.offset) { _, item in
+                if item.title.isEmpty {
+                    Divider()
+                } else {
+                    Button {
+                        if item.children != nil {
+                            submenu = item
+                        } else {
+                            dismiss()
+                            item.action()
+                        }
+                    } label: {
+                        HStack(spacing: standardGap) {
+                            if let symbol = item.symbol { Image(systemName: symbol) }
+                            Text(item.title).lineLimit(1)
+                            Spacer(minLength: standardGap)
+                            if item.children != nil { Image(systemName: "chevron.right") }
+                        }
+                        .frame(maxWidth: .infinity, minHeight: workspaceSidebarProjectPopupRowHeight)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!item.isEnabled)
+                }
+            }
         }
-
-        @objc private func performMenuAction(_ sender: NSMenuItem) {
-            (sender.representedObject as? Item)?.action()
-        }
+        .font(.system(size: workspaceSidebarProjectLabelFontSize))
+        .foregroundStyle(palette.content(.primary))
+        .padding(WinMuxSpacing.section)
+        .frame(width: standardGap * 80)
+        .background(palette.geistBackground(.primary))
     }
 }
