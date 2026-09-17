@@ -4,11 +4,11 @@ The approved prototype lives in `../temp/winmux`. The native implementation uses
 
 | Name | Meaning | Appearance |
 | --- | --- | --- |
-| Widget bar | Status widgets in the native menu area | Untinted native clear glass without an added outline; safe around the camera notch |
+| Widget bar | Status widgets in the native menu area | WinMux clear glass without tint or an added outline; safe around the camera notch |
 | Project frame | Former full-screen surface beneath the Widget bar | Removed; the desktop remains visible through window gaps |
-| Workspace tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized untinted native clear-glass surface without a custom outline, floating 12 points above the usable screen edge; text-only workspace tabs with a text-width underline for selection |
+| Workspace tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized untinted WinMux clear-glass surface without an outline, floating 12 points above the usable screen edge; text-only workspace tabs with a text-width underline for selection |
 | Workspace frame | Window layout area | No enclosing fill; each window and window tab bar owns its surface |
-| Window tab bar | Compact untinted native clear-glass track at 10% emphasis for unfocused groups; the focused group uses full-strength regular glass. Unfocused labels use 40% emphasis and a 5% selected fill, while hover restores full text with a 25% overlay and the focused active tab uses a 70% fill. |
+| Window tab bar | Compact untinted WinMux clear-glass track at 10% emphasis for unfocused groups; the focused group uses the full-strength WinMux regular recipe. Within an unfocused group, inactive labels use 40% emphasis while the active tab uses 65% foreground and a 25% selected fill. Hover restores full text with a 25% overlay, and the focused active tab uses a 70% fill. |
 | Stacked window | Windows sharing one workspace tab bar | Existing grouping behavior |
 | Workspace window | Native app window and title bar | Native controls, borders, and corner geometry retained |
 
@@ -22,7 +22,7 @@ The names describe UI surfaces. Internal workspace/project identifiers, configur
 
 ## Native frame corrections
 
-WinMux-controlled tabs use continuous radii. The Window tab bar uses a 21-point outer radius around its inset. The Workspace tabs bar uses untinted native macOS clear glass; Reduce Transparency falls back to the solid background surface. Light mode uses white borders with black content, while dark mode uses black borders with white content. Navigation follows the selected light, dark, or system theme.
+WinMux-controlled tabs use continuous radii. The Window tab bar uses a 21-point outer radius around its inset. All bars use the shared WinMux glass compositor rather than SwiftUI's native `glassEffect`: an AppKit backdrop blur plus explicit WinMux-owned blur opacity, fill, stroke, shadow, and focus opacity. Clear uses 68% blur with no tint or shadow; regular uses full blur with no tint and a restrained shadow. Reduce Transparency falls back to the solid background surface. Navigation follows the selected light, dark, or system theme.
 
 Each stacked window has a translucent rounded workspace tab surface aligned with the native window below. Adjacent groups share one six-point gap. Native window borders remain visible.
 

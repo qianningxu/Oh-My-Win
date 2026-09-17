@@ -15,7 +15,7 @@ struct WindowTabGroupVisualView: View {
                     width: max(geometry.size.width - windowTabGroupShellHorizontalInset() * 2, 0),
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
-                .winMuxGlassBarSurface(
+                .winMuxCustomGlassBarSurface(
                     palette,
                     cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
                     glassStyle: strip.isFocused ? .regular : .clear,

@@ -20,7 +20,7 @@ enum WinMuxBarStyle {
     static let projectTabsBarFontSize = fontSize + WinMuxSpacing.hairline
     static let projectBarCornerRadius = projectTabsBarContentHeight / 2
     static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
-    static let projectBarStrokeOpacity: CGFloat = 0.65
+    static let projectBarStrokeOpacity: CGFloat = 0
     static let workspaceTabContentHeight = standardGap * 8
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = cornerRadius
@@ -28,17 +28,47 @@ enum WinMuxBarStyle {
     static let workspaceBarStrokeOpacity: CGFloat = 0.24
     static let topBarStrokeOpacity: CGFloat = 0
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
-    static let unfocusedWindowSelectedSegmentOpacity: CGFloat = 0.05
+    static let unfocusedWindowSelectedSegmentOpacity: CGFloat = 0.25
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.25
     static let unfocusedWindowBarOpacity: CGFloat = 0.10
+    static let unfocusedWindowActiveTabOpacity: CGFloat = 0.65
     static let unfocusedWindowTabOpacity: CGFloat = 0.40
     static let selectedSegmentOpacity: CGFloat = 0.18
     static let hoveredSegmentOpacity: CGFloat = 0.08
 }
 
+struct WinMuxGlassRecipe: Equatable {
+    let blurOpacity: CGFloat
+    let fillOpacity: CGFloat
+    let shadowOpacity: CGFloat
+    let shadowRadius: CGFloat
+    let shadowY: CGFloat
+}
+
 enum WinMuxGlassStyle {
     case clear
     case regular
+
+    var recipe: WinMuxGlassRecipe {
+        switch self {
+            case .clear:
+                WinMuxGlassRecipe(
+                    blurOpacity: 0.68,
+                    fillOpacity: 0,
+                    shadowOpacity: 0,
+                    shadowRadius: 0,
+                    shadowY: 0
+                )
+            case .regular:
+                WinMuxGlassRecipe(
+                    blurOpacity: 1,
+                    fillOpacity: 0,
+                    shadowOpacity: 0.12,
+                    shadowRadius: WinMuxSpacing.comfortable,
+                    shadowY: WinMuxSpacing.hairline
+                )
+        }
+    }
 }
 
 struct WinMuxBarDivider: View {
@@ -81,30 +111,32 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        let recipe = glassStyle.recipe
         if reduceTransparency {
             content
                 .background(winMuxBarSurfaceFill(palette))
                 .clipShape(shape)
                 .overlay { stroke(for: shape) }
-        } else if #available(macOS 26.0, *) {
-            switch glassStyle {
-                case .clear:
-                    content
-                        .glassEffect(.clear, in: shape)
-                        .overlay { stroke(for: shape) }
-                case .regular:
-                    content
-                        .glassEffect(.regular, in: shape)
-                        .overlay { stroke(for: shape) }
-            }
         } else {
             content
                 .background {
-                    VisualEffectBlur(material: material, blendingMode: .behindWindow)
+                    ZStack {
+                        VisualEffectBlur(
+                            material: material,
+                            blendingMode: .behindWindow,
+                            opacity: recipe.blurOpacity
+                        )
+                        winMuxBarSurfaceFill(palette).opacity(recipe.fillOpacity)
+                    }
                     .clipShape(shape)
                 }
                 .clipShape(shape)
                 .overlay { stroke(for: shape) }
+                .shadow(
+                    color: .black.opacity(recipe.shadowOpacity),
+                    radius: recipe.shadowRadius,
+                    y: recipe.shadowY
+                )
         }
     }
 
@@ -118,7 +150,7 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
 }
 
 extension View {
-    func winMuxGlassBarSurface(
+    func winMuxCustomGlassBarSurface(
         _ palette: WinMuxOverlayPalette,
         cornerRadius: CGFloat = WinMuxBarStyle.projectBarCornerRadius,
         material: NSVisualEffectView.Material = .underWindowBackground,

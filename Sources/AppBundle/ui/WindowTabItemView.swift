@@ -49,7 +49,11 @@ struct WindowTabItemView: View {
     }
 
     private var contentOpacity: CGFloat {
-        isDragSource || (!isGroupFocused && !isHovered) ? WinMuxBarStyle.unfocusedWindowTabOpacity : 1
+        if isDragSource { return WinMuxBarStyle.unfocusedWindowTabOpacity }
+        if isGroupFocused || isHovered { return 1 }
+        return tab.isActive
+            ? WinMuxBarStyle.unfocusedWindowActiveTabOpacity
+            : WinMuxBarStyle.unfocusedWindowTabOpacity
     }
 
     private var iconSize: CGFloat {

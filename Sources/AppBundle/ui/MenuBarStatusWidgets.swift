@@ -319,7 +319,7 @@ private struct MenuBarStatusWidgetGroup: View {
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
-        .winMuxGlassBarSurface(
+        .winMuxCustomGlassBarSurface(
             palette,
             cornerRadius: WinMuxSpacing.none,
             material: .underWindowBackground,

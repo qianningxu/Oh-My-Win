@@ -2,27 +2,16 @@ import AppKit
 import SwiftUI
 
 var usesNativeLiquidGlass: Bool {
-    if #available(macOS 26.0, *) {
-        true
-    } else {
-        false
-    }
+    false
 }
 
 @ViewBuilder
 func liquidGlassBackground<S: Shape, Fallback: View>(
     in shape: S,
-    isInteractive: Bool = true,
+    isInteractive _: Bool = true,
     @ViewBuilder fallback: () -> Fallback,
 ) -> some View {
-    if #available(macOS 26.0, *) {
-        WinMuxDesignTokens.transparent
-            .glassEffect(.regular.interactive(isInteractive), in: shape)
-            .accessibilityHidden(true)
-            .allowsHitTesting(false)
-    } else {
-        fallback()
-    }
+    fallback()
 }
 
 struct LiquidGlassSurface<S: Shape>: View {
