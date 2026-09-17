@@ -65,6 +65,14 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
 
     private func renameMenu(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> NSMenu {
         let menu = NSMenu()
+        let rename = NSMenuItem(title: "Rename", action: nil, keyEquivalent: "")
+        rename.submenu = renameEditorMenu(workspace)
+        menu.addItem(rename)
+        return menu
+    }
+
+    private func renameEditorMenu(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> NSMenu {
+        let menu = NSMenu()
         let field = NSTextField(
             string: workspace.sidebarLabel.isEmpty ? workspace.displayName : workspace.sidebarLabel
         )
