@@ -55,10 +55,17 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
                 let rowWidth = max(menu.size.width, minimumMenuWidth)
                 let container = NSView(frame: NSRect(x: 0, y: 0, width: rowWidth, height: rowHeight))
                 let button = NSButton(title: "New project", target: self, action: #selector(createProject))
+                let palette = WinMuxOverlayPalette(colorScheme: model.colorScheme)
                 button.isBordered = false
                 button.isEnabled = true
                 button.alignment = .left
-                button.font = .menuFont(ofSize: 0)
+                button.attributedTitle = NSAttributedString(
+                    string: "New project",
+                    attributes: [
+                        .font: NSFont.menuFont(ofSize: 0),
+                        .foregroundColor: palette.contentNSColor(.primary),
+                    ]
+                )
                 button.focusRingType = .none
                 button.frame = NSRect(
                     x: titleInset,
@@ -96,9 +103,13 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
                 let container = NSView(frame: NSRect(x: 0, y: 0, width: rowWidth, height: self.rowHeight))
                 let field = NSTextField(string: project.name)
                 field.isBordered = false
+                field.isBezeled = false
                 field.drawsBackground = false
+                field.backgroundColor = WinMuxDesignTokens.transparentNSColor
                 field.focusRingType = .none
                 field.font = .menuFont(ofSize: 0)
+                field.textColor = WinMuxOverlayPalette(colorScheme: self.model?.colorScheme ?? .light)
+                    .contentNSColor(.primary)
                 field.delegate = self
                 field.setAccessibilityLabel("Project name")
                 field.frame = NSRect(
@@ -115,6 +126,7 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
                 menu.update()
                 DispatchQueue.main.async {
                     field.window?.makeFirstResponder(field)
+                    (field.currentEditor() as? NSTextView)?.drawsBackground = false
                     field.selectText(nil)
                 }
                 self.keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
