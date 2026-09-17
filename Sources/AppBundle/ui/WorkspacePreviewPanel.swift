@@ -495,7 +495,7 @@ private struct WorkspacePreviewCard: View {
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Color.black.opacity(palette.isDark ? 0.45 : 0.28))
+                            .fill(palette.workspacePreviewForeground(palette.isDark ? 0.24 : 0.28))
                     }
                 }
 
@@ -602,17 +602,6 @@ private struct WorkspacePreviewWindowTile: View {
             } else {
                 WorkspacePreviewWindowFallback(window: window)
             }
-        }
-        .overlay(alignment: .top) {
-            Text(window.appName)
-                .font(.system(size: 8, weight: .semibold))
-                .foregroundStyle(Color.white.opacity(0.92))
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 2)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .background(Color.black.opacity(palette.isDark ? 0.82 : 0.58))
         }
         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         .shadow(color: palette.workspacePreviewShadow(0.24, lightOpacity: 0.14), radius: 5, x: 0, y: 2)
