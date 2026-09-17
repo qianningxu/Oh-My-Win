@@ -693,6 +693,7 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
                         Text(workspace.displayName)
                             .font(.system(size: projectTabsBarFontSize, weight: isActive || isHovered ? .medium : .regular))
                             .foregroundStyle(winMuxBarForeground(palette))
+                            .opacity(isActive || isHovered ? 1 : WinMuxBarStyle.workspaceTabUnfocusedTextOpacity)
                             .lineLimit(1)
                             .truncationMode(.tail)
                     }

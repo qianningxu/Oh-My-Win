@@ -22,6 +22,7 @@ struct WindowTabItemView: View {
             if showsTitle {
                 Text(hidesTitle ? "" : tab.title)
                     .font(.system(size: WinMuxBarStyle.fontSize, weight: tab.isActive ? .semibold : .regular))
+                    .opacity(tab.isActive || isHovered ? 1 : WinMuxBarStyle.windowTabUnfocusedTextOpacity)
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
