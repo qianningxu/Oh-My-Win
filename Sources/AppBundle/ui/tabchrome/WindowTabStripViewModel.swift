@@ -6,6 +6,7 @@ struct WindowTabStripViewModel: Identifiable, Equatable {
     let frame: CGRect
     let groupFrame: CGRect
     let activeWindowId: UInt32?
+    let isFocused: Bool
     let activeWindowCornerRadius: CGFloat
     let tabs: [WindowTabItemViewModel]
     let occludingFloatingWindowFrames: [CGRect]

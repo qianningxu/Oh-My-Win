@@ -64,6 +64,7 @@ extension WindowTabStripPanelController {
             frame: tabBarRect.toAppKitScreenRect.alignedToBackingPixels(),
             groupFrame: groupFrameRect.toAppKitScreenRect.alignedToBackingPixels(),
             activeWindowId: baseStrip.activeWindowId,
+            isFocused: baseStrip.isFocused,
             activeWindowCornerRadius: baseStrip.activeWindowCornerRadius,
             tabs: baseStrip.tabs,
             occludingFloatingWindowFrames: baseStrip.occludingFloatingWindowFrames,

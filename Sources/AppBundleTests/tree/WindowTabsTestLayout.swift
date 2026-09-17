@@ -193,6 +193,7 @@ import XCTest
             frame: CGRect(x: 100, y: 280, width: 300, height: 28),
             groupFrame: CGRect(x: 100, y: 100, width: 300, height: 208),
             activeWindowId: 1,
+            isFocused: false,
             activeWindowCornerRadius: 12,
             tabs: [],
             occludingFloatingWindowFrames: []
@@ -227,6 +228,7 @@ import XCTest
             frame: CGRect(x: 100, y: 280, width: 300, height: 28),
             groupFrame: CGRect(x: 100, y: 100, width: 300, height: 208),
             activeWindowId: 1,
+            isFocused: false,
             activeWindowCornerRadius: 12,
             tabs: [],
             occludingFloatingWindowFrames: []

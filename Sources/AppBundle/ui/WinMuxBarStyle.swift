@@ -20,7 +20,7 @@ enum WinMuxBarStyle {
     static let projectTabsBarFontSize = fontSize + WinMuxSpacing.hairline
     static let projectBarCornerRadius = projectTabsBarContentHeight / 2
     static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
-    static let projectBarStrokeOpacity: CGFloat = 0.28
+    static let projectBarStrokeOpacity: CGFloat = 0.12
     static let workspaceTabContentHeight = standardGap * 8
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = cornerRadius
@@ -31,6 +31,11 @@ enum WinMuxBarStyle {
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.25
     static let selectedSegmentOpacity: CGFloat = 0.18
     static let hoveredSegmentOpacity: CGFloat = 0.08
+}
+
+enum WinMuxGlassStyle {
+    case clear
+    case regular
 }
 
 struct WinMuxBarDivider: View {
@@ -67,6 +72,8 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
     let palette: WinMuxOverlayPalette
     let cornerRadius: CGFloat
     let material: NSVisualEffectView.Material
+    let glassStyle: WinMuxGlassStyle
+    let usesContrastingStroke: Bool
     let strokeOpacity: CGFloat
 
     @ViewBuilder
@@ -76,23 +83,18 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
             content
                 .background(winMuxBarSurfaceFill(palette))
                 .clipShape(shape)
-                .overlay {
-                    shape.strokeBorder(
-                        winMuxBarSurfaceStroke(palette),
-                        lineWidth: WinMuxBarStyle.strokeWidth
-                    )
-                    .allowsHitTesting(false)
-                }
+                .overlay { stroke(for: shape) }
         } else if #available(macOS 26.0, *) {
-            content
-                .glassEffect(.clear, in: shape)
-                .overlay {
-                    shape.strokeBorder(
-                        winMuxBarSurfaceStroke(palette).opacity(strokeOpacity),
-                        lineWidth: WinMuxBarStyle.strokeWidth
-                    )
-                    .allowsHitTesting(false)
-                }
+            switch glassStyle {
+                case .clear:
+                    content
+                        .glassEffect(.clear, in: shape)
+                        .overlay { stroke(for: shape) }
+                case .regular:
+                    content
+                        .glassEffect(.regular, in: shape)
+                        .overlay { stroke(for: shape) }
+            }
         } else {
             content
                 .background {
@@ -100,14 +102,17 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
                     .clipShape(shape)
                 }
                 .clipShape(shape)
-                .overlay {
-                    shape.strokeBorder(
-                        winMuxBarSurfaceStroke(palette).opacity(strokeOpacity),
-                        lineWidth: WinMuxBarStyle.strokeWidth
-                    )
-                    .allowsHitTesting(false)
-                }
+                .overlay { stroke(for: shape) }
         }
+    }
+
+    private func stroke(for shape: RoundedRectangle) -> some View {
+        shape.strokeBorder(
+            (usesContrastingStroke ? winMuxBarForeground(palette) : winMuxBarSurfaceStroke(palette))
+                .opacity(strokeOpacity),
+            lineWidth: WinMuxBarStyle.strokeWidth
+        )
+        .allowsHitTesting(false)
     }
 }
 
@@ -116,12 +121,16 @@ extension View {
         _ palette: WinMuxOverlayPalette,
         cornerRadius: CGFloat = WinMuxBarStyle.projectBarCornerRadius,
         material: NSVisualEffectView.Material = .underWindowBackground,
+        glassStyle: WinMuxGlassStyle = .clear,
+        usesContrastingStroke: Bool = false,
         strokeOpacity: CGFloat = WinMuxBarStyle.projectBarStrokeOpacity
     ) -> some View {
         modifier(WinMuxGlassBarSurfaceModifier(
             palette: palette,
             cornerRadius: cornerRadius,
             material: material,
+            glassStyle: glassStyle,
+            usesContrastingStroke: usesContrastingStroke,
             strokeOpacity: strokeOpacity
         ))
     }

@@ -9,6 +9,7 @@ extension WindowTabStripViewModel {
             frame: frame.alignedToBackingPixels(),
             groupFrame: groupFrame.alignedToBackingPixels(),
             activeWindowId: activeWindowId,
+            isFocused: isFocused,
             activeWindowCornerRadius: activeWindowCornerRadius,
             tabs: tabs,
             occludingFloatingWindowFrames: occludingFloatingWindowFrames,
