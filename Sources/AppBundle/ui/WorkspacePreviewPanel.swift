@@ -498,10 +498,10 @@ private struct WorkspacePreviewCard: View {
                 tintOpacity: isSelected ? 0.04 : 0.02,
                 scrimOpacity: isSelected ? 0.03 : 0.015,
                 highlightOpacity: isSelected ? 0.18 : 0.12,
-                borderOpacity: isSelected ? 0.78 : 0.28,
-                glowOpacity: isSelected ? 0.16 : 0,
+                borderOpacity: isSelected ? 0.22 : 0.10,
+                glowOpacity: isSelected ? 0.08 : 0,
                 glowRadius: isSelected ? 18 : 0,
-                lineWidth: isSelected ? 1.8 : 0.9,
+                lineWidth: isSelected ? 0.8 : 0.5,
             )
         }
         .shadow(color: palette.workspacePreviewShadow(isSelected ? 0.42 : 0.24, lightOpacity: isSelected ? 0.24 : 0.16), radius: isSelected ? 30 : 18, x: 0, y: 18)
@@ -526,6 +526,7 @@ private struct WorkspacePreviewGlassSurface<S: Shape>: View {
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         ZStack {
             shape.fill(.ultraThinMaterial)
+                .opacity(0.58)
                 .environment(\.colorScheme, palette.colorScheme)
             shape.fill(palette.workspacePreviewBackground(scrimOpacity))
             shape
