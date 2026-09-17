@@ -117,6 +117,7 @@ release:
 	    /usr/libexec/PlistBuddy -c "Set :CFBundleExecutable $$app_name" "$$app_path/Contents/Info.plist"; \
 	    /usr/libexec/PlistBuddy -c "Set :CFBundleName $$app_name" "$$app_path/Contents/Info.plist"; \
 	    /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName $$app_name" "$$app_path/Contents/Info.plist" 2>/dev/null || true; \
+	    /usr/libexec/PlistBuddy -c "Set :LSUIElement false" "$$app_path/Contents/Info.plist"; \
 	    if [ "$$old_executable" != "$$app_name" ]; then rm -f "$$app_path/Contents/MacOS/$$old_executable"; fi; \
 	    cp "resources/default-config.toml" "$$app_path/Contents/Resources/default-config.toml"; \
 	    rm -f "$$app_path/Contents/Resources/folders.png" "$$app_path/Contents/Resources/winmux-overview.png"; \
