@@ -202,7 +202,7 @@ extension View {
                     blendingMode: .behindWindow,
                     opacity: 1
                 )
-                Color.white.opacity(0.10)
+                Color.white.opacity(0.25)
             }
             .clipShape(shape)
         }
