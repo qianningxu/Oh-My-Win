@@ -15,6 +15,7 @@ private let persistedStateDirectoryName = "WinMux"
 @MainActor private var isSidebarStatePersistenceScheduled = false
 @MainActor private var restartStatePersistenceGeneration: UInt64 = 0
 @MainActor private var persistedStateDirectory: URL?
+@MainActor private var persistedMonitorVisibilityForStartup: [FrozenMonitor] = []
 
 private struct PersistedFrozenWorldEnvelope: Codable, Sendable {
     let version: Int
@@ -340,16 +341,42 @@ func finalizePersistedSidebarStateAfterStartupIfNeeded() {
 func loadPersistedFrozenWorldForStartupIfPresent() -> Bool {
     do {
         let url = try persistedFrozenWorldUrl()
-        guard FileManager.default.fileExists(atPath: url.path) else { return false }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            persistedMonitorVisibilityForStartup = []
+            return false
+        }
         let data = try Data(contentsOf: url)
         let envelope = try JSONDecoder().decode(PersistedFrozenWorldEnvelope.self, from: data)
-        guard envelope.version == persistedFrozenWorldVersion else { return false }
+        guard envelope.version == persistedFrozenWorldVersion else {
+            persistedMonitorVisibilityForStartup = []
+            return false
+        }
         pendingPersistedFrozenWorld = envelope.world
+        persistedMonitorVisibilityForStartup = envelope.world.monitors
         didRestorePersistedFrozenWorldDuringCurrentSession = false
         return true
     } catch {
+        persistedMonitorVisibilityForStartup = []
         return false
     }
+}
+
+@MainActor
+func reassertPersistedMonitorVisibilityAfterStartupRefresh() {
+    defer { persistedMonitorVisibilityForStartup = [] }
+    var mainWorkspace: Workspace?
+    for frozenMonitor in persistedMonitorVisibilityForStartup {
+        guard let monitor = monitors.first(where: { $0.rect.topLeftCorner == frozenMonitor.topLeftCorner }),
+              let workspace = Workspace.existing(byName: frozenMonitor.visibleWorkspace)
+        else { continue }
+        _ = monitor.setActiveWorkspace(workspace)
+        if monitor.rect.topLeftCorner == mainMonitor.rect.topLeftCorner {
+            mainWorkspace = workspace
+        }
+    }
+    guard let mainWorkspace else { return }
+    _ = setFocus(to: mainWorkspace.toLiveFocus())
+    focus.windowOrNil?.nativeFocus()
 }
 
 @MainActor

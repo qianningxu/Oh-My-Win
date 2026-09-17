@@ -67,6 +67,7 @@ import Foundation
         // and a slow or failed scan cannot leave persistence disabled.
         finalizePersistedSidebarStateAfterStartupIfNeeded()
         try await runRefreshSessionBlocking(.startup, layoutWorkspaces: false)
+        reassertPersistedMonitorVisibilityAfterStartupRefresh()
         try await runLightSession(.startup, .forceRun) {
             if !didLoadPersistedFrozenWorld {
                 smartLayoutAtStartup()
