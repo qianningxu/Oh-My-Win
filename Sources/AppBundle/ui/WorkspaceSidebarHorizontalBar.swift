@@ -206,7 +206,7 @@ struct WorkspaceSidebarHorizontalBar: View {
         .fixedSize(horizontal: true, vertical: false)
         .frame(height: contentHeight)
         .padding(.horizontal, WinMuxBarStyle.projectTabsBarHorizontalInset)
-        .winMuxCustomGlassBarSurface(palette)
+        .winMuxCustomGlassBarSurface(palette, glassStyle: .workspaceBar)
         .background {
             GeometryReader { geometry in
                 WinMuxDesignTokens.transparent.preference(
@@ -348,7 +348,7 @@ struct WorkspaceSidebarHorizontalBar: View {
 
     private func workspaceTabWidth(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> CGFloat {
         let textWidth = (workspace.displayName as NSString).size(withAttributes: [
-            .font: NSFont.systemFont(ofSize: projectTabsBarFontSize, weight: .semibold)
+            .font: NSFont.systemFont(ofSize: projectTabsBarFontSize, weight: .medium)
         ]).width
         return min(ceil(textWidth) + WinMuxBarStyle.contentInset * 2, WinMuxBarStyle.maximumTabWidth)
     }
@@ -679,7 +679,7 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
                     workspaceName: workspace.name,
                     onCommit: onCommitRename,
                     onCancel: onCancelRename,
-                    font: .systemFont(ofSize: projectTabsBarFontSize, weight: isActive || isHovered ? .semibold : .medium),
+                    font: .systemFont(ofSize: projectTabsBarFontSize, weight: isActive || isHovered ? .medium : .regular),
                 )
                 .padding(.horizontal, WinMuxBarStyle.contentInset)
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
@@ -687,7 +687,7 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
                 Button(action: onSelect) {
                     HStack(spacing: WinMuxBarStyle.iconSpacing) {
                         Text(workspace.displayName)
-                            .font(.system(size: projectTabsBarFontSize, weight: isActive || isHovered ? .semibold : .medium))
+                            .font(.system(size: projectTabsBarFontSize, weight: isActive || isHovered ? .medium : .regular))
                             .foregroundStyle(winMuxBarForeground(palette))
                             .lineLimit(1)
                             .truncationMode(.tail)

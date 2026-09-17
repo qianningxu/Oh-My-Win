@@ -27,6 +27,7 @@ enum WinMuxBarStyle {
     static let workspaceTabBarCornerRadius = cornerRadius + innerSpacing
     static let workspaceBarStrokeOpacity: CGFloat = 0.24
     static let topBarStrokeOpacity: CGFloat = 0
+    static let dividerOpacity: CGFloat = 0.25
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
     static let windowSelectedSegmentOpacity: CGFloat = 0.80
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.50
@@ -47,6 +48,7 @@ struct WinMuxGlassRecipe: Equatable {
 
 enum WinMuxGlassStyle {
     case clear
+    case workspaceBar
     case windowBar
     case regular
 
@@ -55,6 +57,14 @@ enum WinMuxGlassStyle {
             case .clear:
                 WinMuxGlassRecipe(
                     blurOpacity: 1,
+                    whiteTintOpacity: 0.20,
+                    shadowOpacity: 0,
+                    shadowRadius: 0,
+                    shadowY: 0
+                )
+            case .workspaceBar:
+                WinMuxGlassRecipe(
+                    blurOpacity: 0.25,
                     whiteTintOpacity: 0.20,
                     shadowOpacity: 0,
                     shadowRadius: 0,
@@ -86,7 +96,7 @@ struct WinMuxBarDivider: View {
 
     var body: some View {
         Rectangle()
-            .fill(winMuxBarForeground(palette).opacity(0.5))
+            .fill(winMuxBarForeground(palette).opacity(WinMuxBarStyle.dividerOpacity))
             .frame(width: WinMuxBarStyle.strokeWidth, height: height)
             .allowsHitTesting(false)
     }
