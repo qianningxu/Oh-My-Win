@@ -61,6 +61,9 @@ final class WorkspacePreviewPanel: NSPanelHud {
     }
 
     func select(index: Int) {
+        if !isPreviewActive {
+            begin(direction: 0)
+        }
         guard isPreviewActive, items.indices.contains(index) else { return }
         selectedIndex = index
         render()
@@ -150,6 +153,15 @@ func handleWorkspacePreviewHotkey(_ binding: String) -> Bool {
             return true
         case "alt-shift-tab":
             WorkspacePreviewPanel.shared.advance(direction: -1)
+            return true
+        case "alt-1":
+            WorkspacePreviewPanel.shared.select(index: 0)
+            return true
+        case "alt-2":
+            WorkspacePreviewPanel.shared.select(index: 1)
+            return true
+        case "alt-3":
+            WorkspacePreviewPanel.shared.select(index: 2)
             return true
         default:
             return false
@@ -433,21 +445,27 @@ private struct WorkspacePreviewView: View {
                 .onTapGesture { onDismiss() }
 
             GeometryReader { geometry in
+                let contentWidth = CGFloat(items.count) * 300 + CGFloat(max(items.count - 1, 0)) * 14 + 48
+                let panelWidth = min(max(contentWidth, 380), geometry.size.width * 0.92)
+
                 ScrollViewReader { proxy in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 18) {
-                            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                                WorkspacePreviewCard(
-                                    item: item,
-                                    isSelected: index == selectedIndex,
-                                )
-                                .id(index)
-                                .onTapGesture { onSelect(index) }
+                    VStack {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 14) {
+                                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                                    WorkspacePreviewCard(
+                                        item: item,
+                                        isSelected: index == selectedIndex,
+                                    )
+                                    .id(index)
+                                    .onTapGesture { onSelect(index) }
+                                }
                             }
+                            .padding(24)
                         }
-                        .padding(.horizontal, 36)
-                        .padding(.vertical, 28)
-                        .frame(minWidth: geometry.size.width, minHeight: geometry.size.height, alignment: .center)
+                        .frame(width: panelWidth)
+                        .background { WorkspacePreviewSwitcherSurface() }
+                        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
                     }
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .onAppear { proxy.scrollTo(selectedIndex, anchor: .center) }
@@ -470,94 +488,78 @@ private struct WorkspacePreviewCard: View {
     private var palette: WinMuxOverlayPalette { WinMuxOverlayPalette(colorScheme: colorScheme) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
+        VStack(alignment: .leading, spacing: 10) {
+            WorkspacePreviewLayoutCanvas(windows: item.windows, workspaceAspectRatio: item.workspaceAspectRatio)
+                .frame(width: 284, height: 178)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .strokeBorder(
+                            palette.workspacePreviewContrastingFill(
+                                darkOpacity: isSelected ? 0.28 : 0.10,
+                                lightOpacity: isSelected ? 0.20 : 0.08
+                            ),
+                            lineWidth: isSelected ? 1 : 0.5
+                        )
+                }
+
+            HStack(spacing: 7) {
                 Text(item.displayName)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(palette.workspacePreviewForeground(0.94))
+                    .font(.system(size: 20, weight: isSelected ? .semibold : .medium))
+                    .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
                     .lineLimit(1)
-                Spacer()
                 if item.isCurrent {
                     Text("Current")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(palette.workspacePreviewForeground(0.60))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(palette.workspacePreviewForeground(0.56))
                 }
             }
-
-            WorkspacePreviewLayoutCanvas(windows: item.windows, workspaceAspectRatio: item.workspaceAspectRatio)
-                .frame(width: 268, height: 168)
-
+            .padding(.horizontal, 2)
         }
-        .padding(14)
+        .padding(8)
         .frame(width: 300)
         .background {
-            let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-            WorkspacePreviewGlassSurface(
-                shape: shape,
-                tint: palette.workspacePreviewForeground(1),
-                tintOpacity: isSelected ? 0.04 : 0.02,
-                scrimOpacity: isSelected ? 0.03 : 0.015,
-                highlightOpacity: isSelected ? 0.18 : 0.12,
-                borderOpacity: isSelected ? 0.22 : 0.10,
-                glowOpacity: isSelected ? 0.08 : 0,
-                glowRadius: isSelected ? 18 : 0,
-                lineWidth: isSelected ? 0.8 : 0.5,
-            )
+            if isSelected {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(palette.workspacePreviewForeground(0.07))
+            }
         }
-        .shadow(color: palette.workspacePreviewShadow(isSelected ? 0.42 : 0.24, lightOpacity: isSelected ? 0.24 : 0.16), radius: isSelected ? 30 : 18, x: 0, y: 18)
         .animation(.spring(response: 0.22, dampingFraction: 0.85), value: isSelected)
     }
 }
 
-private struct WorkspacePreviewGlassSurface<S: Shape>: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    let shape: S
-    let tint: Color
-    let tintOpacity: Double
-    let scrimOpacity: Double
-    let highlightOpacity: Double
-    let borderOpacity: Double
-    let glowOpacity: Double
-    let glowRadius: CGFloat
-    let lineWidth: CGFloat
-
+private struct WorkspacePreviewSwitcherSurface: View {
     var body: some View {
-        let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
+        let shape = RoundedRectangle(cornerRadius: 32, style: .continuous)
         ZStack {
-            shape.fill(.ultraThinMaterial)
-                .opacity(0.58)
-                .environment(\.colorScheme, palette.colorScheme)
-            shape.fill(palette.workspacePreviewBackground(scrimOpacity))
-            shape
-                .fill(tint.opacity(tintOpacity))
-                .blendMode(palette.isDark ? .overlay : .multiply)
+            WorkspacePreviewNativeMaterial()
+                .opacity(0.72)
             shape
                 .fill(
                     LinearGradient(
-                        colors: [
-                            palette.workspacePreviewForeground(highlightOpacity),
-                            palette.workspacePreviewForeground(highlightOpacity * 0.25),
-                            Color.clear,
-                        ],
+                        colors: [Color.white.opacity(0.10), Color.white.opacity(0.025)],
                         startPoint: .top,
-                        endPoint: .bottom,
+                        endPoint: .bottom
                     )
                 )
-                .blendMode(.screen)
-            shape.stroke(
-                palette.workspacePreviewContrastingFill(
-                    darkOpacity: borderOpacity,
-                    lightOpacity: borderOpacity * 0.9
-                ),
-                lineWidth: lineWidth
-            )
+            shape.strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
         }
         .compositingGroup()
-        .shadow(color: tint.opacity(glowOpacity), radius: glowRadius)
-        .accessibilityHidden(true)
+        .shadow(color: Color.black.opacity(0.20), radius: 30, x: 0, y: 16)
         .allowsHitTesting(false)
     }
+}
+
+private struct WorkspacePreviewNativeMaterial: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .hudWindow
+        view.blendingMode = .behindWindow
+        view.state = .active
+        view.isEmphasized = false
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
 }
 
 private struct WorkspacePreviewLayoutCanvas: View {
@@ -711,10 +713,6 @@ private func workspacePreviewFallbackInitials(for window: WorkspacePreviewWindow
 private extension WinMuxOverlayPalette {
     func workspacePreviewForeground(_ opacity: Double) -> Color {
         (isDark ? Color.white : Color.black).opacity(opacity)
-    }
-
-    func workspacePreviewBackground(_ opacity: Double) -> Color {
-        (isDark ? Color.black : Color.white).opacity(opacity)
     }
 
     func workspacePreviewContrastingFill(
