@@ -520,8 +520,7 @@ private struct WorkspacePreviewSwitcherSurface: View {
         let shape = RoundedRectangle(cornerRadius: 32, style: .continuous)
         ZStack {
             WorkspacePreviewBackdropBlur(strength: 1)
-                .opacity(0.10)
-            shape.fill(Color.white.opacity(0.03))
+            shape.fill(Color.white.opacity(0.10))
             shape.strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
         }
         .compositingGroup()
