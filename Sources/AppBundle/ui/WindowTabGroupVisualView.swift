@@ -18,7 +18,7 @@ struct WindowTabGroupVisualView: View {
                 .winMuxCustomGlassBarSurface(
                     palette,
                     cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
-                    glassStyle: strip.isFocused ? .regular : .clear,
+                    glassStyle: strip.isFocused ? .regular : .untintedClear,
                     strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
                 )
                 .opacity(strip.isFocused ? 1 : WinMuxBarStyle.unfocusedWindowBarOpacity)

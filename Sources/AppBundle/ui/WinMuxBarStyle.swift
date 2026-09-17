@@ -47,6 +47,7 @@ struct WinMuxGlassRecipe: Equatable {
 
 enum WinMuxGlassStyle {
     case clear
+    case untintedClear
     case regular
 
     var recipe: WinMuxGlassRecipe {
@@ -55,6 +56,14 @@ enum WinMuxGlassStyle {
                 WinMuxGlassRecipe(
                     blurOpacity: 1,
                     whiteTintOpacity: 0.20,
+                    shadowOpacity: 0,
+                    shadowRadius: 0,
+                    shadowY: 0
+                )
+            case .untintedClear:
+                WinMuxGlassRecipe(
+                    blurOpacity: 1,
+                    whiteTintOpacity: 0,
                     shadowOpacity: 0,
                     shadowRadius: 0,
                     shadowY: 0
