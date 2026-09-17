@@ -25,7 +25,9 @@ enum WinMuxBarStyle {
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = cornerRadius
     static let workspaceTabBarCornerRadius = cornerRadius + innerSpacing
-    static let workspaceBarStrokeOpacity: CGFloat = 0.50
+    static let workspaceBarStrokeOpacity: CGFloat = 1
+    static let workspaceBarSurfaceOpacity: CGFloat = 0.80
+    static let workspaceBarStrokeColor = Color(nsColor: NSColor(calibratedWhite: 1, alpha: 1))
     static let topBarStrokeOpacity: CGFloat = 0
     static let dividerOpacity: CGFloat = 0.15
     static let workspaceTabUnfocusedTextOpacity: CGFloat = 0.50
@@ -53,6 +55,13 @@ enum WinMuxGlassStyle {
     case workspaceBar
     case windowBar
     case regular
+
+    var surfaceOpacity: CGFloat {
+        switch self {
+            case .workspaceBar: WinMuxBarStyle.workspaceBarSurfaceOpacity
+            default: 1
+        }
+    }
 
     var recipe: WinMuxGlassRecipe {
         switch self {
@@ -149,6 +158,7 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
                         )
                         Color.white.opacity(recipe.whiteTintOpacity)
                     }
+                    .opacity(glassStyle.surfaceOpacity)
                     .clipShape(shape)
                 }
                 .clipShape(shape)
@@ -164,10 +174,17 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
 
     private func stroke(for shape: RoundedRectangle) -> some View {
         shape.strokeBorder(
-            winMuxBarSurfaceStroke(palette).opacity(strokeOpacity),
+            strokeColor.opacity(strokeOpacity),
             lineWidth: WinMuxBarStyle.strokeWidth
         )
         .allowsHitTesting(false)
+    }
+
+    private var strokeColor: Color {
+        switch glassStyle {
+            case .workspaceBar: WinMuxBarStyle.workspaceBarStrokeColor
+            default: winMuxBarSurfaceStroke(palette)
+        }
     }
 }
 
