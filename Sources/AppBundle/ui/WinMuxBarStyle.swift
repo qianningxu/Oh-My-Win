@@ -14,24 +14,24 @@ enum WinMuxBarStyle {
     static let strokeWidth = standardGap * 0.25
     static let fontSize: CGFloat = 14
     static let maximumTabWidth = standardGap * 50
-    static let projectTabsBarOuterInset = WinMuxSpacing.comfortable
-    static let projectTabsBarContentHeight = standardGap * 10
-    static let projectTabsBarHorizontalInset = WinMuxSpacing.section
-    static let projectTabsBarFontSize = fontSize + strokeWidth
+    static let projectTabsBarOuterInset = WinMuxSpacing.regular
+    static let projectTabsBarContentHeight = standardGap * 12
+    static let projectTabsBarHorizontalInset = WinMuxSpacing.panel
+    static let projectTabsBarFontSize = fontSize + WinMuxSpacing.hairline
     static let projectBarCornerRadius = projectTabsBarContentHeight / 2
     static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
-    static let projectBarTintOpacity: CGFloat = 0.08
-    static let projectBarStrokeOpacity: CGFloat = 0.44
+    static let projectBarTintOpacity: CGFloat = 0.04
+    static let projectBarStrokeOpacity: CGFloat = 0.28
     static let workspaceTabContentHeight = standardGap * 10
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = workspaceTabContentHeight / 2
     static let workspaceTabBarCornerRadius = workspaceBarHeight / 2
-    static let workspaceBarTintOpacity: CGFloat = 0.06
-    static let workspaceBarStrokeOpacity: CGFloat = 0.4
-    static let topBarTintOpacity: CGFloat = 0.06
-    static let topBarStrokeOpacity: CGFloat = 0.34
-    static let selectedSegmentOpacity: CGFloat = 0.56
-    static let hoveredSegmentOpacity: CGFloat = 0.24
+    static let workspaceBarTintOpacity: CGFloat = 0.03
+    static let workspaceBarStrokeOpacity: CGFloat = 0.24
+    static let topBarTintOpacity: CGFloat = 0.03
+    static let topBarStrokeOpacity: CGFloat = 0.2
+    static let selectedSegmentOpacity: CGFloat = 0.18
+    static let hoveredSegmentOpacity: CGFloat = 0.08
 }
 
 struct WinMuxBarDivider: View {
@@ -56,7 +56,6 @@ func winMuxBarSurfaceStroke(_ palette: WinMuxOverlayPalette) -> Color {
 
 private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @Environment(\.colorScheme) private var colorScheme
 
     let palette: WinMuxOverlayPalette
     let cornerRadius: CGFloat
@@ -64,62 +63,51 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
     let tintOpacity: CGFloat
     let strokeOpacity: CGFloat
 
+    @ViewBuilder
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        content
-            .background {
-                if reduceTransparency {
-                    winMuxBarSurfaceFill(palette)
-                } else {
-                    ZStack {
-                        VisualEffectBlur(material: material, blendingMode: .behindWindow)
-                        winMuxBarSurfaceFill(palette).opacity(tintOpacity)
-                        shape.fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(colorScheme == .dark ? 0.13 : 0.24),
-                                    Color.white.opacity(colorScheme == .dark ? 0.035 : 0.07),
-                                    Color.black.opacity(colorScheme == .dark ? 0.08 : 0.035),
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                    }
-                }
-            }
-            .clipShape(shape)
-            .overlay {
-                shape.strokeBorder(
-                    winMuxBarSurfaceStroke(palette).opacity(
-                        reduceTransparency ? 1 : strokeOpacity
-                    ),
-                    lineWidth: WinMuxBarStyle.strokeWidth
-                )
-                .allowsHitTesting(false)
-            }
-            .overlay {
-                if !reduceTransparency {
+        if reduceTransparency {
+            content
+                .background(winMuxBarSurfaceFill(palette))
+                .clipShape(shape)
+                .overlay {
                     shape.strokeBorder(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(colorScheme == .dark ? 0.38 : 0.72),
-                                Color.white.opacity(colorScheme == .dark ? 0.12 : 0.26),
-                                Color.black.opacity(colorScheme == .dark ? 0.24 : 0.12),
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
+                        winMuxBarSurfaceStroke(palette),
                         lineWidth: WinMuxBarStyle.strokeWidth
                     )
                     .allowsHitTesting(false)
                 }
-            }
-            .shadow(
-                color: Color.black.opacity(reduceTransparency ? 0 : colorScheme == .dark ? 0.32 : 0.18),
-                radius: standardGap * 3,
-                y: standardGap
-            )
+        } else if #available(macOS 26.0, *) {
+            content
+                .glassEffect(
+                    .clear.tint(winMuxBarSurfaceFill(palette).opacity(tintOpacity)),
+                    in: shape
+                )
+                .overlay {
+                    shape.strokeBorder(
+                        winMuxBarSurfaceStroke(palette).opacity(strokeOpacity),
+                        lineWidth: WinMuxBarStyle.strokeWidth
+                    )
+                    .allowsHitTesting(false)
+                }
+        } else {
+            content
+                .background {
+                    ZStack {
+                        VisualEffectBlur(material: material, blendingMode: .behindWindow)
+                        winMuxBarSurfaceFill(palette).opacity(tintOpacity)
+                    }
+                    .clipShape(shape)
+                }
+                .clipShape(shape)
+                .overlay {
+                    shape.strokeBorder(
+                        winMuxBarSurfaceStroke(palette).opacity(strokeOpacity),
+                        lineWidth: WinMuxBarStyle.strokeWidth
+                    )
+                    .allowsHitTesting(false)
+                }
+        }
     }
 }
 

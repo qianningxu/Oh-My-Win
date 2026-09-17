@@ -1,5 +1,7 @@
 import AppKit
 
+let workspaceSidebarWorkspaceActivityRevealDuration: TimeInterval = 1.25
+
 extension WorkspaceSidebarPanel {
     static func updateHoverStateForVisiblePanels() {
         for panel in allPanels {
@@ -62,6 +64,15 @@ extension WorkspaceSidebarPanel {
     func revealProjectBarFromCommand() {
         commandExpansionLocksCollapse = true
         showProjectBar()
+    }
+
+    func revealProjectBarForWorkspaceActivity() {
+        guard viewModel.isWorkspaceSidebarAutoHideEnabled else { return }
+        workspaceActivityRevealUntil = Date().addingTimeInterval(
+            workspaceSidebarWorkspaceActivityRevealDuration
+        )
+        showProjectBar()
+        scheduleHoverStateUpdate(at: workspaceActivityRevealUntil)
     }
 
     func releaseCommandProjectBarReveal() {

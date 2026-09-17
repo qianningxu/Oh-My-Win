@@ -149,10 +149,15 @@ extension Window {
 }
 extension Workspace {
     @MainActor func focusWorkspace() -> Bool {
-        if self != focus.workspace {
+        let switchesWorkspace = self != focus.workspace
+        if switchesWorkspace {
             WorkspaceSidebarPanel.suppressEdgeTrapForWorkspaceActivation()
         }
-        return setFocus(to: toLiveFocus())
+        let didFocus = setFocus(to: toLiveFocus())
+        if didFocus, switchesWorkspace {
+            revealWorkspaceSidebarForWorkspaceActivity(on: workspaceMonitor)
+        }
+        return didFocus
     }
 
     func toLiveFocus() -> LiveFocus {

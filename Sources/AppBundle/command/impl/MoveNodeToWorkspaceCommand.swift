@@ -43,7 +43,17 @@ struct MoveNodeToWorkspaceCommand: Command {
                 }
                 targetWorkspace = ws
         }
-        return moveWindowToWorkspace(window, targetWorkspace, io, focusFollowsWindow: args.focusFollowsWindow, failIfNoop: args.failIfNoop)
+        let didMove = moveWindowToWorkspace(
+            window,
+            targetWorkspace,
+            io,
+            focusFollowsWindow: args.focusFollowsWindow,
+            failIfNoop: args.failIfNoop
+        )
+        if didMove {
+            revealWorkspaceSidebarForWorkspaceActivity(on: targetWorkspace.workspaceMonitor)
+        }
+        return didMove
     }
 }
 

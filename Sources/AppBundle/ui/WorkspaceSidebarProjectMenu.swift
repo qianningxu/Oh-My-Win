@@ -30,7 +30,11 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
 
         init() {
             super.init(frame: .zero)
-            image = NSImage(systemSymbolName: "square.stack.3d.up", accessibilityDescription: nil)
+            image = NSImage(systemSymbolName: "square.stack.3d.up", accessibilityDescription: nil)?
+                .withSymbolConfiguration(.init(
+                    pointSize: WinMuxBarStyle.projectTabsBarFontSize + WinMuxSpacing.hairline,
+                    weight: .regular
+                ))
             imagePosition = .imageOnly
             isBordered = false
             focusRingType = .none

@@ -24,6 +24,18 @@ func closeWorkspaceSidebarFromCommand(_ panel: WorkspaceSidebarPanel) {
 }
 
 @MainActor
+func revealWorkspaceSidebarForWorkspaceActivity(on monitor: Monitor) {
+    guard TrayMenuModel.shared.isEnabled,
+          config.workspaceSidebar.enabled,
+          workspaceSidebarAutoHidePreference()
+    else { return }
+    WorkspaceSidebarPanel.refreshAll()
+    WorkspaceSidebarPanel
+        .panel(for: workspaceSidebarMonitorScopeId(for: monitor))?
+        .revealProjectBarForWorkspaceActivity()
+}
+
+@MainActor
 private func installWorkspaceSidebarCommandMouseUnlockMonitor(_ panel: WorkspaceSidebarPanel) {
     removeWorkspaceSidebarCommandMouseUnlockMonitor(panel)
     panel.commandMouseUnlockPoint = mouseLocation

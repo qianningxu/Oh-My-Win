@@ -280,14 +280,15 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
     }
 
     func testGlassBarsUseExpandedDimensions() {
-        XCTAssertEqual(WinMuxBarStyle.projectTabsBarContentHeight, 40)
-        XCTAssertEqual(WinMuxBarStyle.projectBarHeight, 46)
+        XCTAssertEqual(WinMuxBarStyle.projectTabsBarContentHeight, 48)
+        XCTAssertEqual(WinMuxBarStyle.projectBarHeight, 56)
         XCTAssertEqual(WinMuxBarStyle.workspaceTabContentHeight, 40)
         XCTAssertEqual(WinMuxBarStyle.workspaceBarHeight, 42)
         XCTAssertGreaterThan(menuBarWidgetFontSize, NSFont.menuBarFont(ofSize: 0).pointSize)
-        XCTAssertLessThanOrEqual(WinMuxBarStyle.projectBarTintOpacity, 0.1)
-        XCTAssertLessThanOrEqual(WinMuxBarStyle.workspaceBarTintOpacity, 0.1)
-        XCTAssertLessThanOrEqual(WinMuxBarStyle.topBarTintOpacity, 0.1)
+        XCTAssertLessThanOrEqual(WinMuxBarStyle.projectBarTintOpacity, 0.05)
+        XCTAssertLessThanOrEqual(WinMuxBarStyle.workspaceBarTintOpacity, 0.05)
+        XCTAssertLessThanOrEqual(WinMuxBarStyle.topBarTintOpacity, 0.05)
+        XCTAssertGreaterThan(workspaceSidebarWorkspaceActivityRevealDuration, 1)
     }
 
     func testMenuBarUsesCurrentAppearanceWithoutReversingTheme() {

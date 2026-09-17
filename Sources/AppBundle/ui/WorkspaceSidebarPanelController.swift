@@ -35,6 +35,7 @@ final class WorkspaceSidebarPanel: NSPanelHud {
     var projectMenuPresentationExtraHeight: CGFloat = 0
     var projectBarContentSize: CGSize = .zero
     var autoHideGeneration: UInt64 = 0
+    var workspaceActivityRevealUntil: Date = .distantPast
     var menuTrackingObservers: [NSObjectProtocol] = []
     var lastEdgeTrapSample: MousePointerSample?
     var edgeTrapStartedAt: TimeInterval?
@@ -229,6 +230,7 @@ final class WorkspaceSidebarPanel: NSPanelHud {
         projectMenuPresentationExtraHeight = 0
         projectBarContentSize = .zero
         autoHideGeneration = 0
+        workspaceActivityRevealUntil = .distantPast
         resetHiddenSidebarState()
         ignoresMouseEvents = false
     }
