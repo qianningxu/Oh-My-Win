@@ -911,9 +911,8 @@ func pruneEmptyWorkspaceProjects() {
         _ = createWorkspaceProject(displayName: "Default")
     }
     ensureVisibleActiveProjectWorkspaces()
-    if winMuxWorkspaceState.workspaceById[focus.workspace.id] == nil,
-       let replacement = mainMonitor.activeWorkspace ?? Workspace.all.first
-    {
+    if winMuxWorkspaceState.workspaceById[focus.workspace.id] == nil {
+        let replacement = mainMonitor.activeWorkspace
         _ = setFocus(to: replacement.toLiveFocus())
     }
 }

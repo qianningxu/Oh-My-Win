@@ -686,13 +686,6 @@ private extension WinMuxOverlayPalette {
         (isDark ? Color.white : Color.black).opacity(opacity)
     }
 
-    func workspacePreviewContrastingFill(
-        darkOpacity: Double,
-        lightOpacity: Double? = nil
-    ) -> Color {
-        workspacePreviewForeground(isDark ? darkOpacity : (lightOpacity ?? darkOpacity))
-    }
-
     func workspacePreviewShadow(_ darkOpacity: Double, lightOpacity: Double? = nil) -> Color {
         Color.black.opacity(isDark ? darkOpacity : (lightOpacity ?? darkOpacity * 0.65))
     }
