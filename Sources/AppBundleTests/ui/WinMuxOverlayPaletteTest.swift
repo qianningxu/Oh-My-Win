@@ -285,11 +285,11 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         XCTAssertEqual(WinMuxBarStyle.workspaceTabContentHeight, 32)
         XCTAssertEqual(WinMuxBarStyle.workspaceBarHeight, 34)
         XCTAssertGreaterThan(menuBarWidgetFontSize, NSFont.menuBarFont(ofSize: 0).pointSize)
-        XCTAssertEqual(WinMuxBarStyle.projectBarTintOpacity, 0.30)
-        XCTAssertEqual(WinMuxBarStyle.workspaceBarTintOpacity, 0.25)
-        XCTAssertEqual(WinMuxBarStyle.topBarTintOpacity, 0.05)
-        XCTAssertEqual(WinMuxBarStyle.workspaceSelectedSegmentOpacity, 0.75)
-        XCTAssertEqual(WinMuxBarStyle.windowTabHoveredSegmentOpacity, 0.20)
+        XCTAssertEqual(WinMuxBarStyle.projectBarTintOpacity, 0.25)
+        XCTAssertEqual(WinMuxBarStyle.workspaceBarTintOpacity, 0.15)
+        XCTAssertEqual(WinMuxBarStyle.topBarTintOpacity, 0.20)
+        XCTAssertEqual(WinMuxBarStyle.workspaceSelectedSegmentOpacity, 0.70)
+        XCTAssertEqual(WinMuxBarStyle.windowTabHoveredSegmentOpacity, 0.25)
         XCTAssertGreaterThan(workspaceSidebarWorkspaceActivityRevealDuration, 1)
     }
 
