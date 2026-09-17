@@ -531,7 +531,7 @@ private struct WorkspacePreviewSwitcherSurface: View {
 private struct WorkspacePreviewNativeMaterial: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
-        view.material = .hudWindow
+        view.material = .underWindowBackground
         view.blendingMode = .behindWindow
         view.state = .active
         view.isEmphasized = false
