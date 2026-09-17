@@ -489,6 +489,13 @@ private struct WorkspacePreviewCard: View {
         VStack(alignment: .leading, spacing: 10) {
             WorkspacePreviewLayoutCanvas(windows: item.windows, workspaceAspectRatio: item.workspaceAspectRatio)
                 .frame(width: 284, height: 178)
+                .padding(8)
+                .background {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color.black.opacity(palette.isDark ? 0.30 : 0.16))
+                    }
+                }
 
             HStack(spacing: 7) {
                 Text(item.displayName)
@@ -499,14 +506,7 @@ private struct WorkspacePreviewCard: View {
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 2)
         }
-        .padding(8)
         .frame(width: 300)
-        .background {
-            if isSelected {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(palette.workspacePreviewForeground(0.07))
-            }
-        }
         .animation(.spring(response: 0.22, dampingFraction: 0.85), value: isSelected)
     }
 }
