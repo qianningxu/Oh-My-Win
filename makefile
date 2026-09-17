@@ -157,7 +157,7 @@ install:
 	mkdir -p "$$install_dir"; \
 	ALLOW_TCC_REAUTH=0 /bin/bash ./script/assert-accessibility-grant-will-survive.sh "$$app_path/Contents/MacOS/$$app_name" "com.zimengxiong.winmux" "$$install_path"; \
 	legacy_pid="$$(pgrep -f "^$$legacy_install_path/Contents/MacOS/WinMux$$" | head -n 1 || true)"; \
-	if [ -n "$$legacy_pid" ]; then osascript -e 'tell application "WinMux" to quit' >/dev/null 2>&1 || true; fi; \
+	if [ -n "$$legacy_pid" ]; then osascript -e "tell application \"WinMux\" to quit" >/dev/null 2>&1 || true; fi; \
 	old_pid="$$(pgrep -f "^$$install_path/Contents/MacOS/$$app_name$$" | head -n 1 || true)"; \
 	osascript -e "tell application \"$$app_name\" to quit" >/dev/null 2>&1 || true; \
 	attempts=0; \
