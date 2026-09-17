@@ -434,7 +434,7 @@ private func reconcileRefreshedWindows(
     // A targeted creation refresh has no inventory data for other apps.
     // Only a complete scan can reconcile persisted windows globally.
     if isFullInventory {
-        finalizePersistedFrozenWorldAfterRefresh(aliveWindowIds: aliveWindowIds)
+        await finalizePersistedFrozenWorldAfterRefresh(aliveWindowIds: aliveWindowIds)
     }
 
     // Garbage collect workspaces after apps, because workspaces contain apps.

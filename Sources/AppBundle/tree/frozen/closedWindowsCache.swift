@@ -89,17 +89,28 @@ func restoreFrozenWorldIfNeeded(_ frozenWorld: FrozenWorld, newlyDetectedWindow:
     if !frozenWorld.windowIds.contains(newlyDetectedWindow.windowId) {
         return false
     }
-    if let frozenWindow = frozenWorld.globalFloatingWindows?.first(where: { $0.id == newlyDetectedWindow.windowId }) {
-        applyFrozenWindowState(newlyDetectedWindow, frozenWindow)
-        newlyDetectedWindow.bindAsFloatingWindow(to: focus.workspace)
-        return true
-    }
-    guard frozenWorld.workspaces.contains(where: { collectFrozenWindows($0)[newlyDetectedWindow.windowId] != nil }) else {
-        return false
-    }
+    try await restoreCompleteFrozenWorld(frozenWorld)
+    return true
+}
+
+@MainActor
+func restoreCompleteFrozenWorldIfAllWindowsAreKnown(_ frozenWorld: FrozenWorld) async throws -> Bool {
+    guard frozenWorld.windowIds.allSatisfy({ Window.get(byId: $0) != nil }) else { return false }
+    try await restoreCompleteFrozenWorld(frozenWorld)
+    return true
+}
+
+@MainActor
+private func restoreCompleteFrozenWorld(_ frozenWorld: FrozenWorld) async throws {
     let monitors = monitors
     let topLeftCornerToMonitor = monitors.grouped { $0.rect.topLeftCorner }
     let restoredWorkspaceNames = Set(frozenWorld.workspaces.map(\.name))
+
+    for frozenWindow in frozenWorld.globalFloatingWindows ?? [] {
+        guard let window = Window.get(byId: frozenWindow.id) else { continue }
+        applyFrozenWindowState(window, frozenWindow)
+        window.bindAsFloatingWindow(to: focus.workspace)
+    }
 
     for frozenWorkspace in frozenWorld.workspaces {
         let workspace = Workspace.get(byName: frozenWorkspace.name)
@@ -159,7 +170,6 @@ func restoreFrozenWorldIfNeeded(_ frozenWorld: FrozenWorld, newlyDetectedWindow:
     }
     migrateWorkspaceTabGroupsToWorkspaceTabs()
     Workspace.reconcileWorkspaceState()
-    return true
 }
 
 @discardableResult

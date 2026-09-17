@@ -409,6 +409,27 @@ extension TreeNodeTest {
         XCTAssertFalse(floating.noOuterGapsInFullscreen)
     }
 
+    func testCompleteFrozenWorldRestoreReappliesLayoutAfterWindowsWereAlreadyRegistered() async throws {
+        let first = Workspace.get(byName: "first")
+        let firstLeading = TestWindow.new(id: 71, parent: first.rootTilingContainer, adaptiveWeight: 2)
+        let firstTrailing = TestWindow.new(id: 72, parent: first.rootTilingContainer, adaptiveWeight: 1)
+        let second = Workspace.get(byName: "second")
+        let secondLeading = TestWindow.new(id: 73, parent: second.rootTilingContainer, adaptiveWeight: 1)
+        let secondTrailing = TestWindow.new(id: 74, parent: second.rootTilingContainer, adaptiveWeight: 3)
+        let frozenWorld = snapshotCurrentFrozenWorld()
+
+        secondLeading.bind(to: first.rootTilingContainer, adaptiveWeight: 1, index: INDEX_BIND_LAST)
+        secondTrailing.bind(to: first.rootTilingContainer, adaptiveWeight: 1, index: INDEX_BIND_LAST)
+
+        XCTAssertTrue(try await restoreCompleteFrozenWorldIfAllWindowsAreKnown(frozenWorld))
+        XCTAssertEqual(first.rootTilingContainer.children.compactMap { ($0 as? Window)?.windowId }, [71, 72])
+        XCTAssertEqual(second.rootTilingContainer.children.compactMap { ($0 as? Window)?.windowId }, [73, 74])
+        XCTAssertEqual(firstLeading.getWeight(.h), 2)
+        XCTAssertEqual(firstTrailing.getWeight(.h), 1)
+        XCTAssertEqual(secondLeading.getWeight(.h), 1)
+        XCTAssertEqual(secondTrailing.getWeight(.h), 3)
+    }
+
     func testRestoreFrozenWorldMigratesLegacyTopTabGroupIntoSidebarTabs() async throws {
         let workspace = Workspace.get(byName: "restore-tabs")
         workspace.markAsAutomaticallyNamed()

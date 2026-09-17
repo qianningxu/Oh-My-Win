@@ -282,7 +282,7 @@ private struct WinMuxMenuBarMark: View {
         GeometryReader { geometry in
             let side = min(geometry.size.width, geometry.size.height)
             Text("oh!")
-                .font(.system(size: side * 0.50, weight: .bold, design: .rounded))
+                .font(.system(size: side * 0.72, weight: .bold, design: .rounded))
                 .foregroundStyle(color)
             .frame(width: geometry.size.width, height: geometry.size.height)
         }

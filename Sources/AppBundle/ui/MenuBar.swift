@@ -87,12 +87,6 @@ private struct WorkspaceProjectMenuBarContent: View {
     @ViewBuilder
     private func workspaceMenu(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> some View {
         Menu {
-            Button("Switch") {
-                handleWorkspaceSidebarAction(.selectWorkspace(workspace.name), viewModel: viewModel)
-            }
-
-            Divider()
-
             Text("Rename")
             TextField("Workspace name", text: workspaceNameBinding(for: workspace))
                 .textFieldStyle(.plain)

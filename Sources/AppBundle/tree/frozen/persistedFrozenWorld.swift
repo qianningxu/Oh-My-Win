@@ -363,10 +363,22 @@ func restorePersistedFrozenWorldIfNeeded(newlyDetectedWindow: Window) async thro
 }
 
 @MainActor
-func finalizePersistedFrozenWorldAfterRefresh(aliveWindowIds: Set<UInt32>) {
+func finalizePersistedFrozenWorldAfterRefresh(aliveWindowIds: Set<UInt32>) async {
     defer { finalizePersistedSidebarStateAfterStartupIfNeeded() }
     guard let world = pendingPersistedFrozenWorld else { return }
     let knownWindowIds = Set(MacWindow.allWindowsMap.keys)
+    if world.windowIds.isSubset(of: knownWindowIds) {
+        // Some windows can be registered before the restart snapshot is loaded,
+        // so their per-window registration path never sees the pending world.
+        // Reapply the complete tree after the full AX inventory is available;
+        // otherwise every window falls back into the currently visible tab.
+        guard (try? await restoreCompleteFrozenWorldIfAllWindowsAreKnown(world)) == true else { return }
+        persistSidebarStateForRestartIfPossible()
+        pendingPersistedFrozenWorld = nil
+        didRestorePersistedFrozenWorldDuringCurrentSession = false
+        try? FileManager.default.removeItem(at: persistedFrozenWorldUrl())
+        return
+    }
     // Window IDs can legitimately change when WinMux itself is restarted even
     // though the user's browser windows and sidebar workspaces survive. Once
     // the startup scan has found at least the saved number of windows, restore
@@ -391,9 +403,8 @@ func finalizePersistedFrozenWorldAfterRefresh(aliveWindowIds: Set<UInt32>) {
         try? FileManager.default.removeItem(at: persistedFrozenWorldUrl())
         return
     }
-    if world.windowIds.isSubset(of: knownWindowIds) ||
-        (didRestorePersistedFrozenWorldDuringCurrentSession &&
-            !world.windowIds.isSubset(of: aliveWindowIds))
+    if didRestorePersistedFrozenWorldDuringCurrentSession &&
+        !world.windowIds.isSubset(of: aliveWindowIds)
     {
         pendingPersistedFrozenWorld = nil
         didRestorePersistedFrozenWorldDuringCurrentSession = false
