@@ -7,7 +7,6 @@ private struct WorkspacePreviewItem: Identifiable {
     let id: String
     let workspace: Workspace
     let displayName: String
-    let isCurrent: Bool
     let workspaceAspectRatio: CGFloat
     let windows: [WorkspacePreviewWindowItem]
 }
@@ -102,7 +101,6 @@ final class WorkspacePreviewPanel: NSPanelHud {
                 id: workspace.name,
                 workspace: workspace,
                 displayName: workspaceDisplayName(workspace.name),
-                isCurrent: workspace == current,
                 workspaceAspectRatio: workspacePreviewAspectRatio(for: workspaceRect),
                 windows: workspacePreviewWindowItems(for: workspace, workspaceRect: workspaceRect),
             )
@@ -504,14 +502,9 @@ private struct WorkspacePreviewCard: View {
 
             HStack(spacing: 7) {
                 Text(item.displayName)
-                    .font(.system(size: 20, weight: isSelected ? .semibold : .medium))
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
                     .lineLimit(1)
-                if item.isCurrent {
-                    Text("Current")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(palette.workspacePreviewForeground(0.56))
-                }
             }
             .padding(.horizontal, 2)
         }
