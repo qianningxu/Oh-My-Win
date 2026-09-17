@@ -1,4 +1,5 @@
 import AppKit
+import CoreImage
 import SwiftUI
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
@@ -518,8 +519,7 @@ private struct WorkspacePreviewSwitcherSurface: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 32, style: .continuous)
         ZStack {
-            WorkspacePreviewNativeMaterial()
-                .opacity(0.95)
+            WorkspacePreviewBackdropBlur(strength: 0.99)
             shape.strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
         }
         .compositingGroup()
@@ -528,17 +528,26 @@ private struct WorkspacePreviewSwitcherSurface: View {
     }
 }
 
-private struct WorkspacePreviewNativeMaterial: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = .underWindowBackground
-        view.blendingMode = .behindWindow
-        view.state = .active
-        view.isEmphasized = false
+private struct WorkspacePreviewBackdropBlur: NSViewRepresentable {
+    let strength: CGFloat
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.clear.cgColor
+        view.layer?.masksToBounds = true
+        updateNSView(view, context: context)
         return view
     }
 
-    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
+    func updateNSView(_ view: NSView, context: Context) {
+        guard let blur = CIFilter(name: "CIGaussianBlur") else {
+            view.layer?.backgroundFilters = nil
+            return
+        }
+        blur.setValue(40 * min(max(strength, 0), 1), forKey: kCIInputRadiusKey)
+        view.layer?.backgroundFilters = [blur]
+    }
 }
 
 private struct WorkspacePreviewLayoutCanvas: View {

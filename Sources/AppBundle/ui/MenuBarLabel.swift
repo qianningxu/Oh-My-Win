@@ -80,7 +80,13 @@ struct MenuBarLabel: View {
     }
 
     var body: some View {
-        if #available(macOS 14, *) { // https://github.com/nikitabobko/WinMux/issues/1122
+        if menuBarLabelShouldUseAppIndicator(trayText: viewModel.trayText, trayItems: viewModel.trayItems) {
+            Text("oh!")
+                .font(.system(size: 17, weight: .heavy, design: .rounded))
+                .foregroundStyle(finalColor)
+                .fixedSize()
+                .accessibilityLabel("Oh-My-Win")
+        } else if #available(macOS 14, *) { // https://github.com/nikitabobko/WinMux/issues/1122
             if let image = renderedMenuBarImage() {
                 Image(nsImage: image)
                     .accessibilityLabel(Text(viewModel.trayText.isEmpty ? "WinMux" : viewModel.trayText))
