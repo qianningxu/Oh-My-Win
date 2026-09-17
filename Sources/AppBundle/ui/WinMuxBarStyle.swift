@@ -25,7 +25,7 @@ enum WinMuxBarStyle {
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = cornerRadius
     static let workspaceTabBarCornerRadius = cornerRadius + innerSpacing
-    static let workspaceBarStrokeOpacity: CGFloat = 0.40
+    static let workspaceBarStrokeOpacity: CGFloat = 1
     static let topBarStrokeOpacity: CGFloat = 0
     static let dividerOpacity: CGFloat = 0.15
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
@@ -65,7 +65,7 @@ enum WinMuxGlassStyle {
             case .workspaceBar:
                 WinMuxGlassRecipe(
                     blurOpacity: 0.40,
-                    whiteTintOpacity: 0.40,
+                    whiteTintOpacity: 0.75,
                     shadowOpacity: 0.10,
                     shadowRadius: WinMuxSpacing.compact,
                     shadowY: WinMuxSpacing.hairline
