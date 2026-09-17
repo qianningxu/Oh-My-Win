@@ -6,9 +6,9 @@ The approved prototype lives in `../temp/winmux`. The native implementation uses
 | --- | --- | --- |
 | Widget bar | Status widgets in the native menu area | Native clear glass following the current light/dark appearance, with a barely visible project tint; safe around the camera notch |
 | Project frame | Former full-screen surface beneath the Widget bar | Removed; the desktop remains visible through window gaps |
-| Project tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized native clear-glass surface with a minimal color-3 tint and color-5 stroke; text-only workspace tabs with a text-width underline for selection |
+| Project tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized native clear-glass surface visibly tinted with the active project's color-3 background and a color-5 stroke; text-only workspace tabs with a text-width underline for selection |
 | Workspace frame | Window layout area | No enclosing fill; each window and window tab bar owns its surface |
-| Workspace tab bar / window bar | Compact native clear-glass track with a lightly tinted active tab and equal-width tabs with centered content |
+| Workspace tab bar / window bar | Compact native clear-glass track with a distinctly less-transparent active tab and equal-width tabs with centered content |
 | Stacked window | Windows sharing one workspace tab bar | Existing grouping behavior |
 | Workspace window | Native app window and title bar | Native controls, borders, and corner geometry retained |
 

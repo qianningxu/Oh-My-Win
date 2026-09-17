@@ -20,7 +20,7 @@ enum WinMuxBarStyle {
     static let projectTabsBarFontSize = fontSize + WinMuxSpacing.hairline
     static let projectBarCornerRadius = projectTabsBarContentHeight / 2
     static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
-    static let projectBarTintOpacity: CGFloat = 0.04
+    static let projectBarTintOpacity: CGFloat = 0.22
     static let projectBarStrokeOpacity: CGFloat = 0.28
     static let workspaceTabContentHeight = standardGap * 8
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
@@ -30,6 +30,7 @@ enum WinMuxBarStyle {
     static let workspaceBarStrokeOpacity: CGFloat = 0.24
     static let topBarTintOpacity: CGFloat = 0.03
     static let topBarStrokeOpacity: CGFloat = 0.2
+    static let workspaceSelectedSegmentOpacity: CGFloat = 0.68
     static let selectedSegmentOpacity: CGFloat = 0.18
     static let hoveredSegmentOpacity: CGFloat = 0.08
 }
@@ -152,11 +153,16 @@ extension View {
             }
     }
 
-    func winMuxBarSegment(_ palette: WinMuxOverlayPalette, isSelected: Bool, isHovered: Bool) -> some View {
+    func winMuxBarSegment(
+        _ palette: WinMuxOverlayPalette,
+        isSelected: Bool,
+        isHovered: Bool,
+        selectedOpacity: CGFloat = WinMuxBarStyle.selectedSegmentOpacity
+    ) -> some View {
         background {
             if isSelected {
                 Rectangle().fill(
-                    palette.geistBackground(.primary).opacity(WinMuxBarStyle.selectedSegmentOpacity)
+                    palette.geistBackground(.primary).opacity(selectedOpacity)
                 )
             } else if isHovered {
                 Rectangle().fill(
