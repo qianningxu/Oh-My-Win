@@ -206,7 +206,11 @@ struct WorkspaceSidebarHorizontalBar: View {
         .fixedSize(horizontal: true, vertical: false)
         .frame(height: contentHeight)
         .padding(.horizontal, WinMuxBarStyle.projectTabsBarHorizontalInset)
-        .winMuxCustomGlassBarSurface(palette, glassStyle: .workspaceBar)
+        .winMuxCustomGlassBarSurface(
+            palette,
+            glassStyle: .workspaceBar,
+            strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
+        )
         .background {
             GeometryReader { geometry in
                 WinMuxDesignTokens.transparent.preference(
