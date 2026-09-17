@@ -4,7 +4,7 @@
 
 Based on upstream WinMux `e0ad328e109cb6d2f86b1bdbc3aea9bf7bc5935e`, specifically `mouse/resize/resizeWithMouse.swift` and `mouse/driver/WindowMouseInteractionOpacity.swift`: park neighboring native windows off screen while presenting their proposed layout, then restore native windows after release. Opacity alone does not reliably hide foreign-window edges.
 
-The user requested shading on **both** sides with app icons and without preview bars. Both previews are committed in the same compositor transaction. The opaque backing uses the existing workspace canvas color, covers the divider and outer margins, and stops below the project tabs. Final native writes finish beneath the preview before reveal; parked windows are not restored to obsolete pre-drag frames.
+The user requested shading on **both** sides with app icons and without preview bars. Both previews are committed in the same compositor transaction. The opaque backing uses the existing workspace canvas color, covers the divider and outer margins, and stops below the workspace tabs. Final native writes finish beneath the preview before reveal; parked windows are not restored to obsolete pre-drag frames.
 
 The existing minimum-layout calculation still includes inactive tabs. The initial pointer offset is preserved. Resize sessions have unique identities; stale calibration callbacks are rejected, queued AX writes are canceled on stop, and the event constraint expires and clears on mouse-up or a disabled event tap.
 

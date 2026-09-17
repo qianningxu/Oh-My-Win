@@ -33,7 +33,8 @@ struct WindowTabItemView: View {
             palette,
             isSelected: tab.isActive || isDragSource,
             isHovered: isHovered,
-            selectedOpacity: WinMuxBarStyle.workspaceSelectedSegmentOpacity
+            selectedOpacity: WinMuxBarStyle.workspaceSelectedSegmentOpacity,
+            hoveredOpacity: WinMuxBarStyle.windowTabHoveredSegmentOpacity
         )
         .clipShape(RoundedRectangle(cornerRadius: WinMuxBarStyle.workspaceTabCornerRadius, style: .continuous))
         .opacity(isDragSource ? 0.55 : 1.0)
@@ -41,8 +42,7 @@ struct WindowTabItemView: View {
     }
 
     private var tabForegroundStyle: Color {
-        if tab.isActive || isHovered { return palette.content(.primary) }
-        return palette.content(.secondary)
+        winMuxBarForeground(palette)
     }
 
     private var iconSize: CGFloat {
@@ -54,6 +54,7 @@ struct WindowTabRenameTextField: NSViewRepresentable {
     @Binding var text: String
     let onCommit: @MainActor @Sendable () -> Void
     let onCancel: @MainActor @Sendable () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField(string: text)
@@ -61,7 +62,7 @@ struct WindowTabRenameTextField: NSViewRepresentable {
         field.isBezeled = false
         field.drawsBackground = false
         field.focusRingType = .none
-        field.textColor = WinMuxOverlayPalette.current.contentNSColor(.primary)
+        field.textColor = winMuxBarForegroundNSColor(WinMuxOverlayPalette(colorScheme: colorScheme))
         field.font = .systemFont(ofSize: WinMuxBarStyle.fontSize, weight: .semibold)
         field.lineBreakMode = .byTruncatingTail
         field.usesSingleLineMode = true
@@ -76,6 +77,7 @@ struct WindowTabRenameTextField: NSViewRepresentable {
 
     func updateNSView(_ field: NSTextField, context: Context) {
         field.font = .systemFont(ofSize: WinMuxBarStyle.fontSize, weight: .semibold)
+        field.textColor = winMuxBarForegroundNSColor(WinMuxOverlayPalette(colorScheme: colorScheme))
         if field.stringValue != text {
             field.stringValue = text
         }

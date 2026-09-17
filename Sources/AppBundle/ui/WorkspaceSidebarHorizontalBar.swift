@@ -229,7 +229,7 @@ struct WorkspaceSidebarHorizontalBar: View {
             actions.setDropTargets([])
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Project tabs bar")
+        .accessibilityLabel("Workspace tabs bar")
         .onDisappear { clearWorkspaceReorderState() }
         .environment(\.workspaceSidebarProjectThemeFamily, workspaceSidebarProjectThemeFamily(
             projects: snapshot.projects,
@@ -688,13 +688,13 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
                     HStack(spacing: WinMuxBarStyle.iconSpacing) {
                         Text(workspace.displayName)
                             .font(.system(size: projectTabsBarFontSize, weight: isActive || isHovered ? .semibold : .medium))
-                            .foregroundStyle(palette.color(palette.activeGeistFamily, isActive ? .color10 : .color9))
+                            .foregroundStyle(winMuxBarForeground(palette))
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .overlay(alignment: .bottom) {
                                 if isActive || isHovered {
                                     Rectangle()
-                                        .fill(palette.color(palette.activeGeistFamily, .color10))
+                                        .fill(winMuxBarForeground(palette))
                                         .frame(height: WinMuxBarStyle.strokeWidth)
                                 }
                             }
@@ -798,7 +798,7 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
         } else {
             Image(systemName: "square.stack.3d.up")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(palette.content(.secondary))
+                .foregroundStyle(winMuxBarForeground(palette))
                 .frame(width: workspaceSidebarAppIconSize + 2, height: workspaceSidebarAppIconSize + 2)
         }
     }

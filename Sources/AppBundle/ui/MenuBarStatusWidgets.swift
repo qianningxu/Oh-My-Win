@@ -3,8 +3,8 @@ import Charts
 import Foundation
 import SwiftUI
 
-let menuBarWidgetIcon = winMuxOverlayContent(.primary)
-let menuBarWidgetText = winMuxOverlayContent(.primary)
+let menuBarWidgetIcon = WinMuxOverlayPalette.adaptiveColor(winMuxBarForegroundNSColor)
+let menuBarWidgetText = WinMuxOverlayPalette.adaptiveColor(winMuxBarForegroundNSColor)
 private let menuBarWidgetDataPath = defaultWorkspaceSidebarDataPath
 let menuBarWidgetSpacing: CGFloat = WinMuxBarStyle.iconSpacing
 let menuBarWidgetFontSize = NSFont.menuBarFont(ofSize: 0).pointSize + WinMuxBarStyle.strokeWidth
@@ -769,7 +769,7 @@ private struct MenuBarWidgetItemModifier: ViewModifier {
             .overlay {
                 if isSelected {
                     RoundedRectangle(cornerRadius: WinMuxBarStyle.topBarCornerRadius, style: .continuous)
-                        .strokeBorder(palette.color(palette.activeGeistFamily, .color5), lineWidth: WinMuxBarStyle.strokeWidth)
+                        .strokeBorder(winMuxBarSurfaceStroke(palette), lineWidth: WinMuxBarStyle.strokeWidth)
                         .allowsHitTesting(false)
                 }
             }

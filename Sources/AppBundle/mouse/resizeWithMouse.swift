@@ -92,7 +92,7 @@ func updateCompositedResizePreview(_ window: Window, rect: Rect) {
     let canvas = workspace.workspaceMonitor.visibleRectPaddedByOuterGaps.toAppKitScreenRect
     let visible = workspace.workspaceMonitor.visibleRect.toAppKitScreenRect
     // Cover the native window shadows and outer gutters too, using the exact
-    // workspace canvas color. Keep the project tabs above this backing.
+    // workspace canvas color. Keep the workspace tabs above this backing.
     let backing = CGRect(x: visible.minX, y: visible.minY, width: visible.width,
         height: min(visible.maxY, canvas.maxY + WinMuxSpacing.comfortable) - visible.minY)
     WindowResizePreviewPanel.shared.beginStableFrame(backing)

@@ -146,7 +146,7 @@ extension WindowTabStripView {
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 8.5, weight: .bold))
-                .foregroundStyle(winMuxOverlayContent(.secondary))
+                .foregroundStyle(winMuxBarForeground(palette))
                 .frame(width: windowTabStripCloseButtonSize, height: windowTabStripCloseButtonSize)
                 .contentShape(Rectangle())
         }

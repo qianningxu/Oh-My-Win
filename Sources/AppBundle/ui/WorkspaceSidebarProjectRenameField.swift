@@ -185,7 +185,7 @@ struct WorkspaceSidebarProjectRenameField: View {
                 startInlineTextEditing(on: panel, editingView: field)
             },
             font: font,
-            textColor: palette.contentNSColor(.primary),
+            textColor: winMuxBarForegroundNSColor(palette),
         )
             .padding(.horizontal, showsPlate ? 6 : 0)
             .frame(height: showsPlate ? workspaceSidebarDropdownHeight : 18)

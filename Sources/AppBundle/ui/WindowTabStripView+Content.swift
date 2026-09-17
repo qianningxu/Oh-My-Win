@@ -24,7 +24,7 @@ extension WindowTabStripView {
         .padding(.vertical, windowTabStripContentPaddingValue)
         .frame(width: stripWidth, height: stripHeight, alignment: .top)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Workspace tab bar")
+        .accessibilityLabel("Window tab bar")
         .animation(reduceMotion ? windowTabReducedMotionAnimation : windowTabPillAnimation, value: hoveredTabId)
         .animation(reduceMotion ? windowTabReducedMotionAnimation : windowTabPillAnimation, value: activeWindowId)
         .onDisappear { clearTabDragState() }
@@ -51,7 +51,7 @@ extension WindowTabStripView {
                                    !strip.tabs[index - 1].isActive
                                 {
                                     Rectangle()
-                                        .fill(palette.color(palette.activeGeistFamily, .color6))
+                                        .fill(winMuxBarForeground(palette))
                                         .frame(
                                             width: WinMuxBarStyle.strokeWidth,
                                             height: WinMuxSpacing.panel

@@ -48,7 +48,7 @@ struct WindowTabGroupHandleView: View {
         VStack(spacing: standardGap * 1.25) {
             ForEach(0..<2, id: \.self) { _ in
                 Capsule(style: .continuous)
-                    .fill(palette.content(.secondary))
+                    .fill(winMuxBarForeground(palette))
                     .frame(width: 9, height: 1.5)
             }
         }

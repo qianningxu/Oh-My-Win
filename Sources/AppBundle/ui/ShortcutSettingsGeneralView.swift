@@ -63,7 +63,7 @@ struct ShortcutGeneralView: View {
 
                         HStack {
                             VStack(alignment: .leading, spacing: standardGap * 1) {
-                                Text("Project tabs bar menu area")
+                                Text("Workspace tabs bar menu area")
                                 Text("Use 0 px when the macOS menu bar auto-hides.")
                                     .font(.caption)
                                     .foregroundStyle(winMuxOverlayContent(.secondary))

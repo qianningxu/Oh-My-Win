@@ -264,17 +264,17 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         XCTAssertEqual(frame, NSRect(x: 0, y: 40, width: 1512, height: 914))
     }
 
-    func testBarSurfaceUsesProjectColorFillAndStrokeSteps() {
+    func testBarSurfaceUsesMonochromeFillAndStroke() {
         for theme in [AppearanceTheme.light, .dark] {
             let palette = WinMuxOverlayPalette(theme: theme, projectThemeFamily: .blue)
 
             assertSameColor(
                 NSColor(winMuxBarSurfaceFill(palette)),
-                GeistColorSystem.color(.blue, .color3, theme: theme)
+                theme == .dark ? .black : .white
             )
             assertSameColor(
                 NSColor(winMuxBarSurfaceStroke(palette)),
-                GeistColorSystem.color(.blue, .color5, theme: theme)
+                theme == .dark ? .white : .black
             )
         }
     }
@@ -285,12 +285,11 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         XCTAssertEqual(WinMuxBarStyle.workspaceTabContentHeight, 32)
         XCTAssertEqual(WinMuxBarStyle.workspaceBarHeight, 34)
         XCTAssertGreaterThan(menuBarWidgetFontSize, NSFont.menuBarFont(ofSize: 0).pointSize)
-        XCTAssertGreaterThanOrEqual(WinMuxBarStyle.projectBarTintOpacity, 0.2)
-        XCTAssertLessThanOrEqual(WinMuxBarStyle.projectBarTintOpacity, 0.25)
-        XCTAssertGreaterThanOrEqual(WinMuxBarStyle.workspaceBarTintOpacity, 0.18)
-        XCTAssertLessThanOrEqual(WinMuxBarStyle.workspaceBarTintOpacity, 0.22)
-        XCTAssertLessThanOrEqual(WinMuxBarStyle.topBarTintOpacity, 0.05)
-        XCTAssertGreaterThanOrEqual(WinMuxBarStyle.workspaceSelectedSegmentOpacity, 0.6)
+        XCTAssertEqual(WinMuxBarStyle.projectBarTintOpacity, 0.30)
+        XCTAssertEqual(WinMuxBarStyle.workspaceBarTintOpacity, 0.25)
+        XCTAssertEqual(WinMuxBarStyle.topBarTintOpacity, 0.05)
+        XCTAssertEqual(WinMuxBarStyle.workspaceSelectedSegmentOpacity, 0.75)
+        XCTAssertEqual(WinMuxBarStyle.windowTabHoveredSegmentOpacity, 0.20)
         XCTAssertGreaterThan(workspaceSidebarWorkspaceActivityRevealDuration, 1)
     }
 

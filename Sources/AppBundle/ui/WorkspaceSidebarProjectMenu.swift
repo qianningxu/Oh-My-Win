@@ -15,6 +15,7 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
     func updateNSView(_ button: ProjectButton, context: Context) {
         button.model = self
         button.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
+        button.contentTintColor = winMuxBarForegroundNSColor(WinMuxOverlayPalette(colorScheme: colorScheme))
         button.setAccessibilityLabel("Project: \(projects.first { $0.id == selectedProjectId }?.displayName ?? "Main")")
     }
 
@@ -67,7 +68,7 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
                     string: "New project",
                     attributes: [
                         .font: NSFont.menuFont(ofSize: 0),
-                        .foregroundColor: palette.contentNSColor(.primary),
+                        .foregroundColor: winMuxBarForegroundNSColor(palette),
                     ]
                 )
                 button.focusRingType = .none
@@ -112,8 +113,9 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
                 field.backgroundColor = WinMuxDesignTokens.transparentNSColor
                 field.focusRingType = .none
                 field.font = .menuFont(ofSize: 0)
-                field.textColor = WinMuxOverlayPalette(colorScheme: self.model?.colorScheme ?? .light)
-                    .contentNSColor(.primary)
+                field.textColor = winMuxBarForegroundNSColor(
+                    WinMuxOverlayPalette(colorScheme: self.model?.colorScheme ?? .light)
+                )
                 field.delegate = self
                 field.setAccessibilityLabel("Project name")
                 field.frame = NSRect(

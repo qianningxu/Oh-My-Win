@@ -22,15 +22,15 @@ extension WindowTabItemView {
     func fallbackIcon(size: CGFloat) -> some View {
         Text(tabIconText)
             .font(.system(size: 11, weight: .bold))
-            .foregroundStyle(palette.content(tab.isActive ? .primary : .secondary))
+            .foregroundStyle(winMuxBarForeground(palette))
             .frame(width: size, height: size, alignment: .center)
             .background {
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(palette.componentBackground(tab.isActive ? .active : .normal))
+                    .fill(winMuxBarSurfaceFill(palette))
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .strokeBorder(palette.geistBorder(tab.isActive ? .hover : .normal), lineWidth: 0.65)
+                    .strokeBorder(winMuxBarSurfaceStroke(palette), lineWidth: 0.65)
             }
             .accessibilityHidden(true)
     }
