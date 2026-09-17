@@ -53,7 +53,7 @@ func winMuxBarSurfaceFill(_ palette: WinMuxOverlayPalette) -> Color {
 }
 
 func winMuxBarSurfaceStroke(_ palette: WinMuxOverlayPalette) -> Color {
-    winMuxBarForeground(palette)
+    winMuxBarSurfaceFill(palette)
 }
 
 func winMuxBarForeground(_ palette: WinMuxOverlayPalette) -> Color {

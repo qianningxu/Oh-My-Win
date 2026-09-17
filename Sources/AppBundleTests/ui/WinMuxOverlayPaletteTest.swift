@@ -274,7 +274,7 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
             )
             assertSameColor(
                 NSColor(winMuxBarSurfaceStroke(palette)),
-                theme == .dark ? .white : .black
+                theme == .dark ? .black : .white
             )
         }
     }

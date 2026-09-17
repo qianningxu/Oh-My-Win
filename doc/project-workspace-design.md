@@ -22,7 +22,7 @@ The names describe UI surfaces. Internal workspace/project identifiers, configur
 
 ## Native frame corrections
 
-WinMux-controlled tabs use continuous radii. The Window tab bar uses a 21-point outer radius around its inset. The Workspace tabs bar uses native macOS material with monochrome background and foreground colors; Reduce Transparency falls back to the solid background surface. Light mode uses white surfaces with black content, while dark mode uses black surfaces with white content. Navigation follows the selected light, dark, or system theme.
+WinMux-controlled tabs use continuous radii. The Window tab bar uses a 21-point outer radius around its inset. The Workspace tabs bar uses native macOS material with monochrome background and foreground colors; Reduce Transparency falls back to the solid background surface. Light mode uses white surfaces and borders with black content, while dark mode uses black surfaces and borders with white content. Navigation follows the selected light, dark, or system theme.
 
 Each stacked window has a translucent rounded workspace tab surface aligned with the native window below. Adjacent groups share one six-point gap. Native window borders remain visible.
 
