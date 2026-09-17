@@ -20,7 +20,7 @@ enum WinMuxBarStyle {
     static let projectTabsBarFontSize = fontSize + WinMuxSpacing.hairline
     static let projectBarCornerRadius = projectTabsBarContentHeight / 2
     static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
-    static let projectBarStrokeOpacity: CGFloat = 0
+    static let projectBarStrokeOpacity: CGFloat = 0.65
     static let workspaceTabContentHeight = standardGap * 8
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = cornerRadius
@@ -30,7 +30,7 @@ enum WinMuxBarStyle {
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
     static let unfocusedWindowSelectedSegmentOpacity: CGFloat = 0.05
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.25
-    static let unfocusedWindowBarOpacity: CGFloat = 0.15
+    static let unfocusedWindowBarOpacity: CGFloat = 0.10
     static let unfocusedWindowTabOpacity: CGFloat = 0.40
     static let selectedSegmentOpacity: CGFloat = 0.18
     static let hoveredSegmentOpacity: CGFloat = 0.08
