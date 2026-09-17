@@ -437,6 +437,10 @@ struct WorkspaceSidebarHorizontalBar: View {
             hoveredWorkspaceName: $hoveredWorkspaceName,
             actions: actions,
             allWindowMenuItems: windowMenuItems(for: workspace),
+            workspaceDestinations: snapshot.workspaces.filter {
+                $0.name != workspace.name && $0.projectId == workspace.projectId &&
+                    (!workspace.isVisible || !$0.isVisible || $0.monitorScopeId == workspace.monitorScopeId)
+            },
             projectDestinations: workspaceSidebarProjectDestinations(
                 projects: snapshot.projects,
                 currentProjectId: workspace.projectId,
@@ -700,6 +704,7 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
     @Binding var hoveredWorkspaceName: String?
     let actions: WorkspaceSidebarActions
     let allWindowMenuItems: [WorkspaceSidebarWindowMenuItem]
+    let workspaceDestinations: [WorkspaceSidebarWorkspaceViewModel]
     let projectDestinations: [WorkspaceSidebarProjectViewModel]
     let onSelect: () -> Void
     let onBeginRename: () -> Void
@@ -790,8 +795,16 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
                     }
                 }
             }
+            Menu("Move to workspace") {
+                ForEach(workspaceDestinations) { destination in
+                    Button(destination.displayName) {
+                        actions.send(.moveWorkspace(workspace.name, toWorkspace: destination.name))
+                    }
+                }
+            }
+            .disabled(workspaceDestinations.isEmpty)
             if !projectDestinations.isEmpty {
-                Menu("Move to") {
+                Menu("Move to project") {
                     ForEach(projectDestinations) { project in
                         Button(project.displayName) {
                             onMoveToProject(project.id)

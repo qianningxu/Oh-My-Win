@@ -568,11 +568,12 @@ func selectWorkspaceSidebarProject(
 }
 
 @MainActor
+@discardableResult
 func createWorkspaceSidebarProject(
     displayName: String? = nil,
     viewModel: TrayMenuModel = TrayMenuModel.shared,
     targetMonitorScopeId: String? = nil,
-) {
+) -> Task<Void, Never>? {
     runWorkspaceSidebarSession(prioritizeFocusSync: true) {
         let displayName = displayName?.trimmingCharacters(in: .whitespacesAndNewlines)
         if let displayName {
@@ -586,6 +587,13 @@ func createWorkspaceSidebarProject(
         let project = createWorkspaceProject()
         if let displayName {
             try renameWorkspaceProject(project.id, displayName: displayName)
+        }
+        let monitor = workspaceSidebarTargetMonitor(
+            scopeId: targetMonitorScopeId ?? viewModel.workspaceSidebarTargetMonitorScopeId
+        )
+        if let workspace = switchWorkspaceProject(project.id, on: monitor) {
+            _ = workspace.focusWorkspace()
+            viewModel.workspaceSidebarActiveProjectId = project.id
         }
     }
 }
