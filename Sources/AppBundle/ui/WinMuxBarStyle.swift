@@ -39,7 +39,7 @@ enum WinMuxBarStyle {
 
 struct WinMuxGlassRecipe: Equatable {
     let blurOpacity: CGFloat
-    let fillOpacity: CGFloat
+    let whiteTintOpacity: CGFloat
     let shadowOpacity: CGFloat
     let shadowRadius: CGFloat
     let shadowY: CGFloat
@@ -53,8 +53,8 @@ enum WinMuxGlassStyle {
         switch self {
             case .clear:
                 WinMuxGlassRecipe(
-                    blurOpacity: 0.68,
-                    fillOpacity: 0,
+                    blurOpacity: 0.85,
+                    whiteTintOpacity: 0.12,
                     shadowOpacity: 0,
                     shadowRadius: 0,
                     shadowY: 0
@@ -62,7 +62,7 @@ enum WinMuxGlassStyle {
             case .regular:
                 WinMuxGlassRecipe(
                     blurOpacity: 1,
-                    fillOpacity: 0,
+                    whiteTintOpacity: 0.20,
                     shadowOpacity: 0.12,
                     shadowRadius: WinMuxSpacing.comfortable,
                     shadowY: WinMuxSpacing.hairline
@@ -126,7 +126,7 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
                             blendingMode: .behindWindow,
                             opacity: recipe.blurOpacity
                         )
-                        winMuxBarSurfaceFill(palette).opacity(recipe.fillOpacity)
+                        Color.white.opacity(recipe.whiteTintOpacity)
                     }
                     .clipShape(shape)
                 }

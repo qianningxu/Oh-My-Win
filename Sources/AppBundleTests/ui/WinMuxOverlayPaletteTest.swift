@@ -291,10 +291,10 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         XCTAssertEqual(WinMuxBarStyle.unfocusedWindowBarOpacity, 0.10)
         XCTAssertEqual(WinMuxBarStyle.unfocusedWindowActiveTabOpacity, 0.65)
         XCTAssertEqual(WinMuxBarStyle.unfocusedWindowTabOpacity, 0.40)
-        XCTAssertEqual(WinMuxGlassStyle.clear.recipe.blurOpacity, 0.68)
-        XCTAssertEqual(WinMuxGlassStyle.clear.recipe.fillOpacity, 0)
+        XCTAssertEqual(WinMuxGlassStyle.clear.recipe.blurOpacity, 0.85)
+        XCTAssertEqual(WinMuxGlassStyle.clear.recipe.whiteTintOpacity, 0.12)
         XCTAssertEqual(WinMuxGlassStyle.regular.recipe.blurOpacity, 1)
-        XCTAssertEqual(WinMuxGlassStyle.regular.recipe.fillOpacity, 0)
+        XCTAssertEqual(WinMuxGlassStyle.regular.recipe.whiteTintOpacity, 0.20)
         XCTAssertGreaterThan(workspaceSidebarWorkspaceActivityRevealDuration, 1)
     }
 
