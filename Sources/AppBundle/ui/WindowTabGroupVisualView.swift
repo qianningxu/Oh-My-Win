@@ -21,6 +21,7 @@ struct WindowTabGroupVisualView: View {
                     glassStyle: strip.isFocused ? .regular : .unfocused,
                     strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
                 )
+                .saturation(WinMuxBarStyle.windowBarBackdropSaturation)
                 .padding(.top, windowTabBarOuterInset())
 
                 Spacer(minLength: WinMuxSpacing.none)
