@@ -108,23 +108,7 @@ final class WorkspaceSidebarPanel: NSPanelHud {
     static func refreshAll() {
         guard !isRestoringStartupLayout else { return }
         MenuBarStatusWidgetsController.shared.refreshIfInstalled()
-        guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled else {
-            removeCachedPanels()
-            return
-        }
-        let monitors = workspaceSidebarResolvedPanelMonitors()
-        let activeMonitorScopeIds = Set(monitors.map { workspaceSidebarMonitorScopeId(for: $0) })
-        for monitor in monitors {
-            let scopeId = workspaceSidebarMonitorScopeId(for: monitor)
-            let panel = panelsByMonitorScopeId[scopeId] ?? WorkspaceSidebarPanel(monitor: monitor)
-            panelsByMonitorScopeId[scopeId] = panel
-            panel.syncModelFromShared()
-            panel.refresh(on: monitor)
-        }
-        let inactiveScopeIds = panelsByMonitorScopeId.keys.filter { !activeMonitorScopeIds.contains($0) }
-        for scopeId in inactiveScopeIds {
-            panelsByMonitorScopeId.removeValue(forKey: scopeId)?.prepareForRemoval()
-        }
+        removeCachedPanels()
     }
 
     static func syncVisiblePanelModelsFromShared() {
