@@ -56,16 +56,6 @@ private struct WorkspaceProjectMenuBarContent: View {
             if let project = selectedProject, projectsAreEnabled() {
                 Divider()
                 Button("Rename project…") { rename(project) }
-                Menu("Project color") {
-                    ForEach(workspaceSidebarProjectColorPresets) { preset in
-                        Button(preset.name) {
-                            handleWorkspaceSidebarAction(
-                                .setProjectColor(project.id, colorHex: preset.hex),
-                                viewModel: viewModel
-                            )
-                        }
-                    }
-                }
                 Button("Delete project") {
                     handleWorkspaceSidebarAction(.deleteProject(project.id), viewModel: viewModel)
                 }

@@ -6,6 +6,7 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private var workspaceNameByField: [ObjectIdentifier: String] = [:]
+    private var renameFieldByButton: [ObjectIdentifier: NSTextField] = [:]
 
     public init(viewModel: TrayMenuModel) {
         self.viewModel = viewModel
@@ -27,6 +28,7 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     public func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         workspaceNameByField.removeAll(keepingCapacity: true)
+        renameFieldByButton.removeAll(keepingCapacity: true)
 
         for project in viewModel.workspaceSidebarProjects {
             let item = NSMenuItem(title: project.displayName, action: nil, keyEquivalent: "")
@@ -69,11 +71,17 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         field.placeholderString = "Rename workspace"
         field.target = self
         field.action = #selector(commitWorkspaceRename(_:))
-        field.frame = NSRect(x: 10, y: 4, width: 210, height: 24)
+        field.frame = NSRect(x: 10, y: 4, width: 196, height: 24)
         workspaceNameByField[ObjectIdentifier(field)] = workspace.name
 
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 230, height: 32))
+        let renameButton = NSButton(title: "Rename", target: self, action: #selector(commitWorkspaceRenameButton(_:)))
+        renameButton.bezelStyle = .rounded
+        renameButton.frame = NSRect(x: 214, y: 3, width: 74, height: 26)
+        renameFieldByButton[ObjectIdentifier(renameButton)] = field
+
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 298, height: 32))
         container.addSubview(field)
+        container.addSubview(renameButton)
         let item = NSMenuItem()
         item.view = container
         menu.addItem(item)
@@ -96,16 +104,6 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
             let rename = actionItem("Rename project…", #selector(renameProject(_:)))
             rename.representedObject = project.id.rawValue
             menu.addItem(rename)
-
-            let color = NSMenuItem(title: "Project color", action: nil, keyEquivalent: "")
-            let colors = NSMenu()
-            for preset in workspaceSidebarProjectColorPresets {
-                let presetItem = actionItem(preset.name, #selector(setProjectColor(_:)))
-                presetItem.representedObject = [project.id.rawValue, preset.hex]
-                colors.addItem(presetItem)
-            }
-            color.submenu = colors
-            menu.addItem(color)
 
             let delete = actionItem("Delete project", #selector(deleteProject(_:)))
             delete.representedObject = project.id.rawValue
@@ -145,6 +143,11 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         menu.cancelTracking()
     }
 
+    @objc private func commitWorkspaceRenameButton(_ button: NSButton) {
+        guard let field = renameFieldByButton[ObjectIdentifier(button)] else { return }
+        commitWorkspaceRename(field)
+    }
+
     @objc private func setTheme(_ item: NSMenuItem) {
         switch item.tag {
             case 0: setWorkspaceSidebarAppearance(.light)
@@ -159,14 +162,6 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
               let name = promptForProjectName("Rename project", initialValue: project.displayName)
         else { return }
         handleWorkspaceSidebarAction(.renameProject(project.id, displayName: name), viewModel: viewModel)
-    }
-
-    @objc private func setProjectColor(_ item: NSMenuItem) {
-        guard let values = item.representedObject as? [String], values.count == 2 else { return }
-        handleWorkspaceSidebarAction(
-            .setProjectColor(WorkspaceProjectId(values[0]), colorHex: values[1]),
-            viewModel: viewModel
-        )
     }
 
     @objc private func deleteProject(_ item: NSMenuItem) {
