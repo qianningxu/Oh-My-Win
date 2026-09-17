@@ -8,6 +8,11 @@ import SwiftUI
 final class WinMuxAppDelegate: NSObject, NSApplicationDelegate {
     private var isTerminating = false
     private var terminationCoordinator: TerminationPreparationCoordinator?
+    private var menuBarController: NativeMenuBarController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        menuBarController = NativeMenuBarController(viewModel: .shared)
+    }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !isTerminating else { return .terminateNow }
@@ -26,7 +31,6 @@ final class WinMuxAppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct WinMuxApp: App {
     @NSApplicationDelegateAdaptor(WinMuxAppDelegate.self) var appDelegate
-    @StateObject var viewModel = TrayMenuModel.shared
     @StateObject var messageModel = MessageModel.shared
     @StateObject var shortcutSettingsModel = ShortcutSettingsModel.shared
     @Environment(\.openWindow) var openWindow: OpenWindowAction
@@ -36,7 +40,6 @@ struct WinMuxApp: App {
     }
 
     var body: some Scene {
-        menuBar(viewModel: viewModel)
         getShortcutSettingsWindow(model: shortcutSettingsModel)
             .onChange(of: shortcutSettingsModel.openRequestId) { _ in
                 openShortcutSettingsWindow(openWindow)

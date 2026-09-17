@@ -82,7 +82,7 @@ struct MenuBarLabel: View {
     var body: some View {
         if menuBarLabelShouldUseAppIndicator(trayText: viewModel.trayText, trayItems: viewModel.trayItems) {
             Text("oh!")
-                .font(.custom("MarkerFelt-Wide", size: 19))
+                .font(.custom("SignPainter-HouseScriptSemibold", size: 20))
                 .fontWeight(.black)
                 .fixedSize()
                 .accessibilityLabel("Oh-My-Win")
