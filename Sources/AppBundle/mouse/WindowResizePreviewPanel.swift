@@ -42,7 +42,7 @@ final class WindowResizePreviewPanel: NSPanelHud {
             return
         }
 
-        backgroundColor = shadeOnly ? NSColor(workspaceCanvasBackground(for: TrayMenuModel.shared.projectPalette())) : .clear
+        backgroundColor = .clear
         let wasVisible = isVisible
         let alignedPanelFrame = panelFrame.alignedToBackingPixels()
         let localItems = screenItems.map { $0.localItem(in: alignedPanelFrame) }

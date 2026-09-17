@@ -170,6 +170,8 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
     }
 
     func testResizePreviewUsesDocumentedGeistRoles() {
+        assertSameColor(ResizePreviewPalette.shadeFillNSColor, .white)
+        assertSameColor(ResizePreviewPalette.shadeStrokeNSColor, .white)
         for (appearance, theme) in [(NSAppearance.Name.aqua, AppearanceTheme.light), (.darkAqua, .dark)] {
             assertSameColor(
                 resolvedColor(ResizePreviewPalette.fillNSColor, appearance: appearance),
@@ -294,11 +296,11 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         XCTAssertEqual(WinMuxBarStyle.windowBarBackdropSaturation, 0)
         XCTAssertEqual(WinMuxGlassStyle.clear.recipe.blurOpacity, 1)
         XCTAssertEqual(WinMuxGlassStyle.clear.recipe.whiteTintOpacity, 0.20)
-        XCTAssertEqual(WinMuxBarStyle.workspaceBarStrokeOpacity, 0.80)
-        XCTAssertEqual(WinMuxBarStyle.workspaceTabUnfocusedTextOpacity, 0.75)
-        XCTAssertEqual(WinMuxBarStyle.windowTabUnfocusedTextOpacity, 0.75)
+        XCTAssertEqual(WinMuxBarStyle.workspaceBarStrokeOpacity, 0.50)
+        XCTAssertEqual(WinMuxBarStyle.workspaceTabUnfocusedTextOpacity, 0.50)
+        XCTAssertEqual(WinMuxBarStyle.windowTabUnfocusedTextOpacity, 0.50)
         XCTAssertEqual(WinMuxGlassStyle.workspaceBar.recipe.blurOpacity, 1)
-        XCTAssertEqual(WinMuxGlassStyle.workspaceBar.recipe.whiteTintOpacity, 0.75)
+        XCTAssertEqual(WinMuxGlassStyle.workspaceBar.recipe.whiteTintOpacity, 0.50)
         XCTAssertEqual(WinMuxGlassStyle.workspaceBar.recipe.shadowOpacity, 0)
         XCTAssertEqual(WinMuxGlassStyle.workspaceBar.recipe.shadowRadius, 0)
         XCTAssertEqual(WinMuxGlassStyle.windowBar.recipe.blurOpacity, 0.25)

@@ -52,11 +52,10 @@ final class WindowResizePreviewCompositorView: NSView {
                 layer?.addSublayer(itemLayer)
                 appearingLayers.append(itemLayer)
             }
-            let palette = TrayMenuModel.shared.projectPalette()
             itemLayer.update(
                 item, scale: scale, shadeOnly: shadeOnly,
-                shadeFill: NSColor(palette.color(palette.activeGeistFamily, .color3)).cgColor,
-                shadeStroke: NSColor(palette.color(palette.activeGeistFamily, .color7)).cgColor,
+                shadeFill: ResizePreviewPalette.shadeFillNSColor.cgColor,
+                shadeStroke: ResizePreviewPalette.shadeStrokeNSColor.cgColor,
                 iconResolver: resolvedIconImage
             )
         }

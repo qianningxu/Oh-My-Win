@@ -1,6 +1,9 @@
 import AppKit
 
 enum ResizePreviewPalette {
+    static let shadeFillNSColor = NSColor(calibratedWhite: 1, alpha: 1)
+    static let shadeStrokeNSColor = NSColor(calibratedWhite: 1, alpha: 1)
+
     static let fillNSColor = WinMuxOverlayPalette.adaptiveNSColor { $0.highContrastBackgroundNSColor(.normal) }
     static var fill: CGColor { fillNSColor.cgColor }
 
