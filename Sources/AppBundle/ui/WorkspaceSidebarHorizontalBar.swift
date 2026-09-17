@@ -695,13 +695,6 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
                             .foregroundStyle(winMuxBarForeground(palette))
                             .lineLimit(1)
                             .truncationMode(.tail)
-                            .overlay(alignment: .bottom) {
-                                if isActive || isHovered {
-                                    Rectangle()
-                                        .fill(winMuxBarForeground(palette))
-                                        .frame(height: WinMuxBarStyle.strokeWidth)
-                                }
-                            }
                     }
                     .padding(.horizontal, WinMuxBarStyle.contentInset)
                     .frame(
