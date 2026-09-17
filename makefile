@@ -86,7 +86,7 @@ release:
 	set -euo pipefail && \
 	source ./script/setup.sh && \
 	test -n "$(VERSION)" && \
-	app_name="WinMux"; \
+	app_name="WinNotch"; \
 	release_dir="$(RELEASE_DIR)"; \
 	archive_path="$$release_dir/$$app_name-$(VERSION).xcarchive"; \
 	derived_data_path="$$release_dir/$$app_name-$(VERSION).deriveddata"; \
@@ -97,8 +97,8 @@ release:
 	mkdir -p "$$release_dir"; \
 	if xcodebuild -version >/dev/null 2>&1; then \
 	    xcodebuild-pretty "$$log_path" \
-	        -project WinMux.xcodeproj \
-	        -scheme WinMux \
+	        -project WinNotch.xcodeproj \
+	        -scheme WinNotch \
 	        -configuration Release \
 	        -archivePath "$$archive_path" \
 	        -derivedDataPath "$$derived_data_path" \
@@ -106,11 +106,17 @@ release:
 	        archive; \
 	else \
 	    installed_app="$(APP_INSTALL_DIR)/$$app_name.app"; \
+	    if [ ! -d "$$installed_app" ]; then installed_app="$(APP_INSTALL_DIR)/WinMux.app"; fi; \
 	    test -d "$$installed_app"; \
 	    swift build -c release --product WinMuxApp; \
 	    mkdir -p "$$(dirname "$$app_path")"; \
 	    ditto "$$installed_app" "$$app_path"; \
+	    old_executable="$$($(shell command -v /usr/libexec/PlistBuddy) -c "Print :CFBundleExecutable" "$$app_path/Contents/Info.plist")"; \
 	    cp ".build/release/WinMuxApp" "$$app_path/Contents/MacOS/$$app_name"; \
+	    /usr/libexec/PlistBuddy -c "Set :CFBundleExecutable $$app_name" "$$app_path/Contents/Info.plist"; \
+	    /usr/libexec/PlistBuddy -c "Set :CFBundleName $$app_name" "$$app_path/Contents/Info.plist"; \
+	    /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName $$app_name" "$$app_path/Contents/Info.plist" 2>/dev/null || true; \
+	    if [ "$$old_executable" != "$$app_name" ]; then rm -f "$$app_path/Contents/MacOS/$$old_executable"; fi; \
 	    cp "resources/default-config.toml" "$$app_path/Contents/Resources/default-config.toml"; \
 	    rm -f "$$app_path/Contents/Resources/folders.png" "$$app_path/Contents/Resources/winmux-overview.png"; \
 	fi; \
@@ -141,14 +147,17 @@ install:
 	$(MAKE) release VERSION="$(VERSION)" CODESIGN_IDENTITY="$(CODESIGN_IDENTITY)" DEVELOPMENT_TEAM="$(DEVELOPMENT_TEAM)" PUBLISH=0
 	/bin/bash -lc 'cd "$(CURDIR)" && \
 	set -euo pipefail && \
-	app_name="WinMux"; \
+	app_name="WinNotch"; \
 	release_dir="$(RELEASE_DIR)"; \
 	app_path="$$release_dir/$$app_name-$(VERSION).xcarchive/Products/Applications/$$app_name.app"; \
 	install_dir="$(APP_INSTALL_DIR)"; \
 	install_path="$$install_dir/$$app_name.app"; \
+	legacy_install_path="$$install_dir/WinMux.app"; \
 	test -d "$$app_path"; \
 	mkdir -p "$$install_dir"; \
 	ALLOW_TCC_REAUTH=0 /bin/bash ./script/assert-accessibility-grant-will-survive.sh "$$app_path/Contents/MacOS/$$app_name" "com.zimengxiong.winmux" "$$install_path"; \
+	legacy_pid="$$(pgrep -f "^$$legacy_install_path/Contents/MacOS/WinMux$$" | head -n 1 || true)"; \
+	if [ -n "$$legacy_pid" ]; then osascript -e 'tell application "WinMux" to quit' >/dev/null 2>&1 || true; fi; \
 	old_pid="$$(pgrep -f "^$$install_path/Contents/MacOS/$$app_name$$" | head -n 1 || true)"; \
 	osascript -e "tell application \"$$app_name\" to quit" >/dev/null 2>&1 || true; \
 	attempts=0; \
@@ -160,8 +169,18 @@ install:
 	    echo "Refusing to replace $$install_path while old PID $$old_pid is still running" >&2; \
 	    exit 1; \
 	fi; \
+	attempts=0; \
+	while [ -n "$$legacy_pid" ] && kill -0 "$$legacy_pid" >/dev/null 2>&1 && [ "$$attempts" -lt 200 ]; do \
+	    sleep 0.05; \
+	    attempts=$$((attempts + 1)); \
+	done; \
+	if [ -n "$$legacy_pid" ] && kill -0 "$$legacy_pid" >/dev/null 2>&1; then \
+	    echo "Refusing to remove $$legacy_install_path while PID $$legacy_pid is still running" >&2; \
+	    exit 1; \
+	fi; \
 	rm -rf "$$install_path"; \
 	ditto "$$app_path" "$$install_path"; \
+	if [ "$$legacy_install_path" != "$$install_path" ]; then rm -rf "$$legacy_install_path"; fi; \
 	xattr -dr com.apple.quarantine "$$install_path" >/dev/null 2>&1 || true; \
 	codesign --verify --deep --strict --verbose=2 "$$install_path"; \
 	open "$$install_path"; \
@@ -181,4 +200,4 @@ install:
 installed: install
 
 clean:
-	/bin/bash -lc 'cd "$(CURDIR)" && rm -rf .build .debug .deps .derived "$(RELEASE_DIR)" WinMux.xcodeproj'
+	/bin/bash -lc 'cd "$(CURDIR)" && rm -rf .build .debug .deps .derived "$(RELEASE_DIR)" WinNotch.xcodeproj WinMux.xcodeproj'

@@ -4,22 +4,21 @@ import XCTest
 
 final class MenuBarBoundsTest: XCTestCase {
     @MainActor
-    func testProjectTabsStayBehindWindowsAndRestoreLayerAfterMenuCloses() {
+    func testWorkspaceBarStaysAtMenuBarSurfaceLayer() {
         let panel = WorkspaceSidebarPanel.shared
         XCTAssertFalse(panel.hasShadow)
         panel.setProjectMenuPresentation(isPresented: false, extraHeight: 0)
         XCTAssertFalse(panel.isFloatingPanel)
-        XCTAssertEqual(panel.level, WinMuxPanelLayer.projectTabs.level)
-        XCTAssertLessThan(panel.level.rawValue, NSWindow.Level.normal.rawValue)
+        XCTAssertEqual(panel.level, WinMuxPanelLayer.menuBarSurface.level)
         XCTAssertGreaterThan(panel.level.rawValue, WinMuxPanelLayer.workspaceBackground.level.rawValue)
 
         panel.setProjectMenuPresentation(isPresented: true, extraHeight: 100)
         XCTAssertEqual(panel.level, WinMuxPanelLayer.menuBarSurface.level)
         panel.setProjectMenuPresentation(isPresented: false, extraHeight: 0)
-        XCTAssertEqual(panel.level, WinMuxPanelLayer.projectTabs.level)
+        XCTAssertEqual(panel.level, WinMuxPanelLayer.menuBarSurface.level)
     }
 
-    func testWidgetRowOccupiesMenuStripAndProjectBarFloatsAtBottom() {
+    func testWidgetUsesMenuStripAndWorkspaceSwitcherUsesScreenCenter() {
         for height: CGFloat in [24, 32] {
             let screen = NSRect(x: -1920, y: 120, width: 1920, height: 1080)
             let visible = NSRect(x: -1920, y: 145, width: 1920, height: 1055 - height)
@@ -33,7 +32,7 @@ final class MenuBarBoundsTest: XCTestCase {
                 auxiliaryTopRightArea: nil,
                 barHeight: height
             )
-            XCTAssertEqual(left.minY, visible.minY + WinMuxBarStyle.projectTabsBarOuterInset)
+            XCTAssertEqual(left.midY, visible.midY)
             XCTAssertEqual(left.height, 32)
             XCTAssertEqual(right.maxY, screen.maxY)
             XCTAssertEqual(right.minX, screen.minX)

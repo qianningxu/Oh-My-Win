@@ -170,7 +170,7 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
     }
 
     func testResizePreviewUsesDocumentedGeistRoles() {
-        assertSameColor(ResizePreviewPalette.shadeFillNSColor, .white)
+        assertSameColor(ResizePreviewPalette.shadeFillNSColor, .clear)
         assertSameColor(ResizePreviewPalette.shadeStrokeNSColor, .white)
         for (appearance, theme) in [(NSAppearance.Name.aqua, AppearanceTheme.light), (.darkAqua, .dark)] {
             assertSameColor(

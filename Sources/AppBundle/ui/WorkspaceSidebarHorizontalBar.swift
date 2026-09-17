@@ -199,18 +199,11 @@ struct WorkspaceSidebarHorizontalBar: View {
 
     var body: some View {
         let contentHeight = WinMuxBarStyle.projectTabsBarContentHeight
-        HStack(spacing: WinMuxBarStyle.innerSpacing) {
-            projectControl(contentHeight: contentHeight)
-            workspaceTabStrip(contentHeight: contentHeight)
-        }
+        workspaceTabStrip(contentHeight: contentHeight)
         .fixedSize(horizontal: true, vertical: false)
         .frame(height: contentHeight)
         .padding(.horizontal, WinMuxBarStyle.projectTabsBarHorizontalInset)
-        .winMuxCustomGlassBarSurface(
-            palette,
-            glassStyle: .workspaceBar,
-            strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
-        )
+        .winMuxNativeSwitcherHUDSurface(palette)
         .padding(WinMuxBarStyle.workspaceBarShadowOutset)
         .background {
             GeometryReader { geometry in

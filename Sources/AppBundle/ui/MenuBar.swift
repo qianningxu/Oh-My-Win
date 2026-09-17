@@ -3,47 +3,109 @@
     import Foundation
     import SwiftUI
     
-private let winmuxRepositoryURL = "https://github.com/zimengxiong/winmux"
-private let winmuxNewIssueURL = "https://github.com/zimengxiong/winmux/issues/new/choose"
+@MainActor
+public func menuBar(viewModel: TrayMenuModel) -> some Scene {
+    MenuBarExtra {
+        WorkspaceProjectMenuBarContent(viewModel: viewModel)
+    } label: {
+        MenuBarLabel().environmentObject(viewModel)
+    }
+}
 
-    @MainActor
-    public func menuBar(viewModel: TrayMenuModel) -> some Scene { // todo should it be converted to "SwiftUI struct"?
-        MenuBarExtra {
-            let shortIdentification = "\(winMuxAppName) v\(winMuxAppVersion) \(gitShortHash)"
-            let identification      = "\(winMuxAppName) v\(winMuxAppVersion) \(gitHash)"
-        Text(shortIdentification)
-        Button("Copy to clipboard") { identification.copyToClipboard() }
-            .keyboardShortcut("C", modifiers: .command)
-        Divider()
-        Button(viewModel.isEnabled ? "Disable" : "Enable") {
-            Task {
-                try await runLightSession(.menuBarButton, .forceRun) { () throws in
-                    _ = try await EnableCommand(args: EnableCmdArgs(rawArgs: [], targetState: .toggle))
-                        .run(.defaultEnv, .emptyStdin)
+private struct WorkspaceProjectMenuBarContent: View {
+    @ObservedObject var viewModel: TrayMenuModel
+
+    private var selectedProjectId: WorkspaceProjectId {
+        viewModel.workspaceSidebarActiveProjectId
+    }
+
+    private var selectedProject: WorkspaceSidebarProjectViewModel? {
+        viewModel.workspaceSidebarProjects.first { $0.id == selectedProjectId }
+    }
+
+    var body: some View {
+        ForEach(viewModel.workspaceSidebarProjects) { project in
+            Button {
+                handleWorkspaceSidebarAction(.selectProject(project.id), viewModel: viewModel)
+            } label: {
+                if project.id == selectedProjectId {
+                    Label(project.displayName, systemImage: "checkmark")
+                } else {
+                    Text(project.displayName)
                 }
             }
-        }.keyboardShortcut("E", modifiers: .command)
-        OpenShortcutSettingsButton()
-        openConfigButton()
-        reloadConfigButton()
-        Button("GitHub repository") {
-            openURLString(winmuxRepositoryURL)
         }
-        Button("File an issue...") {
-            openURLString(winmuxNewIssueURL)
+
+        Divider()
+
+        Menu("Config") {
+            Menu("Theme") {
+                themeButton("Light", theme: .light)
+                themeButton("Dark", theme: .dark)
+                themeButton("System", theme: nil)
+            }
+
+            if let project = selectedProject, projectsAreEnabled() {
+                Divider()
+                Button("Rename project…") { rename(project) }
+                Menu("Project color") {
+                    ForEach(workspaceSidebarProjectColorPresets) { preset in
+                        Button(preset.name) {
+                            handleWorkspaceSidebarAction(
+                                .setProjectColor(project.id, colorHex: preset.hex),
+                                viewModel: viewModel
+                            )
+                        }
+                    }
+                }
+                Button("Delete project") {
+                    handleWorkspaceSidebarAction(.deleteProject(project.id), viewModel: viewModel)
+                }
+                .disabled(!canDeleteWorkspaceProject(project.id))
+            }
         }
-        Button("Quit \(winMuxAppName)") {
-            quitWinMuxFromMenuBar()
-        }.keyboardShortcut("Q", modifiers: .command)
-    } label: {
-        if viewModel.isEnabled {
-            MenuBarLabel().environmentObject(viewModel)
-        } else {
-            Image(systemName: "pause.circle.fill")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
+
+        if projectsAreEnabled() {
+            Button("New project") { createProject() }
         }
     }
+
+    @ViewBuilder
+    private func themeButton(_ title: String, theme: AppearanceTheme?) -> some View {
+        Button {
+            setWorkspaceSidebarAppearance(theme)
+        } label: {
+            if currentWorkspaceSidebarAppearancePreference() == theme {
+                Label(title, systemImage: "checkmark")
+            } else {
+                Text(title)
+            }
+        }
+    }
+
+    private func createProject() {
+        guard let name = projectNamePrompt(title: "New project", initialValue: "") else { return }
+        createWorkspaceSidebarProject(displayName: name, viewModel: viewModel)
+    }
+
+    private func rename(_ project: WorkspaceSidebarProjectViewModel) {
+        guard let name = projectNamePrompt(title: "Rename project", initialValue: project.displayName) else { return }
+        handleWorkspaceSidebarAction(.renameProject(project.id, displayName: name), viewModel: viewModel)
+    }
+}
+
+@MainActor
+private func projectNamePrompt(title: String, initialValue: String) -> String? {
+    let field = NSTextField(string: initialValue)
+    field.frame = NSRect(x: 0, y: 0, width: 240, height: 24)
+    let alert = NSAlert()
+    alert.messageText = title
+    alert.accessoryView = field
+    alert.addButton(withTitle: "Save")
+    alert.addButton(withTitle: "Cancel")
+    guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+    let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+    return name.isEmpty ? nil : name
 }
 
 @MainActor @ViewBuilder
@@ -80,12 +142,6 @@ func reloadConfigButton(showShortcutGroup: Bool = false) -> some View {
             button
         }
     }
-}
-
-@MainActor
-private func openURLString(_ urlString: String) {
-    guard let url = URL(string: urlString) else { return }
-    NSWorkspace.shared.open(url)
 }
 
 func shortcutGroup(label: some View, content: some View) -> some View {

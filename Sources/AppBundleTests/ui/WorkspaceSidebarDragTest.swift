@@ -546,27 +546,25 @@ final class WorkspaceSidebarDragTest: XCTestCase {
     }
 
     @MainActor
-    func testSidebarAutoHidePreferenceDefaultsToStickyAndRoundTrips() {
+    func testWorkspaceSwitcherIsAlwaysTemporary() {
         resetWorkspaceSidebarUIPreferencesForTests()
 
-        XCTAssertFalse(workspaceSidebarAutoHidePreference())
-        XCTAssertTrue(workspaceSidebarPinnedExpandedPreference())
-
-        setWorkspaceSidebarAutoHidePreference(true)
         XCTAssertTrue(workspaceSidebarAutoHidePreference())
         XCTAssertFalse(workspaceSidebarPinnedExpandedPreference())
         XCTAssertTrue(TrayMenuModel.shared.isWorkspaceSidebarAutoHideEnabled)
         XCTAssertFalse(TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded)
 
-        setWorkspaceSidebarPinnedExpandedPreference(false)
+        setWorkspaceSidebarAutoHidePreference(false)
         XCTAssertTrue(workspaceSidebarAutoHidePreference())
         XCTAssertFalse(workspaceSidebarPinnedExpandedPreference())
+        XCTAssertTrue(TrayMenuModel.shared.isWorkspaceSidebarAutoHideEnabled)
+        XCTAssertFalse(TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded)
 
         setWorkspaceSidebarPinnedExpandedPreference(true)
-        XCTAssertFalse(workspaceSidebarAutoHidePreference())
-        XCTAssertTrue(workspaceSidebarPinnedExpandedPreference())
-        XCTAssertFalse(TrayMenuModel.shared.isWorkspaceSidebarAutoHideEnabled)
-        XCTAssertTrue(TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded)
+        XCTAssertTrue(workspaceSidebarAutoHidePreference())
+        XCTAssertFalse(workspaceSidebarPinnedExpandedPreference())
+        XCTAssertTrue(TrayMenuModel.shared.isWorkspaceSidebarAutoHideEnabled)
+        XCTAssertFalse(TrayMenuModel.shared.isWorkspaceSidebarPinnedExpanded)
     }
 
     @MainActor

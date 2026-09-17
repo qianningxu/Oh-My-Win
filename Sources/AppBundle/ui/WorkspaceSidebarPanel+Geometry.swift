@@ -101,8 +101,8 @@ func workspaceSidebarProjectBarVisibleReservation(for _: Monitor) -> CGFloat {
     )
 }
 
-func workspaceSidebarProjectBarVisibleReservation(autoHideEnabled: Bool) -> CGFloat {
-    autoHideEnabled ? 0 : WinMuxBarStyle.projectBarHeight
+func workspaceSidebarProjectBarVisibleReservation(autoHideEnabled _: Bool) -> CGFloat {
+    0
 }
 
 func workspaceSidebarTopBarRegionFrame(
@@ -144,20 +144,24 @@ func workspaceSidebarFloatingProjectBarPanelFrame(
     extraWidth: CGFloat = 0,
     extraHeight: CGFloat = 0,
     contentOutset: CGFloat = 0,
+    notchLeadingEdge _: CGFloat? = nil,
 ) -> NSRect {
     let horizontalMargin = WinMuxSpacing.comfortable
     let maximumWidth = max(screenFrame.width - horizontalMargin * 2, 1)
     let width = min(max(barSize.width + max(extraWidth, 0), 1), maximumWidth)
     let height = max(barSize.height + max(extraHeight, 0), 1)
+    let outset = max(contentOutset, 0)
     let x = min(
-        max(screenFrame.midX - width / 2, screenFrame.minX),
-        screenFrame.maxX - width
+        max(screenFrame.midX - width / 2, screenFrame.minX - outset),
+        screenFrame.maxX - width + outset
     )
+    let usableMinY = max(visibleFrame.minY, screenFrame.minY)
+    let usableMaxY = min(visibleFrame.maxY, screenFrame.maxY)
     let y = min(
-        max(visibleFrame.minY + WinMuxBarStyle.projectTabsBarOuterInset - max(contentOutset, 0), screenFrame.minY),
-        screenFrame.maxY - height
+        max((usableMinY + usableMaxY - height) / 2, screenFrame.minY - outset),
+        screenFrame.maxY - height + outset
     )
-    return NSRect(x: x, y: max(y, screenFrame.minY), width: width, height: height)
+    return NSRect(x: x, y: y, width: width, height: height)
 }
 
 func workspaceSidebarFloatingProjectBarVisualFrame(

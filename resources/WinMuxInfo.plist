@@ -32,7 +32,7 @@
 				<string>public.data</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>WinMux Sidebar Drag Payload</string>
+			<string>WinNotch Sidebar Drag Payload</string>
 			<key>UTTypeIdentifier</key>
 			<string>dev.winmux.sidebar-drag-payload</string>
 			<key>UTTypeTagSpecification</key>

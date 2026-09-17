@@ -1,25 +1,25 @@
-<img src="resources/winmux-logo.svg" width="80" alt="WinMux logo">
+<img src="resources/winmux-logo.svg" width="80" alt="WinNotch logo">
 
-# WinMux
+# WinNotch
 
-A macOS window manager, forked from [ZimengXiong/winmux](https://github.com/ZimengXiong/winmux).
+A macOS window manager with workspace controls designed for the camera-notch area.
 
 ## Working with windows
 
 - **Tab bar:** the horizontal bar at the top left switches tabs. Each tab holds a window or a composed window layout.
-- **Widget bar:** the bar at the top right displays configured widgets.
+- **Workspace switcher:** a temporary workspace-only HUD centered like macOS Command–Tab.
 - **Window stack:** a group of windows stacked together within a tab.
 - **Stack tabs:** the controls for switching windows within a window stack.
 
-The widget bar sits within the system menu-bar area; the workspace tabs bar floats at the bottom of the work area and does not expand into a vertical sidebar.
+The workspace switcher appears temporarily during keyboard switching and does not reserve window-layout space. The independent [My Menu Bar](https://github.com/qianningxu/my-menu-bar) app owns the configurable top widget strip.
 
-Projects and folders organize tabs without combining their window layouts. Use the project menu to switch projects, drag tabs to reorder them, or enable **Config → Auto hide** for a bottom-edge-revealed bar. Each display has its own tab bar; a tab can be visible on only one display at a time.
+Projects and folders organize tabs without combining their window layouts. Use the WinNotch menu-bar icon to switch or configure projects. Each display has its own workspace bar; a workspace can be visible on only one display at a time.
 
 ## Configuration and shortcuts
 
-WinMux reads `~/.config/winmux/winmux.toml`. Settings provides shortcut editing and access to the configuration file. Reload configuration after editing it externally.
+WinNotch keeps reading `~/.config/winmux/winmux.toml` so existing settings and Accessibility permission remain compatible.
 
-On first launch, an existing WinMux configuration is preserved. If only an AeroSpace configuration exists, WinMux imports its shortcuts and fills in WinMux defaults, leaving the AeroSpace file unchanged. Otherwise it creates a configuration from the bundled defaults.
+On first launch, an existing WinMux configuration is preserved. If only an AeroSpace configuration exists, WinNotch imports its shortcuts and fills in defaults, leaving the AeroSpace file unchanged.
 
 Older configuration section names and workspace command aliases remain supported. Internal names such as `WorkspaceSidebar` and configuration keys such as `[tab-sidebar]` are compatibility identifiers; the visible UI calls this the tab bar.
 
@@ -42,10 +42,10 @@ Use the repository's persistent signing identity, configured with the local Git 
 make install
 ```
 
-This builds and signs the candidate, checks that the existing Accessibility grant will survive, waits for the old process to quit, replaces `/Applications/WinMux.app`, verifies its signature, and reopens it. Installation does not publish a GitHub release. If the Accessibility compatibility check fails, fix signing before replacing the app; do not reset permissions or use ad-hoc signing.
+This builds and signs the candidate, preserves the existing Accessibility identity, replaces the legacy `/Applications/WinMux.app` with `/Applications/WinNotch.app`, verifies its signature, and reopens it.
 
 When full Xcode is unavailable, the release workflow builds with Swift Package Manager and reuses the installed app's bundle resources. XCTest still requires full Xcode.
 
 ## Credits
 
-[WinMux](https://github.com/ZimengXiong/winmux) and [AeroSpace](https://github.com/nikitabobko/AeroSpace).
+[WinMux](https://github.com/ZimengXiong/winmux) and [AeroSpace](https://github.com/nikitabobko/AeroSpace) for the original window-management foundation.

@@ -135,8 +135,7 @@ extension WorkspaceSidebarPanel {
     }
 
     func updateProjectPresentationLayer() {
-        let hasPresentation = projectActionMenuPresentationExtraWidth > 0 || projectMenuPresentationExtraHeight > 0
-        applyWinMuxLayer(hasPresentation || viewModel.isWorkspaceSidebarAutoHideEnabled ? .menuBarSurface : .projectTabs)
+        applyWinMuxLayer(.menuBarSurface)
     }
 }
 
@@ -147,21 +146,7 @@ func workspaceSidebarAutoHideShouldShow(
     barFrame: NSRect,
     isInteractionLocked: Bool,
 ) -> Bool {
-    let revealHeight = WinMuxSpacing.hairline
-    let revealRegion = NSRect(
-        x: screenFrame.minX,
-        y: screenFrame.minY,
-        width: screenFrame.width,
-        height: revealHeight
-    )
-    if revealRegion.contains(pointer) { return true }
     guard isCurrentlyVisible else { return false }
     if isInteractionLocked { return true }
-    let keepVisibleRegion = NSRect(
-        x: screenFrame.minX,
-        y: screenFrame.minY,
-        width: screenFrame.width,
-        height: max(barFrame.maxY - screenFrame.minY, 1)
-    )
-    return keepVisibleRegion.contains(pointer)
+    return barFrame.contains(pointer) && screenFrame.contains(pointer)
 }

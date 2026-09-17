@@ -1,22 +1,22 @@
 # Project and workspace appearance
 
-The approved prototype lives in `../temp/winmux`. The native implementation uses the same Geist token roles, without glass.
+The native implementation uses Geist token roles and the custom WinNotch glass compositor.
 
 | Name | Meaning | Appearance |
 | --- | --- | --- |
-| Widget bar | Status widgets in the native menu area | WinDock clear glass with backdrop blur and a 20% white tint, without an added outline; safe around the camera notch |
+| Widget bar | Status widgets supplied by the independent My Menu Bar app | Clear custom glass with backdrop blur and a 20% white tint, without an added outline; safe around the camera notch |
 | Project frame | Former full-screen surface beneath the Widget bar | Removed; the desktop remains visible through window gaps |
-| Workspace tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized WinDock glass surface with maximum-strength color-neutral backdrop blur and a 60% white tint composited at 80% surface opacity, plus a fully opaque white border and a configurable rounded 12%-black shadow (8 pt radius, 2 pt downward offset) protected by a 12 pt transparent non-interactive inset, floating 16 points above the usable screen edge; active or hovered workspace labels are fully opaque and medium weight, while inactive labels are 50% opaque and regular weight, without an underline treatment |
+| Workspace switcher | Temporary workspace-only HUD | Horizontally and vertically centered like macOS Command–Tab, using the native HUD material, continuous radius, subtle native border, and matching shadow |
 | Workspace frame | Window layout area | No enclosing fill; each window and window tab bar owns its surface |
 | Window tab bar | Compact WinDock glass track with a color-neutral backdrop, 25% blur opacity, a visible 25% white tint, and an independently rendered 45% theme-aware border. Focused and hovered labels are fully opaque, unfocused labels are 50% opaque, and icons remain fully opaque; focused labels use semibold weight, unfocused labels use regular weight, the focused segment uses an 80% white fill, and hover uses a 50% white fill. |
 | Stacked window | Windows sharing one workspace tab bar | Existing grouping behavior |
 | Workspace window | Native app window and title bar | Native controls, borders, and corner geometry retained |
 
-Workspace tabs size to their text with a 200pt cap, centered labels, and dividers only between workspaces. The Project icon and label remain; there is no divider after Project. Active workspace text is semibold with a one-pixel underline directly beneath the text. Inactive workspace text is regular gray-900-light. The floating workspace bar uses a 48pt content height, 16pt outer horizontal padding, a 24pt continuous radius, and 16pt spacing from the bottom work-area edge. Window tab bars retain their original compact 32pt tab surface inside a 34pt glass track. Their tabs retain equal widths, centered content, and existing typography. Window gaps expose the desktop instead of a project-frame fill.
+Workspace tabs size to their text with a 200pt cap, centered labels, and subtle dividers. Project controls live in the WinNotch status-item menu rather than inside the switcher. Window tab bars retain their original compact 32pt tab surface inside a 34pt glass track. Window gaps expose the desktop instead of a project-frame fill.
 
-The Project menu's Config submenu has a global **Auto hide** setting. It defaults off, leaving the workspace tabs bar sticky at the bottom of each display's work area. When enabled, the bar releases its reserved layout space, reveals from the bottom edge as an overlay on that display, and remains visible while its menus, editors, or drag targets are in use. Switching workspaces or moving a window to another workspace briefly reveals the destination display's bar, including the default Option+number and Option+Shift+number shortcuts.
+The workspace switcher is temporary rather than pinned, so there is no auto-hide preference. Switching workspaces or moving a window to another workspace briefly reveals it on the destination display, including the default Option+number and Option+Shift+number shortcuts.
 
-The Project menu opens above the floating bar with a small gap, so it never covers the bar itself.
+During drag previews, managed windows are hidden and the preview interior is clear, so it reveals the wallpaper rather than another window. A white outline marks the destination frame.
 
 The names describe UI surfaces. Internal workspace/project identifiers, configuration keys, CLI commands, and stored user state keep their existing meanings for compatibility. Native window corners remain owned by their applications; the HTML mockup's simulated 20-point corners do not forcibly reshape third-party windows.
 

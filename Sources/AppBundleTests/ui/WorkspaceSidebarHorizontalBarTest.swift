@@ -12,7 +12,7 @@ final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
         XCTAssertEqual(anchor.size, CGSize(width: 1, height: 1))
     }
 
-    func testNotchedDisplayUsesFullWidthWidgetRowAndCenteredProjectBar() {
+    func testNotchedDisplayCentersWorkspaceSwitcherLikeCommandTab() {
         let screenFrame = NSRect(x: 0, y: 0, width: 1728, height: 1117)
         let leftSafeArea = NSRect(x: 0, y: 1085, width: 771, height: 32)
         let rightSafeArea = NSRect(x: 957, y: 1085, width: 771, height: 32)
@@ -30,14 +30,15 @@ final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
         let panel = workspaceSidebarFloatingProjectBarPanelFrame(
             screenFrame: screenFrame,
             visibleFrame: NSRect(x: 0, y: 0, width: 1728, height: 1085),
-            barSize: CGSize(width: 420, height: 32)
+            barSize: CGSize(width: 420, height: 32),
+            notchLeadingEdge: leftSafeArea.maxX
         )
 
         XCTAssertEqual(left, NSRect(x: 0, y: 1041, width: 1728, height: 44))
         XCTAssertEqual(right, NSRect(x: 0, y: 1085, width: 1728, height: 32))
         XCTAssertEqual(panel.width, 420)
         XCTAssertEqual(panel.midX, screenFrame.midX)
-        XCTAssertEqual(panel.minY, WinMuxBarStyle.projectTabsBarOuterInset)
+        XCTAssertEqual(panel.midY, 1085 / 2)
     }
 
     func testNonNotchedDisplayUsesTwoFullWidthRows() {
@@ -67,16 +68,16 @@ final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
 
         let panel = workspaceSidebarFloatingProjectBarPanelFrame(
             screenFrame: screenFrame,
-            visibleFrame: NSRect(x: -1432, y: 145, width: 1432, height: 875),
+            visibleFrame: NSRect(x: -1432, y: 145, width: 1432, height: 851),
             barSize: CGSize(width: 420, height: 32)
         )
 
         XCTAssertEqual(panel.midX, screenFrame.midX)
-        XCTAssertEqual(panel.minY, 145 + WinMuxBarStyle.projectTabsBarOuterInset)
+        XCTAssertEqual(panel.midY, NSRect(x: -1432, y: 145, width: 1432, height: 851).midY)
         XCTAssertEqual(panel.width, 420)
     }
 
-    func testFloatingProjectBarIsCenteredAboveBottomEdge() {
+    func testFloatingWorkspaceBarIsCenteredInUsableScreen() {
         let frame = workspaceSidebarFloatingProjectBarPanelFrame(
             screenFrame: NSRect(x: -1440, y: 120, width: 1440, height: 900),
             visibleFrame: NSRect(x: -1440, y: 120, width: 1440, height: 870),
@@ -86,14 +87,14 @@ final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
         XCTAssertEqual(frame.width, 420)
         XCTAssertEqual(frame.height, 32)
         XCTAssertEqual(frame.midX, -720)
-        XCTAssertEqual(frame.minY, 120 + WinMuxBarStyle.projectTabsBarOuterInset)
+        XCTAssertEqual(frame.midY, 555)
     }
 
     func testFloatingProjectBarShadowOutsetPreservesVisibleBarPosition() {
         let outset = WinMuxBarStyle.workspaceBarShadowOutset
         let frame = workspaceSidebarFloatingProjectBarPanelFrame(
             screenFrame: NSRect(x: 0, y: 0, width: 1440, height: 900),
-            visibleFrame: NSRect(x: 0, y: 40, width: 1440, height: 860),
+            visibleFrame: NSRect(x: 0, y: 40, width: 1440, height: 836),
             barSize: CGSize(width: 420 + outset * 2, height: 48 + outset * 2),
             contentOutset: outset
         )
@@ -103,46 +104,46 @@ final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
         )
 
         XCTAssertEqual(visualFrame.size, CGSize(width: 420, height: 48))
-        XCTAssertEqual(visualFrame.minY, 40 + WinMuxBarStyle.projectTabsBarOuterInset)
+        XCTAssertEqual(visualFrame.midY, 458)
         XCTAssertEqual(visualFrame.midX, 720)
     }
 
-    func testAutoHideReclaimsBottomBarReservation() {
+    func testWorkspaceBarNeverReservesTiledWindowSpace() {
         XCTAssertEqual(
             workspaceSidebarProjectBarVisibleReservation(autoHideEnabled: false),
-            WinMuxBarStyle.projectBarHeight
+            0
         )
         XCTAssertEqual(workspaceSidebarProjectBarVisibleReservation(autoHideEnabled: true), 0)
     }
 
-    func testAutoHideBottomEdgeRevealAndKeepVisibleRegions() {
+    func testTemporarySwitcherOnlyStaysVisibleForInteraction() {
         let screen = NSRect(x: 0, y: 0, width: 1000, height: 800)
-        let bar = NSRect(x: 300, y: 38, width: 400, height: 32)
+        let bar = NSRect(x: 300, y: 384, width: 400, height: 32)
 
-        XCTAssertTrue(workspaceSidebarAutoHideShouldShow(
+        XCTAssertFalse(workspaceSidebarAutoHideShouldShow(
             isCurrentlyVisible: false,
-            pointer: CGPoint(x: 50, y: 1),
+            pointer: CGPoint(x: 50, y: 799),
             screenFrame: screen,
             barFrame: bar,
             isInteractionLocked: false
         ))
         XCTAssertTrue(workspaceSidebarAutoHideShouldShow(
             isCurrentlyVisible: true,
-            pointer: CGPoint(x: 500, y: 50),
+            pointer: CGPoint(x: 500, y: 400),
             screenFrame: screen,
             barFrame: bar,
             isInteractionLocked: false
         ))
         XCTAssertFalse(workspaceSidebarAutoHideShouldShow(
             isCurrentlyVisible: true,
-            pointer: CGPoint(x: 500, y: 100),
+            pointer: CGPoint(x: 500, y: 700),
             screenFrame: screen,
             barFrame: bar,
             isInteractionLocked: false
         ))
         XCTAssertTrue(workspaceSidebarAutoHideShouldShow(
             isCurrentlyVisible: true,
-            pointer: CGPoint(x: 500, y: 100),
+            pointer: CGPoint(x: 500, y: 700),
             screenFrame: screen,
             barFrame: bar,
             isInteractionLocked: true

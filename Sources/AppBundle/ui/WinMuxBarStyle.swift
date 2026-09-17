@@ -193,6 +193,27 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
 }
 
 extension View {
+    func winMuxNativeSwitcherHUDSurface(_ palette: WinMuxOverlayPalette) -> some View {
+        let shape = RoundedRectangle(cornerRadius: WinMuxBarStyle.cornerRadius, style: .continuous)
+        return background {
+            VisualEffectBlur(
+                material: .hudWindow,
+                blendingMode: .behindWindow,
+                opacity: 1
+            )
+            .clipShape(shape)
+        }
+        .clipShape(shape)
+        .overlay {
+            shape.strokeBorder(
+                winMuxBarSurfaceStroke(palette).opacity(0.28),
+                lineWidth: WinMuxBarStyle.strokeWidth
+            )
+            .allowsHitTesting(false)
+        }
+        .shadow(color: .black.opacity(0.28), radius: WinMuxSpacing.regular, y: WinMuxSpacing.hairline)
+    }
+
     func winMuxCustomGlassBarSurface(
         _ palette: WinMuxOverlayPalette,
         cornerRadius: CGFloat = WinMuxBarStyle.projectBarCornerRadius,

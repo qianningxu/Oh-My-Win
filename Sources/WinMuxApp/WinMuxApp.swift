@@ -9,14 +9,6 @@ final class WinMuxAppDelegate: NSObject, NSApplicationDelegate {
     private var isTerminating = false
     private var terminationCoordinator: TerminationPreparationCoordinator?
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        MenuBarStatusWidgetsController.shared.install()
-    }
-
-    func applicationWillTerminate(_ notification: Notification) {
-        MenuBarStatusWidgetsController.shared.remove()
-    }
-
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !isTerminating else { return .terminateNow }
         isTerminating = true

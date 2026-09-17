@@ -139,26 +139,17 @@ public final class MenuBarStatusWidgetsController {
 
     private func refresh() {
         var activeScreenNumbers = Set<NSNumber>()
-        for (screenIndex, screen) in NSScreen.screens.enumerated() {
+        for screen in NSScreen.screens {
             guard let screenNumber = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber else {
                 continue
             }
-            let monitor = sortedMonitors.first {
-                $0.monitorAppKitNsScreenScreensId == screenIndex + 1
-            }
-            let projectThemeFamily = monitor.map {
-                workspaceCanvasProjectThemeFamily(
-                    activeProjectId: activeWorkspaceProjectId(for: $0),
-                    projectColors: config.workspaceSidebar.projectColors
-                )
-            } ?? nil
             activeScreenNumbers.insert(screenNumber)
             let panel = panelsByScreenNumber[screenNumber] ?? MenuBarStatusWidgetPanel()
             panelsByScreenNumber[screenNumber] = panel
             let panelFrame = menuBarFrame(for: screen)
             panel.show(
                 in: panelFrame,
-                projectThemeFamily: projectThemeFamily,
+                projectThemeFamily: nil,
                 cameraSafeEdges: menuBarCameraSafeEdges(for: screen, panelFrame: panelFrame)
             )
         }
