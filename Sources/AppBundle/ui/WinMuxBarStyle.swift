@@ -20,18 +20,18 @@ enum WinMuxBarStyle {
     static let projectTabsBarFontSize = fontSize + strokeWidth
     static let projectBarCornerRadius = projectTabsBarContentHeight / 2
     static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
-    static let projectBarTintOpacity: CGFloat = 0.28
-    static let projectBarStrokeOpacity: CGFloat = 0.72
+    static let projectBarTintOpacity: CGFloat = 0.08
+    static let projectBarStrokeOpacity: CGFloat = 0.44
     static let workspaceTabContentHeight = standardGap * 10
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = workspaceTabContentHeight / 2
     static let workspaceTabBarCornerRadius = workspaceBarHeight / 2
-    static let workspaceBarTintOpacity: CGFloat = 0.22
-    static let workspaceBarStrokeOpacity: CGFloat = 0.68
-    static let topBarTintOpacity: CGFloat = 0.24
-    static let topBarStrokeOpacity: CGFloat = 0.56
-    static let selectedSegmentOpacity: CGFloat = 0.76
-    static let hoveredSegmentOpacity: CGFloat = 0.42
+    static let workspaceBarTintOpacity: CGFloat = 0.06
+    static let workspaceBarStrokeOpacity: CGFloat = 0.4
+    static let topBarTintOpacity: CGFloat = 0.06
+    static let topBarStrokeOpacity: CGFloat = 0.34
+    static let selectedSegmentOpacity: CGFloat = 0.56
+    static let hoveredSegmentOpacity: CGFloat = 0.24
 }
 
 struct WinMuxBarDivider: View {
@@ -56,6 +56,7 @@ func winMuxBarSurfaceStroke(_ palette: WinMuxOverlayPalette) -> Color {
 
 private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorScheme) private var colorScheme
 
     let palette: WinMuxOverlayPalette
     let cornerRadius: CGFloat
@@ -73,6 +74,17 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
                     ZStack {
                         VisualEffectBlur(material: material, blendingMode: .behindWindow)
                         winMuxBarSurfaceFill(palette).opacity(tintOpacity)
+                        shape.fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(colorScheme == .dark ? 0.13 : 0.24),
+                                    Color.white.opacity(colorScheme == .dark ? 0.035 : 0.07),
+                                    Color.black.opacity(colorScheme == .dark ? 0.08 : 0.035),
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                     }
                 }
             }
@@ -86,6 +98,28 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
                 )
                 .allowsHitTesting(false)
             }
+            .overlay {
+                if !reduceTransparency {
+                    shape.strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(colorScheme == .dark ? 0.38 : 0.72),
+                                Color.white.opacity(colorScheme == .dark ? 0.12 : 0.26),
+                                Color.black.opacity(colorScheme == .dark ? 0.24 : 0.12),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: WinMuxBarStyle.strokeWidth
+                    )
+                    .allowsHitTesting(false)
+                }
+            }
+            .shadow(
+                color: Color.black.opacity(reduceTransparency ? 0 : colorScheme == .dark ? 0.32 : 0.18),
+                radius: standardGap * 3,
+                y: standardGap
+            )
     }
 }
 
@@ -93,7 +127,7 @@ extension View {
     func winMuxGlassBarSurface(
         _ palette: WinMuxOverlayPalette,
         cornerRadius: CGFloat = WinMuxBarStyle.projectBarCornerRadius,
-        material: NSVisualEffectView.Material = .popover,
+        material: NSVisualEffectView.Material = .underWindowBackground,
         tintOpacity: CGFloat = WinMuxBarStyle.projectBarTintOpacity,
         strokeOpacity: CGFloat = WinMuxBarStyle.projectBarStrokeOpacity
     ) -> some View {

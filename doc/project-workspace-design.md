@@ -4,11 +4,11 @@ The approved prototype lives in `../temp/winmux`. The native implementation uses
 
 | Name | Meaning | Appearance |
 | --- | --- | --- |
-| Widget bar | Status widgets in the native menu area | Native menu material with a translucent project tint and subtle stroke; safe around the camera notch |
+| Widget bar | Status widgets in the native menu area | Native glass following the current light/dark appearance, with a faint project tint and reflective edge; safe around the camera notch |
 | Project frame | Former full-screen surface beneath the Widget bar | Removed; the desktop remains visible through window gaps |
-| Project tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized native glass surface with a translucent color-3 tint and color-5 stroke; text-only workspace tabs with a text-width underline for selection |
+| Project tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized native glass surface with a faint color-3 tint, reflective edge, and color-5 stroke; text-only workspace tabs with a text-width underline for selection |
 | Workspace frame | Window layout area | No enclosing fill; each window and window tab bar owns its surface |
-| Workspace tab bar / window bar | Row attached above a workspace window | Enlarged native glass track, translucent active tab, equal-width tabs with centered content |
+| Workspace tab bar / window bar | Row attached above a workspace window | Enlarged native glass track with reflective edging, a translucent active tab, and equal-width tabs with centered content |
 | Stacked window | Windows sharing one workspace tab bar | Existing grouping behavior |
 | Workspace window | Native app window and title bar | Native controls, borders, and corner geometry retained |
 

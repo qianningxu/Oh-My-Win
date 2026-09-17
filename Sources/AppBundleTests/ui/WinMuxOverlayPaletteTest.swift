@@ -285,6 +285,20 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         XCTAssertEqual(WinMuxBarStyle.workspaceTabContentHeight, 40)
         XCTAssertEqual(WinMuxBarStyle.workspaceBarHeight, 42)
         XCTAssertGreaterThan(menuBarWidgetFontSize, NSFont.menuBarFont(ofSize: 0).pointSize)
+        XCTAssertLessThanOrEqual(WinMuxBarStyle.projectBarTintOpacity, 0.1)
+        XCTAssertLessThanOrEqual(WinMuxBarStyle.workspaceBarTintOpacity, 0.1)
+        XCTAssertLessThanOrEqual(WinMuxBarStyle.topBarTintOpacity, 0.1)
+    }
+
+    func testMenuBarUsesCurrentAppearanceWithoutReversingTheme() {
+        XCTAssertEqual(
+            menuBarStatusWidgetPalette(colorScheme: .light, projectThemeFamily: .blue).theme,
+            .light
+        )
+        XCTAssertEqual(
+            menuBarStatusWidgetPalette(colorScheme: .dark, projectThemeFamily: .blue).theme,
+            .dark
+        )
     }
 
     func testSidebarSideAreaVisualFrameIsInsetWithinHostFrame() {

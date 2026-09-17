@@ -262,8 +262,8 @@ private struct MenuBarStatusWidgetGroup: View {
     let cameraSafeEdges: ClosedRange<CGFloat>?
 
     var body: some View {
-        let palette = WinMuxOverlayPalette(
-            theme: colorScheme == .dark ? .light : .dark,
+        let palette = menuBarStatusWidgetPalette(
+            colorScheme: colorScheme,
             projectThemeFamily: projectThemeFamily
         )
         GeometryReader { geometry in
@@ -322,13 +322,23 @@ private struct MenuBarStatusWidgetGroup: View {
         .winMuxGlassBarSurface(
             palette,
             cornerRadius: WinMuxSpacing.none,
-            material: .menu,
+            material: .underWindowBackground,
             tintOpacity: WinMuxBarStyle.topBarTintOpacity,
             strokeOpacity: WinMuxBarStyle.topBarStrokeOpacity
         )
         .environment(\.colorScheme, palette.colorScheme)
         .environment(\.workspaceSidebarProjectThemeFamily, projectThemeFamily)
     }
+}
+
+func menuBarStatusWidgetPalette(
+    colorScheme: ColorScheme,
+    projectThemeFamily: WorkspaceSidebarProjectThemeFamily?
+) -> WinMuxOverlayPalette {
+    WinMuxOverlayPalette(
+        colorScheme: colorScheme,
+        projectThemeFamily: projectThemeFamily
+    )
 }
 
 struct MenuBarPeriodCapsule: View {
