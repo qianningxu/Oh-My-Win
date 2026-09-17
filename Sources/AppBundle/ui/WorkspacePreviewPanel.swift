@@ -459,7 +459,9 @@ private struct WorkspacePreviewView: View {
                                     .onTapGesture { onSelect(index) }
                                 }
                             }
-                            .padding(24)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 24)
+                            .padding(.bottom, 12)
                         }
                         .frame(width: panelWidth)
                         .background { WorkspacePreviewSwitcherSurface() }
@@ -493,7 +495,7 @@ private struct WorkspacePreviewCard: View {
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Color.black.opacity(palette.isDark ? 0.30 : 0.16))
+                            .fill(Color.black.opacity(palette.isDark ? 0.45 : 0.28))
                     }
                 }
 
@@ -516,7 +518,7 @@ private struct WorkspacePreviewSwitcherSurface: View {
         let shape = RoundedRectangle(cornerRadius: 32, style: .continuous)
         ZStack {
             WorkspacePreviewNativeMaterial()
-                .opacity(0.8)
+                .opacity(0.9)
             shape.strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
         }
         .compositingGroup()
