@@ -4,7 +4,6 @@ import Foundation
 
 @MainActor public func initAppBundle() {
     restoreWorkspaceSidebarAppearancePreference()
-    WorkspaceMenuBridge.shared.install()
     Task {
         beginStartupLayoutRestoration()
         defer { finishStartupLayoutRestoration() }

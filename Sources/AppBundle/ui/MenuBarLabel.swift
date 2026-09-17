@@ -281,28 +281,10 @@ private struct WinMuxMenuBarMark: View {
     var body: some View {
         GeometryReader { geometry in
             let side = min(geometry.size.width, geometry.size.height)
-            let lineWidth = max(1.8, side * 0.055)
-            ZStack {
-                menuBarWindow(width: side * 0.48, height: side * 0.28, lineWidth: lineWidth)
-                    .rotationEffect(.degrees(-10))
-                    .offset(x: -side * 0.04, y: -side * 0.11)
-                menuBarWindow(width: side * 0.34, height: side * 0.38, lineWidth: lineWidth)
-                    .rotationEffect(.degrees(12))
-                    .offset(x: side * 0.18, y: -side * 0.03)
-                menuBarWindow(width: side * 0.50, height: side * 0.30, lineWidth: lineWidth)
-                    .rotationEffect(.degrees(8))
-                    .offset(x: -side * 0.10, y: side * 0.16)
-                menuBarWindow(width: side * 0.30, height: side * 0.30, lineWidth: lineWidth)
-                    .rotationEffect(.degrees(-8))
-                    .offset(x: side * 0.20, y: side * 0.18)
-            }
+            Text("oh!")
+                .font(.system(size: side * 0.50, weight: .bold, design: .rounded))
+                .foregroundStyle(color)
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
-    }
-
-    private func menuBarWindow(width: CGFloat, height: CGFloat, lineWidth: CGFloat) -> some View {
-        RoundedRectangle(cornerRadius: min(width, height) * 0.23, style: .continuous)
-            .stroke(color, lineWidth: lineWidth)
-            .frame(width: width, height: height)
     }
 }
