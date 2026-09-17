@@ -60,22 +60,3 @@ final class WinMuxMenuPresentation {
         trackingDepth = 0
     }
 }
-
-/// SwiftUI and AppKit popovers also inherit the low resting level of the tab bar.
-struct WinMuxMenuPopoverLevel: NSViewRepresentable {
-    func makeNSView(context: Context) -> LevelView { LevelView() }
-    func updateNSView(_ view: LevelView, context: Context) { view.raisePopover() }
-
-    final class LevelView: NSView {
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            raisePopover()
-            DispatchQueue.main.async { [weak self] in self?.raisePopover() }
-        }
-
-        func raisePopover() {
-            guard let window, !(window is NSPanelHud) else { return }
-            window.level = .popUpMenu
-        }
-    }
-}

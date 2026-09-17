@@ -314,7 +314,8 @@ struct WorkspaceSidebarHorizontalBar: View {
             .buttonStyle(.plain)
             .help("Project: \(name) — Switch project")
             .accessibilityLabel("Project: \(name)")
-            .popover(isPresented: $isProjectMenuOpen, arrowEdge: .bottom) {
+            .background {
+                WinMuxMenuPanelAnchor(isPresented: $isProjectMenuOpen) {
                 WorkspaceSidebarProjectMenu(
                     projects: snapshot.projects,
                     selectedProjectId: snapshot.activeProjectId,
@@ -340,6 +341,7 @@ struct WorkspaceSidebarHorizontalBar: View {
                     .menuStyle(.borderlessButton)
                 }
                 .environment(\.colorScheme, colorScheme)
+                }
             }
             .frame(width: contentHeight, height: contentHeight)
         }

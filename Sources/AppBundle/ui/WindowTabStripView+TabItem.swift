@@ -39,19 +39,19 @@ extension WindowTabStripView {
         .onHover { hovering in
             updateHoveredTab(tab.windowId, hovering: hovering)
         }
-        .contextMenu {
-            Button("Rename tab") {
-                beginRenamingTab(tab)
-            }
-            if !projectDestinations.isEmpty {
-                Menu("Move to") {
-                    ForEach(projectDestinations) { project in
-                        Button(project.displayName) {
+        .overlay {
+            WorkspaceSidebarNativeContextMenu(
+                items: [
+                    .init(title: "Rename tab") { beginRenamingTab(tab) },
+                ] + (projectDestinations.isEmpty ? [] : [
+                    .init(title: "Move to project", children: projectDestinations.map { project in
+                        .init(title: project.displayName) {
                             moveWindowToProjectFromTabStrip(tab.windowId, projectId: project.id)
                         }
-                    }
-                }
-            }
+                    }),
+                ]),
+                colorScheme: barColorScheme
+            )
         }
     }
 

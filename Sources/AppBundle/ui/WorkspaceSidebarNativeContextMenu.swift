@@ -26,10 +26,16 @@ struct WorkspaceSidebarNativeContextMenu: NSViewRepresentable {
         view.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
     }
 
+    static func dismantleNSView(_ view: MenuView, coordinator: ()) {
+        view.dismissMenu()
+    }
+
     final class MenuView: NSView {
         var items: [Item] = []
         var colorScheme: ColorScheme = .light
-        private var popover: NSPopover?
+        private var menuPanel: WinMuxMenuPanelController?
+
+        func dismissMenu() { menuPanel?.dismiss() }
 
         override func hitTest(_ point: NSPoint) -> NSView? {
             guard let event = NSApp.currentEvent,
@@ -40,19 +46,15 @@ struct WorkspaceSidebarNativeContextMenu: NSViewRepresentable {
         }
 
         override func rightMouseDown(with event: NSEvent) {
-            popover?.close()
-            let popover = NSPopover()
-            popover.behavior = .transient
-            popover.animates = false
-            popover.contentViewController = NSHostingController(rootView:
-                WorkspaceSidebarContextCommands(items: items) { [weak popover] in
-                    popover?.close()
+            menuPanel?.dismiss()
+            let controller = WinMuxMenuPanelController()
+            menuPanel = controller
+            controller.show(from: self) {
+                WorkspaceSidebarContextCommands(items: items) { [weak controller] in
+                    controller?.dismiss()
                 }
                 .environment(\.colorScheme, colorScheme)
-            )
-            self.popover = popover
-            popover.show(relativeTo: bounds, of: self, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.level = .popUpMenu
+            }
         }
 
         override func mouseDown(with event: NSEvent) {
@@ -112,6 +114,6 @@ private struct WorkspaceSidebarContextCommands: View {
         .padding(WinMuxSpacing.section)
         .frame(width: standardGap * 80)
         .background(palette.geistBackground(.primary))
-        .background(WinMuxMenuPopoverLevel())
+
     }
 }
