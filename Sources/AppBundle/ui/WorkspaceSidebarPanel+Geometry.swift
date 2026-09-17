@@ -33,6 +33,7 @@ extension WorkspaceSidebarPanel {
             barSize: contentSize,
             extraWidth: projectActionMenuPresentationExtraWidth,
             extraHeight: projectMenuPresentationExtraHeight,
+            contentOutset: WinMuxBarStyle.workspaceBarShadowOutset,
         )
 
         return WorkspaceSidebarPanelLayout(
@@ -142,6 +143,7 @@ func workspaceSidebarFloatingProjectBarPanelFrame(
     barSize: CGSize,
     extraWidth: CGFloat = 0,
     extraHeight: CGFloat = 0,
+    contentOutset: CGFloat = 0,
 ) -> NSRect {
     let horizontalMargin = WinMuxSpacing.comfortable
     let maximumWidth = max(screenFrame.width - horizontalMargin * 2, 1)
@@ -152,10 +154,17 @@ func workspaceSidebarFloatingProjectBarPanelFrame(
         screenFrame.maxX - width
     )
     let y = min(
-        max(visibleFrame.minY + WinMuxBarStyle.projectTabsBarOuterInset, screenFrame.minY),
+        max(visibleFrame.minY + WinMuxBarStyle.projectTabsBarOuterInset - max(contentOutset, 0), screenFrame.minY),
         screenFrame.maxY - height
     )
     return NSRect(x: x, y: max(y, screenFrame.minY), width: width, height: height)
+}
+
+func workspaceSidebarFloatingProjectBarVisualFrame(
+    panelFrame: NSRect,
+    contentOutset: CGFloat = WinMuxBarStyle.workspaceBarShadowOutset
+) -> NSRect {
+    panelFrame.insetBy(dx: max(contentOutset, 0), dy: max(contentOutset, 0))
 }
 
 func workspaceSidebarPanelFrame(

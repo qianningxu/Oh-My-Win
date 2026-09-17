@@ -89,6 +89,24 @@ final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
         XCTAssertEqual(frame.minY, 120 + WinMuxBarStyle.projectTabsBarOuterInset)
     }
 
+    func testFloatingProjectBarShadowOutsetPreservesVisibleBarPosition() {
+        let outset = WinMuxBarStyle.workspaceBarShadowOutset
+        let frame = workspaceSidebarFloatingProjectBarPanelFrame(
+            screenFrame: NSRect(x: 0, y: 0, width: 1440, height: 900),
+            visibleFrame: NSRect(x: 0, y: 40, width: 1440, height: 860),
+            barSize: CGSize(width: 420 + outset * 2, height: 48 + outset * 2),
+            contentOutset: outset
+        )
+        let visualFrame = workspaceSidebarFloatingProjectBarVisualFrame(
+            panelFrame: frame,
+            contentOutset: outset
+        )
+
+        XCTAssertEqual(visualFrame.size, CGSize(width: 420, height: 48))
+        XCTAssertEqual(visualFrame.minY, 40 + WinMuxBarStyle.projectTabsBarOuterInset)
+        XCTAssertEqual(visualFrame.midX, 720)
+    }
+
     func testAutoHideReclaimsBottomBarReservation() {
         XCTAssertEqual(
             workspaceSidebarProjectBarVisibleReservation(autoHideEnabled: false),

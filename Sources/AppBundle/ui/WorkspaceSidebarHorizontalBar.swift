@@ -211,6 +211,7 @@ struct WorkspaceSidebarHorizontalBar: View {
             glassStyle: .workspaceBar,
             strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
         )
+        .padding(WinMuxBarStyle.workspaceBarShadowOutset)
         .background {
             GeometryReader { geometry in
                 WinMuxDesignTokens.transparent.preference(

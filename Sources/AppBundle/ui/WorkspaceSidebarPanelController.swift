@@ -64,9 +64,8 @@ final class WorkspaceSidebarPanel: NSPanelHud {
         styleMask.remove(.nonactivatingPanel)
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
-        // Let AppKit render the floating bar shadow outside the panel bounds.
-        // A SwiftUI shadow is clipped because this panel hugs the bar exactly.
-        hasShadow = true
+        // The workspace bar renders its own configurable rounded shadow.
+        hasShadow = false
         isFloatingPanel = false
         isExcludedFromWindowsMenu = true
         animationBehavior = .none

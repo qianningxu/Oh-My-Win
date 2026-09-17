@@ -7,7 +7,7 @@ extension WorkspaceSidebarPanel {
     }
 
     func isMouseInsideHoverRegion() -> Bool {
-        isVisible && frame.contains(NSEvent.mouseLocation)
+        isVisible && visualSidebarFrame().contains(NSEvent.mouseLocation)
     }
 
     func isMouseInsideInteractiveRegion() -> Bool {
@@ -16,11 +16,15 @@ extension WorkspaceSidebarPanel {
     }
 
     func isPointInsideInteractiveRegion(_ point: CGPoint) -> Bool {
-        isVisible && frame.contains(point)
+        guard isVisible else { return false }
+        if projectActionMenuPresentationExtraWidth > 0 || projectMenuPresentationExtraHeight > 0 {
+            return frame.contains(point)
+        }
+        return visualSidebarFrame().contains(point)
     }
 
     func isMouseInsideVisibleRegion() -> Bool {
-        isVisible && frame.contains(NSEvent.mouseLocation)
+        isVisible && visualSidebarFrame().contains(NSEvent.mouseLocation)
     }
 
     func isMouseDeepEnoughToExpand(collapsedWidth: CGFloat) -> Bool {
@@ -28,10 +32,10 @@ extension WorkspaceSidebarPanel {
     }
 
     func visualSidebarFrame() -> NSRect {
-        frame
+        workspaceSidebarFloatingProjectBarVisualFrame(panelFrame: frame)
     }
 
     func sideAreaBackgroundFrame() -> NSRect {
-        frame
+        visualSidebarFrame()
     }
 }

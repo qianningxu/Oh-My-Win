@@ -6,7 +6,7 @@ final class MenuBarBoundsTest: XCTestCase {
     @MainActor
     func testProjectTabsStayBehindWindowsAndRestoreLayerAfterMenuCloses() {
         let panel = WorkspaceSidebarPanel.shared
-        XCTAssertTrue(panel.hasShadow)
+        XCTAssertFalse(panel.hasShadow)
         panel.setProjectMenuPresentation(isPresented: false, extraHeight: 0)
         XCTAssertFalse(panel.isFloatingPanel)
         XCTAssertEqual(panel.level, WinMuxPanelLayer.projectTabs.level)

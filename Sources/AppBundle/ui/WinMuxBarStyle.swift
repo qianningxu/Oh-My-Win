@@ -28,6 +28,10 @@ enum WinMuxBarStyle {
     static let workspaceBarStrokeOpacity: CGFloat = 1
     static let workspaceBarSurfaceOpacity: CGFloat = 0.80
     static let workspaceBarStrokeColor = Color(nsColor: NSColor(calibratedWhite: 1, alpha: 1))
+    static let workspaceBarShadowOpacity: CGFloat = 0.12
+    static let workspaceBarShadowRadius = WinMuxSpacing.regular
+    static let workspaceBarShadowY = WinMuxSpacing.hairline
+    static let workspaceBarShadowOutset = WinMuxSpacing.section
     static let topBarStrokeOpacity: CGFloat = 0
     static let dividerOpacity: CGFloat = 0.15
     static let workspaceTabUnfocusedTextOpacity: CGFloat = 0.50
@@ -77,9 +81,9 @@ enum WinMuxGlassStyle {
                 WinMuxGlassRecipe(
                     blurOpacity: 1,
                     whiteTintOpacity: 0.60,
-                    shadowOpacity: 0,
-                    shadowRadius: 0,
-                    shadowY: 0
+                    shadowOpacity: WinMuxBarStyle.workspaceBarShadowOpacity,
+                    shadowRadius: WinMuxBarStyle.workspaceBarShadowRadius,
+                    shadowY: WinMuxBarStyle.workspaceBarShadowY
                 )
             case .windowBar:
                 WinMuxGlassRecipe(
