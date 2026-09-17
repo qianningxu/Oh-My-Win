@@ -196,11 +196,14 @@ extension View {
     func winMuxNativeSwitcherHUDSurface(_ palette: WinMuxOverlayPalette) -> some View {
         let shape = RoundedRectangle(cornerRadius: WinMuxBarStyle.cornerRadius, style: .continuous)
         return background {
-            VisualEffectBlur(
-                material: .hudWindow,
-                blendingMode: .behindWindow,
-                opacity: 1
-            )
+            ZStack {
+                VisualEffectBlur(
+                    material: .hudWindow,
+                    blendingMode: .behindWindow,
+                    opacity: 1
+                )
+                Color.white.opacity(0.10)
+            }
             .clipShape(shape)
         }
         .clipShape(shape)
