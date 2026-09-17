@@ -74,6 +74,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         Task { @MainActor in
             guard let token: RunSessionGuard = .isServerEnabled else { return }
             try await runLightSession(.menuBarButton, token) {
+                rearrangeWorkspacesOnMonitors()
                 _ = target.focusWorkspace()
             }
         }

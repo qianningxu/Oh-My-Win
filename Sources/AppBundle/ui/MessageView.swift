@@ -8,7 +8,7 @@ public func getMessageWindow(messageModel: MessageModel) -> some Scene {
         MessageView(model: messageModel)
             .onAppear {
                 // Set activation policy; otherwise, WinMux windows won't be able to receive focus and accept keyboard input
-                NSApp.setActivationPolicy(.accessory)
+                NSApp.setActivationPolicy(.regular)
                 NSApplication.shared.windows.forEach {
                     if $0.identifier?.rawValue == messageWindowId {
                         $0.level = WinMuxPanelLayer.overlay.level

@@ -16,7 +16,7 @@ public func getShortcutSettingsWindow(model: ShortcutSettingsModel) -> some Scen
         ShortcutSettingsView(model: model)
             .frame(minWidth: 720, minHeight: 600)
             .onAppear {
-                NSApp.setActivationPolicy(.accessory)
+                NSApp.setActivationPolicy(.regular)
             }
     }
 }
