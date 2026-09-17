@@ -82,8 +82,8 @@ struct MenuBarLabel: View {
     var body: some View {
         if menuBarLabelShouldUseAppIndicator(trayText: viewModel.trayText, trayItems: viewModel.trayItems) {
             Text("oh!")
-                .font(.system(size: 17, weight: .heavy, design: .rounded))
-                .foregroundStyle(finalColor)
+                .font(.custom("MarkerFelt-Wide", size: 19))
+                .fontWeight(.black)
                 .fixedSize()
                 .accessibilityLabel("Oh-My-Win")
         } else if #available(macOS 14, *) { // https://github.com/nikitabobko/WinMux/issues/1122
