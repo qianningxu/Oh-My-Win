@@ -69,6 +69,8 @@ enum GlobalObserver {
     @MainActor private static var isWindowInventoryPollingStarted = false
     @MainActor private static var isWindowInventoryPollingSuspendedForSleep = false
     @MainActor private static var resizeCandidateCaptureGeneration: UInt64 = 0
+    @MainActor private static var isOptionRevealPressed = false
+    @MainActor private static var optionRevealGeneration: UInt64 = 0
     private static let pointerActivityCoalescer = PointerActivityCoalescer()
 
     private static func onNotif(_ notification: Notification) {
@@ -137,6 +139,23 @@ enum GlobalObserver {
         let modifierFlags = event.modifierFlags
         Task { @MainActor in
             noteTapBindingFlagsChanged(keyCode: keyCode, modifierFlags: modifierFlags)
+            updateOptionKeyWorkspaceBarReveal(isPressed: modifierFlags.contains(.option))
+        }
+    }
+
+    @MainActor
+    private static func updateOptionKeyWorkspaceBarReveal(isPressed: Bool) {
+        guard isOptionRevealPressed != isPressed else { return }
+        isOptionRevealPressed = isPressed
+        optionRevealGeneration &+= 1
+        let generation = optionRevealGeneration
+        if isPressed {
+            DispatchQueue.main.asyncAfter(deadline: .now() + workspaceSidebarOptionKeyRevealDelay) {
+                guard isOptionRevealPressed, optionRevealGeneration == generation else { return }
+                revealWorkspaceSidebarFromOptionKey()
+            }
+        } else {
+            releaseWorkspaceSidebarOptionKeyReveal()
         }
     }
 

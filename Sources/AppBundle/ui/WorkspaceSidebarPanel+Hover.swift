@@ -16,6 +16,7 @@ extension WorkspaceSidebarPanel {
     }
 
     func shouldKeepSidebarOpenForInlineTextEditing() -> Bool {
-        commandExpansionLocksCollapse || (inlineTextEditingActive && inlineTextEditingLocksExpansion)
+        commandExpansionLocksCollapse || optionKeyExpansionLocksCollapse ||
+            (inlineTextEditingActive && inlineTextEditingLocksExpansion)
     }
 }

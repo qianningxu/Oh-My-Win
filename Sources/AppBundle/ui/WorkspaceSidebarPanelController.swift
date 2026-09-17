@@ -27,6 +27,7 @@ final class WorkspaceSidebarPanel: NSPanelHud {
     var inlineTextEditingStartedAt: Date = .distantPast
     var inlineTextEditingPointerEnteredVisibleRegion = false
     var commandExpansionLocksCollapse = false
+    var optionKeyExpansionLocksCollapse = false
     var shouldLockNextSidebarSearchExpansion = false
     var bufferedCommandSidebarSearchKeys: [WorkspaceSidebarInlineTextKey] = []
     var commandMouseUnlockPoint: CGPoint?
@@ -219,6 +220,7 @@ final class WorkspaceSidebarPanel: NSPanelHud {
         menuTrackingDepth = 0
         menuTrackingGraceUntil = .distantPast
         commandExpansionLocksCollapse = false
+        optionKeyExpansionLocksCollapse = false
         shouldLockNextSidebarSearchExpansion = false
         bufferedCommandSidebarSearchKeys = []
         removeCommandMouseUnlockMonitors()

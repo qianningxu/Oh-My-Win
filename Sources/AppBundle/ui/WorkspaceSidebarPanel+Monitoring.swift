@@ -75,6 +75,18 @@ extension WorkspaceSidebarPanel {
         scheduleHoverStateUpdate(at: workspaceActivityRevealUntil)
     }
 
+    func revealProjectBarFromOptionKey() {
+        guard viewModel.isWorkspaceSidebarAutoHideEnabled else { return }
+        optionKeyExpansionLocksCollapse = true
+        showProjectBar()
+    }
+
+    func releaseOptionKeyProjectBarReveal() {
+        guard optionKeyExpansionLocksCollapse else { return }
+        optionKeyExpansionLocksCollapse = false
+        updateAutoHideVisibility(at: NSEvent.mouseLocation)
+    }
+
     func releaseCommandProjectBarReveal() {
         commandExpansionLocksCollapse = false
         updateAutoHideVisibility(at: NSEvent.mouseLocation)

@@ -1,6 +1,8 @@
 import Foundation
 import AppKit
 
+let workspaceSidebarOptionKeyRevealDelay: TimeInterval = 0.15
+
 @MainActor
 func openWorkspaceSidebarFromCommand() {
     guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled else { return }
@@ -33,6 +35,28 @@ func revealWorkspaceSidebarForWorkspaceActivity(on monitor: Monitor) {
     WorkspaceSidebarPanel
         .panel(for: workspaceSidebarMonitorScopeId(for: monitor))?
         .revealProjectBarForWorkspaceActivity()
+}
+
+@MainActor
+func revealWorkspaceSidebarFromOptionKey() {
+    guard TrayMenuModel.shared.isEnabled,
+          config.workspaceSidebar.enabled,
+          workspaceSidebarAutoHidePreference()
+    else { return }
+    WorkspaceSidebarPanel.refreshAll()
+    let focusedScopeId = TrayMenuModel.shared.workspaceSidebarFocusedMonitorScopeId
+    let panel = WorkspaceSidebarPanel.panel(for: focusedScopeId)
+        ?? WorkspaceSidebarPanel.visiblePanels.first
+        ?? WorkspaceSidebarPanel.allPanels.first
+        ?? WorkspaceSidebarPanel.shared
+    panel.revealProjectBarFromOptionKey()
+}
+
+@MainActor
+func releaseWorkspaceSidebarOptionKeyReveal() {
+    for panel in WorkspaceSidebarPanel.allPanels {
+        panel.releaseOptionKeyProjectBarReveal()
+    }
 }
 
 @MainActor
