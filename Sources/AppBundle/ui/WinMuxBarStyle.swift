@@ -63,7 +63,7 @@ enum WinMuxGlassStyle {
             case .windowBar:
                 WinMuxGlassRecipe(
                     blurOpacity: 0.25,
-                    whiteTintOpacity: 0.20,
+                    whiteTintOpacity: 0.25,
                     shadowOpacity: 0,
                     shadowRadius: 0,
                     shadowY: 0

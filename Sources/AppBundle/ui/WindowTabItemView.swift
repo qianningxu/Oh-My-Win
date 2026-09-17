@@ -21,7 +21,7 @@ struct WindowTabItemView: View {
 
             if showsTitle {
                 Text(hidesTitle ? "" : tab.title)
-                    .font(.system(size: WinMuxBarStyle.fontSize, weight: tab.isActive ? .semibold : .medium))
+                    .font(.system(size: WinMuxBarStyle.fontSize, weight: tab.isActive ? .semibold : .regular))
                     .lineLimit(1)
                     .truncationMode(.tail)
             }

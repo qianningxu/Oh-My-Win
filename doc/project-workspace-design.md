@@ -8,7 +8,7 @@ The approved prototype lives in `../temp/winmux`. The native implementation uses
 | Project frame | Former full-screen surface beneath the Widget bar | Removed; the desktop remains visible through window gaps |
 | Workspace tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized WinDock clear-glass surface with backdrop blur and a 20% white tint, without an outline, floating 12 points above the usable screen edge; text-only workspace tabs with a text-width underline for selection |
 | Workspace frame | Window layout area | No enclosing fill; each window and window tab bar owns its surface |
-| Window tab bar | Compact WinDock glass track with a color-neutral backdrop, 25% blur opacity, a visible 20% white tint, and an independently rendered 45% theme-aware border. Text and icons remain fully opaque; the focused segment uses an 80% white fill and hover uses a 50% white fill. |
+| Window tab bar | Compact WinDock glass track with a color-neutral backdrop, 25% blur opacity, a visible 25% white tint, and an independently rendered 45% theme-aware border. Text and icons remain fully opaque; focused labels use semibold weight, unfocused labels use regular weight, the focused segment uses an 80% white fill, and hover uses a 50% white fill. |
 | Stacked window | Windows sharing one workspace tab bar | Existing grouping behavior |
 | Workspace window | Native app window and title bar | Native controls, borders, and corner geometry retained |
 
