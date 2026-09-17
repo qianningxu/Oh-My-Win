@@ -532,7 +532,7 @@ private struct WorkspacePreviewSwitcherSurface: View {
         let shape = RoundedRectangle(cornerRadius: 32, style: .continuous)
         ZStack {
             WorkspacePreviewNativeMaterial()
-                .opacity(0.72)
+                .opacity(1)
             shape
                 .fill(
                     LinearGradient(
