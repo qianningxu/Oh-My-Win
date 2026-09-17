@@ -7,6 +7,7 @@ struct WindowTabItemView: View {
     let height: CGFloat
     let isDragSource: Bool
     let isHovered: Bool
+    let isGroupFocused: Bool
     let showsTitle: Bool
     let reservesCloseButtonSpace: Bool
     var hidesTitle = false
@@ -33,16 +34,22 @@ struct WindowTabItemView: View {
             palette,
             isSelected: tab.isActive || isDragSource,
             isHovered: isHovered,
-            selectedOpacity: WinMuxBarStyle.workspaceSelectedSegmentOpacity,
+            selectedOpacity: isGroupFocused
+                ? WinMuxBarStyle.workspaceSelectedSegmentOpacity
+                : WinMuxBarStyle.unfocusedWindowSelectedSegmentOpacity,
             hoveredOpacity: WinMuxBarStyle.windowTabHoveredSegmentOpacity
         )
         .clipShape(RoundedRectangle(cornerRadius: WinMuxBarStyle.workspaceTabCornerRadius, style: .continuous))
-        .opacity(isDragSource ? 0.55 : 1.0)
+        .opacity(contentOpacity)
         .contentShape(Rectangle())
     }
 
     private var tabForegroundStyle: Color {
         winMuxBarForeground(palette)
+    }
+
+    private var contentOpacity: CGFloat {
+        isDragSource || (!isGroupFocused && !isHovered) ? WinMuxBarStyle.unfocusedWindowTabOpacity : 1
     }
 
     private var iconSize: CGFloat {

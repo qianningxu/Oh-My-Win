@@ -20,7 +20,7 @@ enum WinMuxBarStyle {
     static let projectTabsBarFontSize = fontSize + WinMuxSpacing.hairline
     static let projectBarCornerRadius = projectTabsBarContentHeight / 2
     static let projectBarHeight = projectTabsBarContentHeight + projectTabsBarOuterInset
-    static let projectBarStrokeOpacity: CGFloat = 0.12
+    static let projectBarStrokeOpacity: CGFloat = 0
     static let workspaceTabContentHeight = standardGap * 8
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = cornerRadius
@@ -28,7 +28,10 @@ enum WinMuxBarStyle {
     static let workspaceBarStrokeOpacity: CGFloat = 0.24
     static let topBarStrokeOpacity: CGFloat = 0
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
+    static let unfocusedWindowSelectedSegmentOpacity: CGFloat = 0.10
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.25
+    static let unfocusedWindowBarOpacity: CGFloat = 0.35
+    static let unfocusedWindowTabOpacity: CGFloat = 0.55
     static let selectedSegmentOpacity: CGFloat = 0.18
     static let hoveredSegmentOpacity: CGFloat = 0.08
 }
@@ -73,7 +76,6 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
     let cornerRadius: CGFloat
     let material: NSVisualEffectView.Material
     let glassStyle: WinMuxGlassStyle
-    let usesContrastingStroke: Bool
     let strokeOpacity: CGFloat
 
     @ViewBuilder
@@ -108,8 +110,7 @@ private struct WinMuxGlassBarSurfaceModifier: ViewModifier {
 
     private func stroke(for shape: RoundedRectangle) -> some View {
         shape.strokeBorder(
-            (usesContrastingStroke ? winMuxBarForeground(palette) : winMuxBarSurfaceStroke(palette))
-                .opacity(strokeOpacity),
+            winMuxBarSurfaceStroke(palette).opacity(strokeOpacity),
             lineWidth: WinMuxBarStyle.strokeWidth
         )
         .allowsHitTesting(false)
@@ -122,7 +123,6 @@ extension View {
         cornerRadius: CGFloat = WinMuxBarStyle.projectBarCornerRadius,
         material: NSVisualEffectView.Material = .underWindowBackground,
         glassStyle: WinMuxGlassStyle = .clear,
-        usesContrastingStroke: Bool = false,
         strokeOpacity: CGFloat = WinMuxBarStyle.projectBarStrokeOpacity
     ) -> some View {
         modifier(WinMuxGlassBarSurfaceModifier(
@@ -130,7 +130,6 @@ extension View {
             cornerRadius: cornerRadius,
             material: material,
             glassStyle: glassStyle,
-            usesContrastingStroke: usesContrastingStroke,
             strokeOpacity: strokeOpacity
         ))
     }
