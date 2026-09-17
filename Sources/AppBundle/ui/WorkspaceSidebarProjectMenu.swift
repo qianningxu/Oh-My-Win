@@ -19,6 +19,9 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
     }
 
     final class ProjectButton: NSButton, NSTextFieldDelegate {
+        private let rowHeight = standardGap * 6
+        private let titleInset = standardGap * 8
+        private let minimumMenuWidth = standardGap * 46
         var model: WorkspaceSidebarProjectMenu?
         private let menuBuilder = WorkspaceSidebarNativeContextMenu.MenuView()
         private var trackingMenu: NSMenu?
@@ -39,19 +42,31 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
         @objc private func openProjects() {
             guard let model, let window else { return }
             let menu = menuBuilder.makeMenu(model.projects.map { project in
-                .init(title: project.displayName, symbol: project.id == model.selectedProjectId ? "checkmark" : nil) {
+                .init(title: project.displayName) {
                     model.onSelect(project.id)
                 }
             } + [.separator, .init(title: "Config", children: model.configuration)])
+            if let selectedIndex = model.projects.firstIndex(where: { $0.id == model.selectedProjectId }) {
+                menu.items[selectedIndex].keyEquivalentModifierMask = []
+                menu.items[selectedIndex].keyEquivalent = "✓"
+            }
             if model.allowsCreation {
                 let row = NSMenuItem()
+                let rowWidth = max(menu.size.width, minimumMenuWidth)
+                let container = NSView(frame: NSRect(x: 0, y: 0, width: rowWidth, height: rowHeight))
                 let button = NSButton(title: "New project", target: self, action: #selector(createProject))
                 button.isBordered = false
                 button.alignment = .left
                 button.font = .menuFont(ofSize: 0)
                 button.focusRingType = .none
-                button.frame = NSRect(x: 0, y: 0, width: max(menu.size.width, standardGap * 46), height: standardGap * 6)
-                row.view = button
+                button.frame = NSRect(
+                    x: titleInset,
+                    y: 0,
+                    width: rowWidth - titleInset - standardGap * 2,
+                    height: rowHeight
+                )
+                container.addSubview(button)
+                row.view = container
                 menu.addItem(row)
             }
             trackingMenu = menu
@@ -75,6 +90,8 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
             model?.onCreate { [weak self] id in
                 guard let self, let menu = self.trackingMenu,
                       let project = workspaceProjects().first(where: { $0.id == id }) else { return }
+                let rowWidth = max(menu.size.width, self.minimumMenuWidth)
+                let container = NSView(frame: NSRect(x: 0, y: 0, width: rowWidth, height: self.rowHeight))
                 let field = NSTextField(string: project.name)
                 field.isBordered = false
                 field.drawsBackground = false
@@ -82,9 +99,15 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
                 field.font = .menuFont(ofSize: 0)
                 field.delegate = self
                 field.setAccessibilityLabel("Project name")
-                field.frame = NSRect(x: 0, y: 0, width: max(menu.size.width, standardGap * 46), height: standardGap * 6)
+                field.frame = NSRect(
+                    x: self.titleInset,
+                    y: standardGap * 0.5,
+                    width: rowWidth - self.titleInset - standardGap * 2,
+                    height: self.rowHeight - standardGap
+                )
+                container.addSubview(field)
                 let row = NSMenuItem(title: project.name, action: nil, keyEquivalent: "")
-                row.view = field
+                row.view = container
                 menu.insertItem(row, at: menu.items.firstIndex(where: \.isSeparatorItem) ?? 0)
                 self.editing = (id, row, field)
                 menu.update()
