@@ -75,7 +75,7 @@ enum WinMuxGlassStyle {
                 )
             case .workspaceBar:
                 WinMuxGlassRecipe(
-                    blurOpacity: 1,
+                    blurOpacity: 0.80,
                     whiteTintOpacity: 0.50,
                     shadowOpacity: 0,
                     shadowRadius: 0,
