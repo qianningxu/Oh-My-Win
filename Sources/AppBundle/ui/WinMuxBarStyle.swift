@@ -30,6 +30,7 @@ enum WinMuxBarStyle {
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
     static let unfocusedWindowSelectedSegmentOpacity: CGFloat = 0.25
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.25
+    static let windowBarOpacity: CGFloat = 0.05
     static let unfocusedWindowActiveTabOpacity: CGFloat = 0.65
     static let unfocusedWindowTabOpacity: CGFloat = 0.40
     static let windowBarBackdropSaturation: CGFloat = 0
@@ -47,7 +48,7 @@ struct WinMuxGlassRecipe: Equatable {
 
 enum WinMuxGlassStyle {
     case clear
-    case unfocused
+    case windowBar
     case regular
 
     var recipe: WinMuxGlassRecipe {
@@ -60,7 +61,7 @@ enum WinMuxGlassStyle {
                     shadowRadius: 0,
                     shadowY: 0
                 )
-            case .unfocused:
+            case .windowBar:
                 WinMuxGlassRecipe(
                     blurOpacity: 0.25,
                     whiteTintOpacity: 0.20,

@@ -71,7 +71,6 @@ extension WindowTabStripView {
                 height: itemHeight,
                 isDragSource: draggingTabId == tab.windowId,
                 isHovered: isHovered,
-                isGroupFocused: strip.isFocused,
                 showsTitle: context.showsTabTitles,
                 reservesCloseButtonSpace: context.showsTabTitles
             )
@@ -95,7 +94,6 @@ extension WindowTabStripView {
                 height: itemHeight,
                 isDragSource: false,
                 isHovered: true,
-                isGroupFocused: strip.isFocused,
                 showsTitle: true,
                 reservesCloseButtonSpace: false,
                 hidesTitle: true

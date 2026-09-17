@@ -52,7 +52,7 @@ extension WindowTabStripView {
                                 {
                                     Rectangle()
                                         .fill(winMuxBarForeground(palette))
-                                        .opacity(strip.isFocused ? 1 : WinMuxBarStyle.unfocusedWindowTabOpacity)
+                                        .opacity(WinMuxBarStyle.unfocusedWindowTabOpacity)
                                         .frame(
                                             width: WinMuxBarStyle.strokeWidth,
                                             height: WinMuxSpacing.panel

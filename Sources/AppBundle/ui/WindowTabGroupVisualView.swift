@@ -18,10 +18,11 @@ struct WindowTabGroupVisualView: View {
                 .winMuxCustomGlassBarSurface(
                     palette,
                     cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
-                    glassStyle: strip.isFocused ? .regular : .unfocused,
+                    glassStyle: .windowBar,
                     strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
                 )
                 .saturation(WinMuxBarStyle.windowBarBackdropSaturation)
+                .opacity(WinMuxBarStyle.windowBarOpacity)
                 .padding(.top, windowTabBarOuterInset())
 
                 Spacer(minLength: WinMuxSpacing.none)
