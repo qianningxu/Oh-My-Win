@@ -281,7 +281,7 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
 
     func testGlassBarsUseExpandedDimensions() {
         XCTAssertEqual(WinMuxBarStyle.projectTabsBarContentHeight, 48)
-        XCTAssertEqual(WinMuxBarStyle.projectBarHeight, 64)
+        XCTAssertEqual(WinMuxBarStyle.projectBarHeight, 60)
         XCTAssertEqual(WinMuxBarStyle.workspaceTabContentHeight, 32)
         XCTAssertEqual(WinMuxBarStyle.workspaceBarHeight, 34)
         XCTAssertGreaterThan(menuBarWidgetFontSize, NSFont.menuBarFont(ofSize: 0).pointSize)
