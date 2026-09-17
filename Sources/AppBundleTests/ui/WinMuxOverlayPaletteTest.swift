@@ -281,15 +281,15 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
 
     func testGlassBarsUseExpandedDimensions() {
         XCTAssertEqual(WinMuxBarStyle.projectTabsBarContentHeight, 48)
-        XCTAssertEqual(WinMuxBarStyle.projectBarHeight, 56)
+        XCTAssertEqual(WinMuxBarStyle.projectBarHeight, 64)
         XCTAssertEqual(WinMuxBarStyle.workspaceTabContentHeight, 32)
         XCTAssertEqual(WinMuxBarStyle.workspaceBarHeight, 34)
         XCTAssertGreaterThan(menuBarWidgetFontSize, NSFont.menuBarFont(ofSize: 0).pointSize)
         XCTAssertEqual(WinMuxBarStyle.workspaceSelectedSegmentOpacity, 0.70)
-        XCTAssertEqual(WinMuxBarStyle.unfocusedWindowSelectedSegmentOpacity, 0.10)
+        XCTAssertEqual(WinMuxBarStyle.unfocusedWindowSelectedSegmentOpacity, 0.05)
         XCTAssertEqual(WinMuxBarStyle.windowTabHoveredSegmentOpacity, 0.25)
-        XCTAssertEqual(WinMuxBarStyle.unfocusedWindowBarOpacity, 0.35)
-        XCTAssertEqual(WinMuxBarStyle.unfocusedWindowTabOpacity, 0.55)
+        XCTAssertEqual(WinMuxBarStyle.unfocusedWindowBarOpacity, 0.15)
+        XCTAssertEqual(WinMuxBarStyle.unfocusedWindowTabOpacity, 0.40)
         XCTAssertGreaterThan(workspaceSidebarWorkspaceActivityRevealDuration, 1)
     }
 

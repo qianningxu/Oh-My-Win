@@ -14,7 +14,7 @@ enum WinMuxBarStyle {
     static let strokeWidth = standardGap * 0.25
     static let fontSize: CGFloat = 14
     static let maximumTabWidth = standardGap * 50
-    static let projectTabsBarOuterInset = WinMuxSpacing.regular
+    static let projectTabsBarOuterInset = WinMuxSpacing.panel
     static let projectTabsBarContentHeight = standardGap * 12
     static let projectTabsBarHorizontalInset = WinMuxSpacing.panel
     static let projectTabsBarFontSize = fontSize + WinMuxSpacing.hairline
@@ -28,10 +28,10 @@ enum WinMuxBarStyle {
     static let workspaceBarStrokeOpacity: CGFloat = 0.24
     static let topBarStrokeOpacity: CGFloat = 0
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
-    static let unfocusedWindowSelectedSegmentOpacity: CGFloat = 0.10
+    static let unfocusedWindowSelectedSegmentOpacity: CGFloat = 0.05
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.25
-    static let unfocusedWindowBarOpacity: CGFloat = 0.35
-    static let unfocusedWindowTabOpacity: CGFloat = 0.55
+    static let unfocusedWindowBarOpacity: CGFloat = 0.15
+    static let unfocusedWindowTabOpacity: CGFloat = 0.40
     static let selectedSegmentOpacity: CGFloat = 0.18
     static let hoveredSegmentOpacity: CGFloat = 0.08
 }
