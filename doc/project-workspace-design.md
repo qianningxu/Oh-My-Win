@@ -4,7 +4,7 @@ The approved prototype lives in `../temp/winmux`. The native implementation uses
 
 | Name | Meaning | Appearance |
 | --- | --- | --- |
-| Widget bar | Status widgets in the native menu area | Untinted native clear glass; safe around the camera notch |
+| Widget bar | Status widgets in the native menu area | Untinted native clear glass without an added outline; safe around the camera notch |
 | Project frame | Former full-screen surface beneath the Widget bar | Removed; the desktop remains visible through window gaps |
 | Workspace tabs bar | Bottom bar containing the Project menu and workspace tabs | Centered content-sized untinted native clear-glass surface with a subtle contrast-aware keyline; text-only workspace tabs with a text-width underline for selection |
 | Workspace frame | Window layout area | No enclosing fill; each window and window tab bar owns its surface |
