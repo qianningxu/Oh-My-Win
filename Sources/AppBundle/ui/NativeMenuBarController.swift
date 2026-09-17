@@ -6,7 +6,7 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private var workspaceNameByField: [ObjectIdentifier: String] = [:]
-    private var renameFieldByButton: [ObjectIdentifier: NSTextField] = [:]
+    private var renameFieldByMenuItem: [ObjectIdentifier: NSTextField] = [:]
 
     public init(viewModel: TrayMenuModel) {
         self.viewModel = viewModel
@@ -28,7 +28,7 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     public func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         workspaceNameByField.removeAll(keepingCapacity: true)
-        renameFieldByButton.removeAll(keepingCapacity: true)
+        renameFieldByMenuItem.removeAll(keepingCapacity: true)
 
         for project in viewModel.workspaceSidebarProjects {
             let item = NSMenuItem(title: project.displayName, action: nil, keyEquivalent: "")
@@ -79,20 +79,19 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         field.placeholderString = "Rename workspace"
         field.target = self
         field.action = #selector(commitWorkspaceRename(_:))
-        field.frame = NSRect(x: 10, y: 4, width: 196, height: 24)
+        field.frame = NSRect(x: 10, y: 4, width: 220, height: 24)
         workspaceNameByField[ObjectIdentifier(field)] = workspace.name
 
-        let renameButton = NSButton(title: "Rename", target: self, action: #selector(commitWorkspaceRenameButton(_:)))
-        renameButton.bezelStyle = .rounded
-        renameButton.frame = NSRect(x: 214, y: 3, width: 74, height: 26)
-        renameFieldByButton[ObjectIdentifier(renameButton)] = field
-
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 298, height: 32))
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 240, height: 32))
         container.addSubview(field)
-        container.addSubview(renameButton)
         let item = NSMenuItem()
         item.view = container
         menu.addItem(item)
+        menu.addItem(.separator())
+
+        let commit = actionItem("Rename", #selector(commitWorkspaceRenameMenuItem(_:)))
+        renameFieldByMenuItem[ObjectIdentifier(commit)] = field
+        menu.addItem(commit)
         return menu
     }
 
@@ -151,8 +150,8 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         menu.cancelTracking()
     }
 
-    @objc private func commitWorkspaceRenameButton(_ button: NSButton) {
-        guard let field = renameFieldByButton[ObjectIdentifier(button)] else { return }
+    @objc private func commitWorkspaceRenameMenuItem(_ item: NSMenuItem) {
+        guard let field = renameFieldByMenuItem[ObjectIdentifier(item)] else { return }
         commitWorkspaceRename(field)
     }
 
