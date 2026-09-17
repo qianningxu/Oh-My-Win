@@ -588,13 +588,6 @@ func createWorkspaceSidebarProject(
         if let displayName {
             try renameWorkspaceProject(project.id, displayName: displayName)
         }
-        let monitor = workspaceSidebarTargetMonitor(
-            scopeId: targetMonitorScopeId ?? viewModel.workspaceSidebarTargetMonitorScopeId
-        )
-        if let workspace = switchWorkspaceProject(project.id, on: monitor) {
-            _ = workspace.focusWorkspace()
-            viewModel.workspaceSidebarActiveProjectId = project.id
-        }
     }
 }
 

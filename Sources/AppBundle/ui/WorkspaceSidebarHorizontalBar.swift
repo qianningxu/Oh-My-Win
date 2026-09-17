@@ -776,42 +776,8 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
             hoveredWorkspaceName = hovering ? workspace.name : nil
             actions.hoverWorkspace(workspace.name, hovering)
         }
-        .contextMenu {
-            Button("Rename tab", action: onBeginRename)
-            Button("Close workspace", action: onClose)
-                .disabled(workspace.tabSummary.windowCount == 0)
-            if !allWindowMenuItems.isEmpty {
-                Menu("All windows") {
-                    ForEach(allWindowMenuItems.filter { !$0.isFloating }) { item in
-                        windowMenuButton(item)
-                    }
-                    if allWindowMenuItems.contains(where: \.isFloating),
-                       allWindowMenuItems.contains(where: { !$0.isFloating })
-                    {
-                        Divider()
-                    }
-                    ForEach(allWindowMenuItems.filter(\.isFloating)) { item in
-                        windowMenuButton(item)
-                    }
-                }
-            }
-            Menu("Move to workspace") {
-                ForEach(workspaceDestinations) { destination in
-                    Button(destination.displayName) {
-                        actions.send(.moveWorkspace(workspace.name, toWorkspace: destination.name))
-                    }
-                }
-            }
-            .disabled(workspaceDestinations.isEmpty)
-            if !projectDestinations.isEmpty {
-                Menu("Move to project") {
-                    ForEach(projectDestinations) { project in
-                        Button(project.displayName) {
-                            onMoveToProject(project.id)
-                        }
-                    }
-                }
-            }
+        .overlay {
+            WorkspaceSidebarNativeContextMenu(items: contextMenuItems, colorScheme: colorScheme)
         }
         .modifier(WorkspaceSidebarWorkspaceReorderGestureModifier(
             isEnabled: !isRenaming,
@@ -836,14 +802,42 @@ private struct WorkspaceSidebarHorizontalWorkspaceTab: View {
         .animation(.easeOut(duration: 0.10), value: isHovered)
     }
 
-    private func windowMenuButton(_ item: WorkspaceSidebarWindowMenuItem) -> some View {
-        Button {
+    private var contextMenuItems: [WorkspaceSidebarNativeContextMenu.Item] {
+        typealias Item = WorkspaceSidebarNativeContextMenu.Item
+        var items = [
+            Item(title: "Rename tab", action: onBeginRename),
+            Item(title: "Close workspace", isEnabled: workspace.tabSummary.windowCount > 0, action: onClose),
+        ]
+        if !allWindowMenuItems.isEmpty {
+            var windows = allWindowMenuItems.filter { !$0.isFloating }.map(windowMenuItem)
+            let floating = allWindowMenuItems.filter(\.isFloating).map(windowMenuItem)
+            if !windows.isEmpty && !floating.isEmpty { windows.append(.separator) }
+            windows.append(contentsOf: floating)
+            items.append(Item(title: "All windows", children: windows))
+        }
+        items.append(Item(
+            title: "Move to workspace",
+            isEnabled: !workspaceDestinations.isEmpty,
+            children: workspaceDestinations.map { destination in
+                Item(title: destination.displayName) {
+                    actions.send(.moveWorkspace(workspace.name, toWorkspace: destination.name))
+                }
+            }
+        ))
+        if !projectDestinations.isEmpty {
+            items.append(Item(title: "Move to project", children: projectDestinations.map { project in
+                Item(title: project.displayName) { onMoveToProject(project.id) }
+            }))
+        }
+        return items
+    }
+
+    private func windowMenuItem(_ item: WorkspaceSidebarWindowMenuItem) -> WorkspaceSidebarNativeContextMenu.Item {
+        WorkspaceSidebarNativeContextMenu.Item(
+            title: item.menuTitle,
+            symbol: item.isFloating ? "pin.fill" : item.isFocused ? "checkmark" : "macwindow"
+        ) {
             actions.send(.selectWindow(item.windowId))
-        } label: {
-            Label(
-                item.menuTitle,
-                systemImage: item.isFloating ? "pin.fill" : item.isFocused ? "checkmark" : "macwindow"
-            )
         }
     }
 

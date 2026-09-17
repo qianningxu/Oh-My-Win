@@ -888,8 +888,14 @@ func pruneEmptyWorkspaceProjects() {
     let emptyProjectIds = winMuxWorkspaceState.projectsById.keys.filter { projectId in
         let workspaces = projectWorkspaces(projectId: projectId)
         guard !workspaces.contains(where: workspaceAnchorsEmptySlot) else { return false }
-        // Keep a fresh blank project available for its first window. Once left,
-        // or once its used workspace becomes empty, placeholders do not keep it alive.
+        // A project created in the background must survive until first selected.
+        let wasSelected = winMuxWorkspaceState.monitorViewportsById.values.contains {
+            $0.lastActiveWorkspaceByProject[projectId] != nil
+        }
+        if !wasSelected && !workspaces.contains(where: { $0.lifecycle == .durable }) {
+            return false
+        }
+        // Once visited and left, or emptied after use, placeholders do not retain it.
         return !workspaces.contains(where: \.isVisible) || workspaces.contains { $0.lifecycle == .durable }
     }
     for projectId in emptyProjectIds {

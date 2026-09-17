@@ -5,25 +5,27 @@ import XCTest
 final class WorkspaceSidebarProjectCreationTest: XCTestCase {
     override func setUp() async throws { setUpWorkspacesForTests() }
 
-    func testNewProjectIsSelectedAndFocusedImmediately() async throws {
+    func testNewProjectSurvivesCleanupWithoutChangingFocus() async throws {
         let previousWorkspace = focus.workspace
+        _ = TestWindow.new(id: 1, parent: previousWorkspace.rootTilingContainer)
         let previousProjects = Set(workspaceProjects().map(\.id))
 
         await createWorkspaceSidebarProject()?.value
 
+        pruneEmptyWorkspaceProjects()
         let project = try XCTUnwrap(workspaceProjects().first { !previousProjects.contains($0.id) })
-        XCTAssertEqual(activeWorkspaceProjectId(for: mainMonitor), project.id)
-        XCTAssertEqual(TrayMenuModel.shared.workspaceSidebarActiveProjectId, project.id)
-        XCTAssertEqual(focus.workspace.projectId, project.id)
-        XCTAssertFalse(focus.workspace === previousWorkspace)
-        XCTAssertTrue(focus.workspace.isOrdinaryEmptySlot)
+        XCTAssertEqual(activeWorkspaceProjectId(for: mainMonitor), previousWorkspace.projectId)
+        XCTAssertTrue(focus.workspace === previousWorkspace)
+        XCTAssertEqual(projectWorkspaces(projectId: project.id).count, 1)
     }
 
-    func testNamedProjectIsSelectedAfterCreation() async throws {
+    func testNamedProjectIsCreatedWithoutChangingFocus() async throws {
+        let previousWorkspace = focus.workspace
+        _ = TestWindow.new(id: 2, parent: previousWorkspace.rootTilingContainer)
         await createWorkspaceSidebarProject(displayName: "  Writing  ")?.value
 
         let project = try XCTUnwrap(workspaceProjects().first { $0.name == "Writing" })
-        XCTAssertEqual(focus.workspace.projectId, project.id)
-        XCTAssertEqual(activeWorkspaceProjectId(for: mainMonitor), project.id)
+        XCTAssertNotEqual(project.id, previousWorkspace.projectId)
+        XCTAssertTrue(focus.workspace === previousWorkspace)
     }
 }
