@@ -83,6 +83,7 @@ struct WorkspaceSidebarProjectMenu<Configuration: View>: View {
         .padding(WinMuxSpacing.section)
         .frame(width: standardGap * 70)
         .background(palette.geistBackground(.primary))
+        .background(WinMuxMenuPopoverLevel())
     }
 
     private func createProject() {

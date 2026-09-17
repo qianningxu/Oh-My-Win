@@ -52,6 +52,7 @@ struct WorkspaceSidebarNativeContextMenu: NSViewRepresentable {
             )
             self.popover = popover
             popover.show(relativeTo: bounds, of: self, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.level = .popUpMenu
         }
 
         override func mouseDown(with event: NSEvent) {
@@ -111,5 +112,6 @@ private struct WorkspaceSidebarContextCommands: View {
         .padding(WinMuxSpacing.section)
         .frame(width: standardGap * 80)
         .background(palette.geistBackground(.primary))
+        .background(WinMuxMenuPopoverLevel())
     }
 }

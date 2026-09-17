@@ -39,6 +39,6 @@ enum WinMuxPanelLayer: CaseIterable {
 
 extension NSPanelHud {
     func applyWinMuxLayer(_ layer: WinMuxPanelLayer) {
-        level = layer.level
+        WinMuxMenuPresentation.shared.setLevel(layer.level, for: self)
     }
 }

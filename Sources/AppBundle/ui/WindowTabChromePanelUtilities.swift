@@ -47,7 +47,11 @@ private func applyWindowTabChromeStackingPolicy(
     let targetLevel = WinMuxPanelLayer.windowChrome.level
 
     panel.isFloatingPanel = false
-    panel.level = targetLevel
+    WinMuxMenuPresentation.shared.setLevel(targetLevel, for: panel)
+    if WinMuxMenuPresentation.shared.owns(panel) {
+        panel.orderFrontRegardless()
+        return
+    }
     if let activeWindowId = strip.activeWindowId {
         panel.order(order, relativeTo: Int(activeWindowId))
     } else if !panel.isVisible || previousLevel != targetLevel || previousIsFloating {
