@@ -86,6 +86,7 @@ extension TreeNodeTest {
 
         XCTAssertEqual(decoded.sidebar?.workspaceLabels, [:])
         XCTAssertEqual(decoded.sidebar?.projectLabels, [:])
+        XCTAssertTrue(decoded.sidebar?.visibleMonitors.isEmpty == true)
     }
 
     func testLegacyMultiFolderSidebarMigratesIntoMainAndRoundTripsIdempotently() throws {

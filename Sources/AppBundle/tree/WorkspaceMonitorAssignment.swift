@@ -108,6 +108,7 @@ extension CGPoint {
         }
         _ = winMuxWorkspaceState.setActiveWorkspace(workspace, on: viewportId)
         checkWorkspaceHierarchyInvariants()
+        scheduleSidebarStatePersistenceForRestart()
         return true
     }
 }

@@ -309,10 +309,26 @@ func loadPersistedSidebarStateForStartupIfPresent() {
         pendingPersistedSidebarState = (1 ... persistedSidebarStateVersion).contains(envelope.version)
             ? envelope.sidebar
             : nil
+        if persistedMonitorVisibilityForStartup.isEmpty {
+            persistedMonitorVisibilityForStartup = pendingPersistedSidebarState?.visibleMonitors ?? []
+        }
         didLoadPersistedSidebarStateDuringCurrentSession = pendingPersistedSidebarState != nil
     } catch {
         pendingPersistedSidebarState = nil
     }
+}
+
+@MainActor
+func persistFrozenWorldCheckpointForRestartIfPossible(_ world: FrozenWorld) {
+    guard !isUnitTest,
+          isPersistedSidebarStateReady,
+          pendingPersistedFrozenWorld == nil
+    else { return }
+    let sidebar = FrozenSidebarState(restorableWorkspaces: Workspace.all.filter { !$0.isArchived })
+    enqueueRestartState(
+        sidebar: sidebar,
+        world: world.windowIds.isEmpty ? .remove : .snapshot(world),
+    )
 }
 
 @MainActor

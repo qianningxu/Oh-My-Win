@@ -8,6 +8,7 @@ struct FrozenSidebarState: Codable, Sendable {
     let projectColors: [String: String]
     let folderLabels: [String: String]
     let folderColors: [String: String]
+    let visibleMonitors: [FrozenMonitor]
 
     @MainActor
     init(restorableWorkspaces: [Workspace]) {
@@ -46,6 +47,7 @@ struct FrozenSidebarState: Codable, Sendable {
         folderColors = Dictionary(uniqueKeysWithValues: config.workspaceSidebar.folderColors.filter {
             knownFolderIds.contains($0.key)
         })
+        visibleMonitors = monitors.map(FrozenMonitor.init)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -56,6 +58,7 @@ struct FrozenSidebarState: Codable, Sendable {
         case projectColors
         case folderLabels
         case folderColors
+        case visibleMonitors
     }
 
     init(from decoder: any Decoder) throws {
@@ -84,6 +87,7 @@ struct FrozenSidebarState: Codable, Sendable {
         folderLabels = isLegacy ? decodedProjectLabels.merging(decodedFolderLabels) { _, current in current } : decodedFolderLabels
         let decodedFolderColors = try container.decodeIfPresent([String: String].self, forKey: .folderColors) ?? [:]
         folderColors = isLegacy ? decodedProjectColors.merging(decodedFolderColors) { _, current in current } : decodedFolderColors
+        visibleMonitors = try container.decodeIfPresent([FrozenMonitor].self, forKey: .visibleMonitors) ?? []
     }
 }
 
