@@ -37,18 +37,11 @@ struct WindowTabItemView: View {
             hoveredOpacity: WinMuxBarStyle.windowTabHoveredSegmentOpacity
         )
         .clipShape(RoundedRectangle(cornerRadius: WinMuxBarStyle.workspaceTabCornerRadius, style: .continuous))
-        .opacity(contentOpacity)
         .contentShape(Rectangle())
     }
 
     private var tabForegroundStyle: Color {
         winMuxBarForeground(palette)
-    }
-
-    private var contentOpacity: CGFloat {
-        if tab.isActive || isDragSource { return WinMuxBarStyle.focusedWindowTabOpacity }
-        if isHovered { return WinMuxBarStyle.hoveredWindowTabOpacity }
-        return WinMuxBarStyle.unfocusedWindowTabOpacity
     }
 
     private var iconSize: CGFloat {

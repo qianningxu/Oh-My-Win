@@ -22,7 +22,6 @@ struct WindowTabGroupVisualView: View {
                     strokeOpacity: 0
                 )
                 .saturation(WinMuxBarStyle.windowBarBackdropSaturation)
-                .opacity(WinMuxBarStyle.windowBarOpacity)
                 .overlay {
                     RoundedRectangle(
                         cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
