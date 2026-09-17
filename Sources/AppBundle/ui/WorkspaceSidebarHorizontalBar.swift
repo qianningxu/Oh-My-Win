@@ -125,7 +125,6 @@ struct WorkspaceSidebarHorizontalBar: View {
     let snapshot: WorkspaceSidebarSnapshot
     let actions: WorkspaceSidebarActions
 
-    @State private var isProjectMenuOpen = false
     @State private var renamingProjectId: WorkspaceProjectId?
     @State private var renamingProjectText = ""
     @State private var renamingWorkspaceName: String?
@@ -304,84 +303,43 @@ struct WorkspaceSidebarHorizontalBar: View {
             )
             .frame(width: controlWidth, height: contentHeight)
         } else {
-            Button { isProjectMenuOpen.toggle() } label: {
-                Image(systemName: "square.stack.3d.up")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(palette.content(.secondary))
-                    .frame(width: contentHeight, height: contentHeight)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help("Project: \(name) — Switch project")
-            .accessibilityLabel("Project: \(name)")
-            .background {
-                WinMuxMenuPanelAnchor(isPresented: $isProjectMenuOpen) {
-                WorkspaceSidebarProjectMenu(
-                    projects: snapshot.projects,
-                    selectedProjectId: snapshot.activeProjectId,
-                    allowsCreation: projectsAreEnabled(),
-                    onSelect: { projectId in
-                        isProjectMenuOpen = false
-                        actions.send(.selectProject(projectId))
-                    },
-                    onCreate: { name in
-                        actions.send(.createProject(displayName: name))
-                    }
-                ) {
-                    Menu("Config") {
-                        Menu("Theme") {
-                            themeOption("Light", theme: .light)
-                            themeOption("Dark", theme: .dark)
-                            themeOption("System", theme: nil)
-                        }
-                        if projectsAreEnabled(), let project = activeProject {
-                            projectActions(for: project)
-                        }
-                    }
-                    .menuStyle(.borderlessButton)
-                }
-                .environment(\.colorScheme, colorScheme)
-                }
-            }
+            WorkspaceSidebarProjectMenu(
+                projects: snapshot.projects,
+                selectedProjectId: snapshot.activeProjectId,
+                configuration: projectConfigurationItems,
+                allowsCreation: projectsAreEnabled(),
+                colorScheme: colorScheme,
+                onSelect: { actions.send(.selectProject($0)) },
+                onCreate: { onCreated in
+                    createWorkspaceSidebarProject(onCreated: onCreated)
+                },
+                onRename: { actions.send(.renameProject($0, displayName: $1)) }
+            )
             .frame(width: contentHeight, height: contentHeight)
+            .help("Project: \(name) — Switch project")
         }
     }
 
-    @ViewBuilder
-    private func themeOption(_ title: String, theme: AppearanceTheme?) -> some View {
-        Button {
-            setWorkspaceSidebarAppearance(theme)
-        } label: {
-            if currentWorkspaceSidebarAppearancePreference() == theme {
-                Label(title, systemImage: "checkmark")
-            } else {
-                Text(title)
+    private var projectConfigurationItems: [WorkspaceSidebarNativeContextMenu.Item] {
+        typealias Item = WorkspaceSidebarNativeContextMenu.Item
+        let themes: [(String, AppearanceTheme?)] = [("Light", .light), ("Dark", .dark), ("System", nil)]
+        var items = [Item(title: "Theme", children: themes.map { title, theme in
+            Item(title: title, symbol: currentWorkspaceSidebarAppearancePreference() == theme ? "checkmark" : nil) {
+                setWorkspaceSidebarAppearance(theme)
             }
-        }
-    }
-
-    @ViewBuilder
-    private func projectActions(for project: WorkspaceSidebarProjectViewModel) -> some View {
-        Button("Rename project") {
-            beginProjectRename(project)
-        }
-        Menu("Project color") {
-            ForEach(workspaceSidebarProjectColorPresets) { preset in
-                Button {
+        })]
+        if projectsAreEnabled(), let project = activeProject {
+            items.append(Item(title: "Rename project") { beginProjectRename(project) })
+            items.append(Item(title: "Project color", children: workspaceSidebarProjectColorPresets.map { preset in
+                Item(title: preset.name, symbol: project.colorHex.flatMap(normalizedWorkspaceSidebarColorHex) == preset.hex ? "checkmark" : nil) {
                     actions.send(.setProjectColor(project.id, colorHex: preset.hex))
-                } label: {
-                    if project.colorHex.flatMap(normalizedWorkspaceSidebarColorHex) == preset.hex {
-                        Label(preset.name, systemImage: "checkmark")
-                    } else {
-                        Text(preset.name)
-                    }
                 }
-            }
+            }))
+            items.append(Item(title: "Delete project", isEnabled: canDeleteWorkspaceProject(project.id)) {
+                actions.send(.deleteProject(project.id))
+            })
         }
-        Button("Delete project", role: .destructive) {
-            actions.send(.deleteProject(project.id))
-        }
-        .disabled(!canDeleteWorkspaceProject(project.id))
+        return items
     }
 
     private func workspaceTabStrip(contentHeight: CGFloat) -> some View {
@@ -514,7 +472,6 @@ struct WorkspaceSidebarHorizontalBar: View {
     }
 
     private func beginProjectRename(_ project: WorkspaceSidebarProjectViewModel) {
-        isProjectMenuOpen = false
         finishWorkspaceRename(cancelled: true)
         renamingProjectId = project.id
         renamingProjectText = project.displayName

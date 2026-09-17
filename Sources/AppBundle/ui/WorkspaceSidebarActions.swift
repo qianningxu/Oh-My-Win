@@ -573,6 +573,7 @@ func createWorkspaceSidebarProject(
     displayName: String? = nil,
     viewModel: TrayMenuModel = TrayMenuModel.shared,
     targetMonitorScopeId: String? = nil,
+    onCreated: ((WorkspaceProjectId) -> Void)? = nil,
 ) -> Task<Void, Never>? {
     runWorkspaceSidebarSession(prioritizeFocusSync: true) {
         let displayName = displayName?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -588,6 +589,7 @@ func createWorkspaceSidebarProject(
         if let displayName {
             try renameWorkspaceProject(project.id, displayName: displayName)
         }
+        onCreated?(project.id)
     }
 }
 
