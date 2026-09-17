@@ -22,7 +22,7 @@ The names describe UI surfaces. Internal workspace/project identifiers, configur
 
 ## Native frame corrections
 
-WinDock-controlled tabs use continuous radii. The Window tab bar uses a 21-point outer radius around its inset. All bars use the shared WinDock glass compositor rather than SwiftUI's native `glassEffect`: an AppKit backdrop blur plus explicit WinDock-owned blur opacity, white tint, stroke, shadow, and focus opacity. Clear uses 85% blur with a 20% white tint and no shadow; regular uses full blur with a 28% white tint and a restrained shadow. Reduce Transparency falls back to the solid background surface. Navigation follows the selected light, dark, or system theme.
+WinDock-controlled tabs use continuous radii. The Window tab bar uses a 21-point outer radius around its inset. All bars use the shared WinDock glass compositor rather than SwiftUI's native `glassEffect`: an AppKit backdrop blur plus explicit WinDock-owned blur opacity, white tint, stroke, shadow, and focus opacity. Clear uses full blur with a 20% white tint and no shadow; regular uses full blur with a 28% white tint and a restrained shadow. Reduce Transparency falls back to the solid background surface. Navigation follows the selected light, dark, or system theme.
 
 Each stacked window has a translucent rounded workspace tab surface aligned with the native window below. Adjacent groups share one six-point gap. Native window borders remain visible.
 

@@ -53,7 +53,7 @@ enum WinMuxGlassStyle {
         switch self {
             case .clear:
                 WinMuxGlassRecipe(
-                    blurOpacity: 0.85,
+                    blurOpacity: 1,
                     whiteTintOpacity: 0.20,
                     shadowOpacity: 0,
                     shadowRadius: 0,
