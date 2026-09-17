@@ -1,7 +1,7 @@
 # Xcode project configuration. Managed by https://github.com/yonaskolb/XcodeGen
 # Xcode is only used to build the release App Bundle. Debug builds only use Swift Package Manager
 
-name: WinNotch
+name: Oh-My-Win
 
 packages:
   WinMuxPackage:
@@ -12,7 +12,7 @@ configs:
   Release: release
 
 targets:
-  WinNotch:
+  Oh-My-Win:
     type: application
     platform: macOS
     deploymentTarget: "13.0"
@@ -36,10 +36,10 @@ targets:
         DEVELOPMENT_TEAM: ${XCODEGEN_WINMUX_DEVELOPMENT_TEAM}
       configs:
         Debug:
-          PRODUCT_NAME: WinNotch-Debug
+          PRODUCT_NAME: Oh-My-Win-Debug
           PRODUCT_BUNDLE_IDENTIFIER: com.zimengxiong.winmux.debug
         Release:
-          PRODUCT_NAME: WinNotch
+          PRODUCT_NAME: Oh-My-Win
           PRODUCT_BUNDLE_IDENTIFIER: com.zimengxiong.winmux
           SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
           GCC_TREAT_WARNINGS_AS_ERRORS: YES

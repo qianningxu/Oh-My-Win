@@ -12,7 +12,7 @@ struct ShortcutSettingsWindowPresentationRetryPolicy: Equatable {
 
 @MainActor
 public func getShortcutSettingsWindow(model: ShortcutSettingsModel) -> some Scene {
-    SwiftUI.Window("WinNotch Settings", id: shortcutSettingsWindowId) {
+    SwiftUI.Window("Oh-My-Win Settings", id: shortcutSettingsWindowId) {
         ShortcutSettingsView(model: model)
             .frame(minWidth: 720, minHeight: 600)
             .onAppear {

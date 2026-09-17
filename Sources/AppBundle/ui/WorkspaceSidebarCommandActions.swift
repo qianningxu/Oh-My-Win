@@ -1,8 +1,6 @@
 import Foundation
 import AppKit
 
-let workspaceSidebarOptionKeyRevealDelay: TimeInterval = 0.15
-
 @MainActor
 func openWorkspaceSidebarFromCommand() {
     guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled else { return }

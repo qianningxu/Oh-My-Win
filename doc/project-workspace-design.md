@@ -1,6 +1,6 @@
 # Project and workspace appearance
 
-The native implementation uses Geist token roles and the custom WinNotch glass compositor.
+The native implementation uses Geist token roles and the custom Oh-My-Win glass compositor.
 
 | Name | Meaning | Appearance |
 | --- | --- | --- |
@@ -12,7 +12,7 @@ The native implementation uses Geist token roles and the custom WinNotch glass c
 | Stacked window | Windows sharing one workspace tab bar | Existing grouping behavior |
 | Workspace window | Native app window and title bar | Native controls, borders, and corner geometry retained |
 
-Workspace tabs size to their text with a 200pt cap, centered labels, and subtle dividers. Project controls live in the WinNotch status-item menu rather than inside the switcher. Window tab bars retain their original compact 32pt tab surface inside a 34pt glass track. Window gaps expose the desktop instead of a project-frame fill.
+Workspace tabs size to their text with a 200pt cap, centered labels, and subtle dividers. Project controls live in the Oh-My-Win status-item menu rather than inside the switcher. Window tab bars retain their original compact 32pt tab surface inside a 34pt glass track. Window gaps expose the desktop instead of a project-frame fill.
 
 The workspace switcher is temporary rather than pinned, so there is no auto-hide preference. Switching workspaces or moving a window to another workspace briefly reveals it on the destination display, including the default Option+number and Option+Shift+number shortcuts.
 

@@ -1,6 +1,6 @@
-<img src="resources/winmux-logo.svg" width="80" alt="WinNotch logo">
+<img src="resources/winmux-logo.svg" width="80" alt="Oh-My-Win logo">
 
-# WinNotch
+# Oh-My-Win
 
 A macOS window manager with workspace controls designed for the camera-notch area.
 
@@ -11,15 +11,15 @@ A macOS window manager with workspace controls designed for the camera-notch are
 - **Window stack:** a group of windows stacked together within a tab.
 - **Stack tabs:** the controls for switching windows within a window stack.
 
-The workspace switcher appears temporarily during keyboard switching and does not reserve window-layout space. The independent [My Menu Bar](https://github.com/qianningxu/my-menu-bar) app owns the configurable top widget strip.
+The workspace switcher appears temporarily during keyboard switching and does not reserve window-layout space. Hold Option to see live previews, use Option–Tab to cycle, or Option–1/2/3 to select directly; releasing Option activates the selection. The independent [My Menu Bar](https://github.com/qianningxu/my-menu-bar) app owns the configurable top widget strip.
 
-Projects and folders organize tabs without combining their window layouts. Use the WinNotch menu-bar icon to switch or configure projects. Each display has its own workspace bar; a workspace can be visible on only one display at a time.
+Projects and folders organize tabs without combining their window layouts. Use the Oh-My-Win menu-bar icon to switch or configure projects. Each display has its own workspace bar; a workspace can be visible on only one display at a time.
 
 ## Configuration and shortcuts
 
-WinNotch keeps reading `~/.config/winmux/winmux.toml` so existing settings and Accessibility permission remain compatible.
+Oh-My-Win keeps reading `~/.config/winmux/winmux.toml` so existing settings and Accessibility permission remain compatible.
 
-On first launch, an existing WinMux configuration is preserved. If only an AeroSpace configuration exists, WinNotch imports its shortcuts and fills in defaults, leaving the AeroSpace file unchanged.
+On first launch, an existing WinMux configuration is preserved. If only an AeroSpace configuration exists, Oh-My-Win imports its shortcuts and fills in defaults, leaving the AeroSpace file unchanged.
 
 Older configuration section names and workspace command aliases remain supported. Internal names such as `WorkspaceSidebar` and configuration keys such as `[tab-sidebar]` are compatibility identifiers; the visible UI calls this the tab bar.
 
@@ -42,7 +42,7 @@ Use the repository's persistent signing identity, configured with the local Git 
 make install
 ```
 
-This builds and signs the candidate, preserves the existing Accessibility identity, replaces the legacy `/Applications/WinMux.app` with `/Applications/WinNotch.app`, verifies its signature, and reopens it.
+This builds and signs the candidate, preserves the existing Accessibility identity, replaces the legacy `/Applications/WinMux.app` or `/Applications/WinNotch.app` with `/Applications/Oh-My-Win.app`, verifies its signature, and reopens it.
 
 When full Xcode is unavailable, the release workflow builds with Swift Package Manager and reuses the installed app's bundle resources. XCTest still requires full Xcode.
 

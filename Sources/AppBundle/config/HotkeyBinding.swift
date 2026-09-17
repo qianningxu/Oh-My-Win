@@ -109,6 +109,7 @@ extension HotKey {
 
 @MainActor private func triggerBinding(_ binding: String, _ commands: [any Command]) {
     if hotkeysSuspended { return }
+    if handleWorkspacePreviewHotkey(binding) { return }
     if commands.count == 1, commands[0] is OpenSidebarCommand, let activeMode {
         broadcastEvent(.bindingTriggered(mode: activeMode, binding: binding))
         openWorkspaceSidebarFromCommand()

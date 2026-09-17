@@ -70,7 +70,6 @@ enum GlobalObserver {
     @MainActor private static var isWindowInventoryPollingSuspendedForSleep = false
     @MainActor private static var resizeCandidateCaptureGeneration: UInt64 = 0
     @MainActor private static var isOptionRevealPressed = false
-    @MainActor private static var optionRevealGeneration: UInt64 = 0
     private static let pointerActivityCoalescer = PointerActivityCoalescer()
 
     private static func onNotif(_ notification: Notification) {
@@ -127,10 +126,31 @@ enum GlobalObserver {
         let modifierFlags = event.modifierFlags
         let keyCode = event.keyCode
         Task { @MainActor in
+            if modifierFlags.contains(.option),
+               let workspaceIndex = optionWorkspaceIndex(for: keyCode)
+            {
+                WorkspacePreviewPanel.shared.select(index: workspaceIndex)
+                return
+            }
+            if modifierFlags.contains(.option), keyCode == 48 {
+                WorkspacePreviewPanel.shared.advance(
+                    direction: modifierFlags.contains(.shift) ? -1 : 1
+                )
+                return
+            }
             noteTapBindingKeyDown()
             if modifierFlags.contains(.control), keyCode == 34 { // 'i' key
                 ExposePanel.shared.toggle()
             }
+        }
+    }
+
+    private static func optionWorkspaceIndex(for keyCode: UInt16) -> Int? {
+        switch keyCode {
+            case 18, 83: 0
+            case 19, 84: 1
+            case 20, 85: 2
+            default: nil
         }
     }
 
@@ -147,15 +167,10 @@ enum GlobalObserver {
     private static func updateOptionKeyWorkspaceBarReveal(isPressed: Bool) {
         guard isOptionRevealPressed != isPressed else { return }
         isOptionRevealPressed = isPressed
-        optionRevealGeneration &+= 1
-        let generation = optionRevealGeneration
         if isPressed {
-            DispatchQueue.main.asyncAfter(deadline: .now() + workspaceSidebarOptionKeyRevealDelay) {
-                guard isOptionRevealPressed, optionRevealGeneration == generation else { return }
-                revealWorkspaceSidebarFromOptionKey()
-            }
+            WorkspacePreviewPanel.shared.present()
         } else {
-            releaseWorkspaceSidebarOptionKeyReveal()
+            WorkspacePreviewPanel.shared.commitIfActive()
         }
     }
 
@@ -327,6 +342,11 @@ enum GlobalObserver {
         retainEventMonitor(NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: onKeyDown))
         retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             onKeyDown(event)
+            if event.modifierFlags.contains(.option),
+               (event.keyCode == 48 || optionWorkspaceIndex(for: event.keyCode) != nil)
+            {
+                return nil
+            }
             // Check if this key matches a recently-pressed prefix (sequence binding)
             if handleSequenceKeyDown(event: event) {
                 return nil // consume the event

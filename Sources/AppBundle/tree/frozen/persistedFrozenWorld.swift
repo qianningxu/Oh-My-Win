@@ -5,6 +5,7 @@ private let persistedFrozenWorldVersion = 1
 private let persistedSidebarStateVersion = 2
 private let persistedFrozenWorldFilename = "window-state.json"
 private let persistedSidebarStateFilename = "sidebar-state.json"
+private let persistedStateDirectoryName = "WinMux"
 @MainActor private var pendingPersistedFrozenWorld: FrozenWorld? = nil
 @MainActor private var didRestorePersistedFrozenWorldDuringCurrentSession = false
 @MainActor private var pendingPersistedSidebarState: FrozenSidebarState? = nil
@@ -160,7 +161,9 @@ private func persistedStateDirectoryUrl() throws -> URL {
         appropriateFor: nil,
         create: true,
     )
-    let directory = appSupport.appendingPathComponent(winMuxAppName, isDirectory: true)
+    // Keep the original support directory after the product rename so existing
+    // workspace layouts survive app upgrades and restarts.
+    let directory = appSupport.appendingPathComponent(persistedStateDirectoryName, isDirectory: true)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     persistedStateDirectory = directory
     return directory
