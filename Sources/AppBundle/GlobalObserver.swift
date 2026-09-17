@@ -127,6 +127,7 @@ enum GlobalObserver {
         let keyCode = event.keyCode
         Task { @MainActor in
             if modifierFlags.contains(.option),
+               !modifierFlags.contains(.shift),
                let workspaceIndex = optionWorkspaceIndex(for: keyCode)
             {
                 WorkspacePreviewPanel.shared.select(index: workspaceIndex)
@@ -343,6 +344,7 @@ enum GlobalObserver {
         retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             onKeyDown(event)
             if event.modifierFlags.contains(.option),
+               !event.modifierFlags.contains(.shift),
                (event.keyCode == 48 || optionWorkspaceIndex(for: event.keyCode) != nil)
             {
                 return nil
