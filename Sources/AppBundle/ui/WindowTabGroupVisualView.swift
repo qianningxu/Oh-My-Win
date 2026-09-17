@@ -19,10 +19,20 @@ struct WindowTabGroupVisualView: View {
                     palette,
                     cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
                     glassStyle: .windowBar,
-                    strokeOpacity: WinMuxBarStyle.workspaceBarStrokeOpacity
+                    strokeOpacity: 0
                 )
                 .saturation(WinMuxBarStyle.windowBarBackdropSaturation)
                 .opacity(WinMuxBarStyle.windowBarOpacity)
+                .overlay {
+                    RoundedRectangle(
+                        cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
+                        style: .continuous
+                    )
+                    .strokeBorder(
+                        winMuxBarSurfaceStroke(palette).opacity(WinMuxBarStyle.windowBarStrokeOpacity),
+                        lineWidth: WinMuxBarStyle.strokeWidth
+                    )
+                }
                 .padding(.top, windowTabBarOuterInset())
 
                 Spacer(minLength: WinMuxSpacing.none)
