@@ -26,7 +26,7 @@ enum WinMuxBarStyle {
     static let workspaceBarHeight = workspaceTabContentHeight + windowTabStripContentPaddingValue * 2
     static let workspaceTabCornerRadius = cornerRadius
     static let workspaceTabBarCornerRadius = cornerRadius + innerSpacing
-    static let workspaceBarTintOpacity: CGFloat = 0.14
+    static let workspaceBarTintOpacity: CGFloat = 0.2
     static let workspaceBarStrokeOpacity: CGFloat = 0.24
     static let topBarTintOpacity: CGFloat = 0.03
     static let topBarStrokeOpacity: CGFloat = 0.2

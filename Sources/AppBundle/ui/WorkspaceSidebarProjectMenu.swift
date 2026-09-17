@@ -86,7 +86,7 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
             let anchor = NSPanelHud()
             anchor.contentView = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
             let rect = window.convertToScreen(convert(bounds, to: nil))
-            anchor.setFrame(NSRect(x: rect.minX, y: rect.minY, width: 1, height: 1), display: false)
+            anchor.setFrame(workspaceSidebarProjectMenuAnchorFrame(for: rect), display: false)
             anchor.appearance = appearance
             anchor.level = .popUpMenu
             anchor.hasShadow = false
@@ -169,4 +169,13 @@ struct WorkspaceSidebarProjectMenu: NSViewRepresentable {
             editing.row.representedObject = replacement.representedObject
         }
     }
+}
+
+func workspaceSidebarProjectMenuAnchorFrame(for controlFrame: NSRect) -> NSRect {
+    NSRect(
+        x: controlFrame.minX,
+        y: controlFrame.maxY + WinMuxSpacing.comfortable,
+        width: 1,
+        height: 1
+    )
 }

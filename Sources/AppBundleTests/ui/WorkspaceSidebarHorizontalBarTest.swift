@@ -3,6 +3,15 @@ import AppKit
 import XCTest
 
 final class WorkspaceSidebarHorizontalBarTest: XCTestCase {
+    func testProjectMenuAnchorSitsAboveBottomBar() {
+        let control = NSRect(x: 240, y: 8, width: 48, height: 48)
+        let anchor = workspaceSidebarProjectMenuAnchorFrame(for: control)
+
+        XCTAssertEqual(anchor.minX, control.minX)
+        XCTAssertEqual(anchor.minY, control.maxY + WinMuxSpacing.comfortable)
+        XCTAssertEqual(anchor.size, CGSize(width: 1, height: 1))
+    }
+
     func testNotchedDisplayUsesFullWidthWidgetRowAndCenteredProjectBar() {
         let screenFrame = NSRect(x: 0, y: 0, width: 1728, height: 1117)
         let leftSafeArea = NSRect(x: 0, y: 1085, width: 771, height: 32)

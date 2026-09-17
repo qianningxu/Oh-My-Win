@@ -16,6 +16,8 @@ Project tabs size to their text with a 200pt cap, centered labels, and dividers 
 
 The Project menu's Config submenu has a global **Auto hide** setting. It defaults off, leaving the project tabs bar sticky at the bottom of each display's work area. When enabled, the bar releases its reserved layout space, reveals from the bottom edge as an overlay on that display, and remains visible while its menus, editors, or drag targets are in use. Switching workspaces or moving a window to another workspace briefly reveals the destination display's bar, including the default Option+number and Option+Shift+number shortcuts.
 
+The Project menu opens above the floating bar with a small gap, so it never covers the bar itself.
+
 The names describe UI surfaces. Internal workspace/project identifiers, configuration keys, CLI commands, and stored user state keep their existing meanings for compatibility. Native window corners remain owned by their applications; the HTML mockup's simulated 20-point corners do not forcibly reshape third-party windows.
 
 ## Native frame corrections
