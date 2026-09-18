@@ -314,7 +314,7 @@ private struct MenuBarStatusWidgetGroup: View {
             palette,
             cornerRadius: WinMuxSpacing.none,
             material: .underWindowBackground,
-            blurOpacity: 0.95,
+            blurOpacity: 1.00,
             strokeOpacity: WinMuxBarStyle.topBarStrokeOpacity
         )
         .environment(\.colorScheme, palette.colorScheme)
