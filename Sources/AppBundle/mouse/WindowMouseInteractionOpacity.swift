@@ -14,6 +14,7 @@ final class WindowMouseInteractionOpacityController {
     private var hiddenWindowIds: Set<UInt32> = []
     private var temporarilyMovedWindows: [UInt32: Rect] = [:]
     private var activeWindowId: UInt32?
+    private var hidesActiveWindow = false
 
     private init() {
         let inventory = MouseInteractionVisibleWindowInventoryCache(
@@ -36,7 +37,8 @@ final class WindowMouseInteractionOpacityController {
         guard !isUnitTest, let source = Window.get(byId: activeWindowId),
               let workspace = source.nodeWorkspace else { return }
         visibleWindowInventory.invalidate()
-        self.activeWindowId = nil
+        self.activeWindowId = activeWindowId
+        hidesActiveWindow = true
         let neighbors = workspace.rootTilingContainer.allLeafWindowsRecursive.filter {
             $0.windowId != activeWindowId && !$0.isHiddenInCorner
         }
@@ -48,6 +50,7 @@ final class WindowMouseInteractionOpacityController {
     func update(activeWindowId: UInt32, hidesPassiveTabGroupChrome: Bool) {
         guard !isUnitTest else { return }
         self.activeWindowId = activeWindowId
+        hidesActiveWindow = false
         let windowsToHide = mouseInteractionManagedWindowsToHide(activeWindowId: activeWindowId)
         var discoveredWindowIds = Set(windowsToHide.map(\.windowId))
         if let cachedWindowIds = visibleWindowInventory.freshWindowIds {
@@ -72,6 +75,7 @@ final class WindowMouseInteractionOpacityController {
             activeWindowId: activeWindowId,
             currentlyHidden: hiddenWindowIds,
             discovered: discoveredWindowIds,
+            hidesActiveWindow: hidesActiveWindow,
         )
         setWindowListAlpha(
             windowIds: Array(hiddenWindowIds.subtracting(nextHiddenIds)),
@@ -92,6 +96,7 @@ final class WindowMouseInteractionOpacityController {
 
     func restore() {
         activeWindowId = nil
+        hidesActiveWindow = false
         visibleWindowInventory.invalidate()
         if !hiddenWindowIds.isEmpty {
             setWindowListAlpha(windowIds: Array(hiddenWindowIds), alpha: mouseInteractionVisibleWindowAlpha)
@@ -206,10 +211,15 @@ func nextMouseInteractionHiddenWindowIds(
     activeWindowId: UInt32,
     currentlyHidden: Set<UInt32>,
     discovered: Set<UInt32>,
+    hidesActiveWindow: Bool,
 ) -> Set<UInt32> {
     var result = discovered
     result.formUnion(currentlyHidden)
-    result.remove(activeWindowId)
+    if hidesActiveWindow {
+        result.insert(activeWindowId)
+    } else {
+        result.remove(activeWindowId)
+    }
     return result
 }
 
