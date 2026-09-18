@@ -534,7 +534,7 @@ private struct WorkspacePreviewSwitcherSurface: View {
             VisualEffectBlur(
                 material: .hudWindow,
                 blendingMode: .behindWindow,
-                opacity: 0.99
+                opacity: 0.95
             )
             shape.fill(Color.white.opacity(0.01))
             shape.strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
