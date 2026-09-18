@@ -21,10 +21,9 @@ extension Monitor {
         let contentTopGap = config.workspaceSidebar.enabled ? WinMuxSpacing.comfortable : max(gaps.outer.top.toDouble(), 0)
         let topInset = contentTopGap
         let rightInset = max(gaps.outer.right.toDouble(), 0)
-        let contentBottomGap = config.workspaceSidebar.enabled
-            ? WinMuxSpacing.comfortable * 0.5
-            : max(gaps.outer.bottom.toDouble(), 0)
-        let bottomInset = contentBottomGap + projectBarReservation
+        // Keep sticky workspace tabs above the bottom edge. Auto hide releases
+        // this reservation without moving windows when the overlay appears.
+        let bottomInset = max(gaps.outer.bottom.toDouble(), 0) + projectBarReservation
         return Rect(
             topLeftX: topLeft.x + leftInset,
             topLeftY: topLeft.y + topInset,

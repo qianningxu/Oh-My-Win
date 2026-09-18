@@ -2,6 +2,9 @@ import AppKit
 import SwiftUI
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
+private let workspacePreviewCardWidth = standardGap * 75
+private let workspacePreviewCardSpacing = standardGap * 3.5
+private let workspacePreviewPanelPadding = standardGap * 6
 
 private struct WorkspacePreviewItem: Identifiable {
     let id: String
@@ -430,6 +433,14 @@ func workspacePreviewFrame(for normalizedFrame: CGRect, in canvasRect: CGRect) -
     )
 }
 
+func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat) -> CGFloat {
+    let itemCount = max(itemCount, 0)
+    let contentWidth = CGFloat(itemCount) * workspacePreviewCardWidth +
+        CGFloat(max(itemCount - 1, 0)) * workspacePreviewCardSpacing +
+        workspacePreviewPanelPadding * 2
+    return min(contentWidth, availableWidth * 0.92)
+}
+
 private struct WorkspacePreviewView: View {
     let items: [WorkspacePreviewItem]
     let selectedIndex: Int
@@ -443,13 +454,15 @@ private struct WorkspacePreviewView: View {
                 .onTapGesture { onDismiss() }
 
             GeometryReader { geometry in
-                let contentWidth = CGFloat(items.count) * 300 + CGFloat(max(items.count - 1, 0)) * 14 + 48
-                let panelWidth = min(max(contentWidth, 380), geometry.size.width * 0.92)
+                let panelWidth = workspacePreviewPanelWidth(
+                    itemCount: items.count,
+                    availableWidth: geometry.size.width
+                )
 
                 ScrollViewReader { proxy in
                     VStack {
                         ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 14) {
+                            HStack(spacing: workspacePreviewCardSpacing) {
                                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                                     WorkspacePreviewCard(
                                         item: item,
@@ -459,9 +472,9 @@ private struct WorkspacePreviewView: View {
                                     .onTapGesture { onSelect(index) }
                                 }
                             }
-                            .padding(.horizontal, 24)
-                            .padding(.top, 24)
-                            .padding(.bottom, 12)
+                            .padding(.horizontal, workspacePreviewPanelPadding)
+                            .padding(.top, workspacePreviewPanelPadding)
+                            .padding(.bottom, workspacePreviewPanelPadding * 0.5)
                             .frame(minWidth: panelWidth, alignment: .center)
                         }
                         .frame(width: panelWidth)
@@ -509,7 +522,7 @@ private struct WorkspacePreviewCard: View {
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 2)
         }
-        .frame(width: 300)
+        .frame(width: workspacePreviewCardWidth)
         .animation(.spring(response: 0.22, dampingFraction: 0.85), value: isSelected)
     }
 }
