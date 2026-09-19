@@ -8,7 +8,7 @@ The native implementation uses Geist token roles and the custom Oh-My-Win glass 
 | Project frame | Former full-screen surface beneath the Widget bar | Removed; the desktop remains visible through window gaps |
 | Workspace switcher | Temporary workspace-only HUD | Horizontally and vertically centered like macOS Command–Tab, using the native HUD material, continuous radius, subtle native border, and matching shadow |
 | Workspace frame | Window layout area | No enclosing fill; each window and window tab bar owns its surface |
-| Window tab bar | Compact WinDock glass track with a color-neutral backdrop, 25% blur opacity, a visible 25% white tint, and an independently rendered 45% theme-aware border. Focused and hovered labels are fully opaque, unfocused labels are 50% opaque, and icons remain fully opaque; focused labels use semibold weight, unfocused labels use regular weight, the focused segment uses an 80% white fill, and hover uses a 50% white fill. |
+| Window tab bar | Compact WinDock glass track with a color-neutral backdrop, 25% blur opacity, a visible 25% white tint, and an independently rendered 45% theme-aware border. Focused and hovered labels are fully opaque, unfocused labels are 75% opaque, and icons remain fully opaque; focused labels use semibold weight, unfocused labels use regular weight, the focused segment uses an 80% white fill, and hover uses a 50% white fill. |
 | Stacked window | Windows sharing one workspace tab bar | Existing grouping behavior |
 | Workspace window | Native app window and title bar | Native controls, borders, and corner geometry retained |
 
