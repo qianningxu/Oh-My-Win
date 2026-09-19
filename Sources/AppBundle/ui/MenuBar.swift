@@ -47,14 +47,7 @@ private struct WorkspaceProjectMenuBarContent: View {
         Divider()
 
         Menu("Config") {
-            Menu("Theme") {
-                themeButton("Light", theme: .light)
-                themeButton("Dark", theme: .dark)
-                themeButton("System", theme: nil)
-            }
-
             if let project = selectedProject, projectsAreEnabled() {
-                Divider()
                 Button("Rename project…") { rename(project) }
                 Button("Delete project") {
                     handleWorkspaceSidebarAction(.deleteProject(project.id), viewModel: viewModel)
@@ -113,19 +106,6 @@ private struct WorkspaceProjectMenuBarContent: View {
             .renameWorkspace(workspace.name, displayName: displayName),
             viewModel: viewModel
         )
-    }
-
-    @ViewBuilder
-    private func themeButton(_ title: String, theme: AppearanceTheme?) -> some View {
-        Button {
-            setWorkspaceSidebarAppearance(theme)
-        } label: {
-            if currentWorkspaceSidebarAppearancePreference() == theme {
-                Label(title, systemImage: "checkmark")
-            } else {
-                Text(title)
-            }
-        }
     }
 
     private func createProject() {

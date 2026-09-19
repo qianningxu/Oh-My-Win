@@ -303,18 +303,12 @@ struct WorkspaceSidebarHorizontalBar: View {
 
     private var projectConfigurationItems: [WorkspaceSidebarNativeContextMenu.Item] {
         typealias Item = WorkspaceSidebarNativeContextMenu.Item
-        let themes: [(String, AppearanceTheme?)] = [("Light", .light), ("Dark", .dark), ("System", nil)]
-        var items = [Item(title: "Theme", children: themes.map { title, theme in
-            Item(title: title, symbol: currentWorkspaceSidebarAppearancePreference() == theme ? "checkmark" : nil) {
-                setWorkspaceSidebarAppearance(theme)
-            }
-        })]
-        items.append(Item(
+        var items = [Item(
             title: "Auto hide",
             symbol: snapshot.isAutoHideEnabled ? "checkmark" : nil
         ) {
             actions.send(.setAutoHide(!snapshot.isAutoHideEnabled))
-        })
+        }]
         if projectsAreEnabled(), let project = activeProject {
             items.append(Item(title: "Rename project") { beginProjectRename(project) })
             items.append(Item(title: "Project color", children: workspaceSidebarProjectColorPresets.map { preset in

@@ -39,16 +39,7 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     private func configMenu() -> NSMenuItem {
         let item = NSMenuItem(title: "Config", action: nil, keyEquivalent: "")
         let menu = NSMenu()
-        let theme = NSMenuItem(title: "Theme", action: nil, keyEquivalent: "")
-        let themes = NSMenu()
-        themes.addItem(themeItem("Light", tag: 0, theme: .light))
-        themes.addItem(themeItem("Dark", tag: 1, theme: .dark))
-        themes.addItem(themeItem("System", tag: 2, theme: nil))
-        theme.submenu = themes
-        menu.addItem(theme)
-
         if let project = activeProject, projectsAreEnabled() {
-            menu.addItem(.separator())
             let rename = actionItem("Rename project…", #selector(renameProject(_:)))
             rename.representedObject = project.id.rawValue
             menu.addItem(rename)
@@ -64,13 +55,6 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
 
     private var activeProject: WorkspaceSidebarProjectViewModel? {
         viewModel.workspaceSidebarProjects.first { $0.id == viewModel.workspaceSidebarActiveProjectId }
-    }
-
-    private func themeItem(_ title: String, tag: Int, theme: AppearanceTheme?) -> NSMenuItem {
-        let item = actionItem(title, #selector(setTheme(_:)))
-        item.tag = tag
-        item.state = currentWorkspaceSidebarAppearancePreference() == theme ? .on : .off
-        return item
     }
 
     private func actionItem(_ title: String, _ action: Selector) -> NSMenuItem {
@@ -173,14 +157,6 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     @objc private func commitWorkspaceRenameButton(_ button: NSButton) {
         guard let field = workspaceRenameFieldByButton[ObjectIdentifier(button)] else { return }
         commitWorkspaceRename(field)
-    }
-
-    @objc private func setTheme(_ item: NSMenuItem) {
-        switch item.tag {
-            case 0: setWorkspaceSidebarAppearance(.light)
-            case 1: setWorkspaceSidebarAppearance(.dark)
-            default: setWorkspaceSidebarAppearance(nil)
-        }
     }
 
     @objc private func renameProject(_ item: NSMenuItem) {
