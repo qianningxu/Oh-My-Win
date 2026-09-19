@@ -272,7 +272,10 @@ private func materializePersistedWorkspaceProjectMetadata() {
     }
     for rawFolderId in Set(config.workspaceSidebar.folderLabels.keys)
         .union(config.workspaceSidebar.folderColors.keys).sorted()
+    where rawFolderId != workspaceFolderDefaultId.rawValue
     {
+        // The built-in folder belongs to the default project. Its saved label
+        // must not recreate that project after its last workspace is pruned.
         let folderId = WorkspaceFolderId(rawFolderId)
         guard winMuxWorkspaceState.workspaceFoldersById[folderId] == nil else { continue }
         let name = config.workspaceSidebar.folderLabels[rawFolderId]?

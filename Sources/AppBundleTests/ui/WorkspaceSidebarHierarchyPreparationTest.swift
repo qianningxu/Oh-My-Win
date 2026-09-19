@@ -5,6 +5,25 @@ import XCTest
 final class WorkspaceSidebarHierarchyPreparationTest: XCTestCase {
     override func setUp() async throws { setUpWorkspacesForTests() }
 
+    func testDefaultFolderMetadataDoesNotResurrectPrunedEmptyProject() throws {
+        config.workspaceSidebar.folderLabels[workspaceFolderDefaultId.rawValue] = "Unfolded"
+        config.workspaceSidebar.folderColors[workspaceFolderDefaultId.rawValue] = "#777777"
+        let project = createWorkspaceProject(displayName: "Occupied")
+        let workspace = try XCTUnwrap(projectWorkspaces(projectId: project.id).first)
+        TestWindow.new(id: 8121, parent: workspace.rootTilingContainer)
+        XCTAssertTrue(workspace.focusWorkspace())
+        Workspace.reconcileWorkspaceState()
+
+        for _ in 0..<3 {
+            let hierarchy = prepareWorkspaceSidebarHierarchyInputs()
+            XCTAssertEqual(hierarchy.projects.map(\.id), [project.id])
+            XCTAssertEqual(hierarchy.orderedWorkspaces, [workspace])
+            XCTAssertNil(winMuxWorkspaceState.projectsById[workspaceProjectDefaultId])
+            XCTAssertNil(winMuxWorkspaceState.workspaceFoldersById[workspaceFolderDefaultId])
+            _ = FrozenSidebarState(restorableWorkspaces: [workspace])
+        }
+    }
+
     func testPreparationMaterializesNormalizesAndIsIdempotent() {
         let focusedWorkspace = focus.workspace
         config.workspaceSidebar.projectLabels["client"] = "Client"
