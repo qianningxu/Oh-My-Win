@@ -5,9 +5,6 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     private let viewModel: TrayMenuModel
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
-    private var workspacePanel: NSPanel?
-    private var workspaceNameByField: [ObjectIdentifier: String] = [:]
-    private var workspaceRenameFieldByButton: [ObjectIdentifier: NSTextField] = [:]
 
     public init(viewModel: TrayMenuModel) {
         self.viewModel = viewModel
@@ -28,33 +25,48 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
 
     public func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        menu.addItem(actionItem("Workspace", #selector(showWorkspacePanel)))
+        for project in viewModel.workspaceSidebarProjects {
+            if project.id == viewModel.workspaceSidebarActiveProjectId {
+                menu.addItem(activeProjectMenu(project))
+            } else {
+                let item = actionItem(project.displayName, #selector(selectProject(_:)))
+                item.representedObject = project.id.rawValue
+                menu.addItem(item)
+            }
+        }
         menu.addItem(.separator())
-        menu.addItem(configMenu())
         if projectsAreEnabled() {
             menu.addItem(actionItem("New project", #selector(createProject)))
         }
+        menu.addItem(.separator())
+        menu.addItem(actionItem("Show Dashboard", #selector(showDashboard)))
+        menu.addItem(actionItem("Quit", #selector(quit)))
     }
 
-    private func configMenu() -> NSMenuItem {
-        let item = NSMenuItem(title: "Config", action: nil, keyEquivalent: "")
-        let menu = NSMenu()
-        if let project = activeProject, projectsAreEnabled() {
-            let rename = actionItem("Rename project…", #selector(renameProject(_:)))
-            rename.representedObject = project.id.rawValue
-            menu.addItem(rename)
-
-            let delete = actionItem("Delete project", #selector(deleteProject(_:)))
-            delete.representedObject = project.id.rawValue
-            delete.isEnabled = canDeleteWorkspaceProject(project.id)
-            menu.addItem(delete)
+    private func activeProjectMenu(_ project: WorkspaceSidebarProjectViewModel) -> NSMenuItem {
+        let item = NSMenuItem(title: project.displayName, action: nil, keyEquivalent: "")
+        item.state = .on
+        let submenu = NSMenu()
+        let workspaces = viewModel.workspaceSidebarWorkspaces.filter { $0.projectId == project.id }
+        if workspaces.isEmpty {
+            let emptyItem = NSMenuItem(title: "No workspaces", action: nil, keyEquivalent: "")
+            emptyItem.isEnabled = false
+            submenu.addItem(emptyItem)
+        } else {
+            for workspace in workspaces {
+                let workspaceItem = actionItem(workspace.displayName, #selector(selectWorkspace(_:)))
+                workspaceItem.representedObject = workspace.name
+                workspaceItem.state = workspace.isFocused ? .on : .off
+                submenu.addItem(workspaceItem)
+            }
         }
-        item.submenu = menu
+        submenu.addItem(.separator())
+        let rename = actionItem("Rename current project…", #selector(renameProject(_:)))
+        rename.representedObject = project.id.rawValue
+        rename.isEnabled = projectsAreEnabled()
+        submenu.addItem(rename)
+        item.submenu = submenu
         return item
-    }
-
-    private var activeProject: WorkspaceSidebarProjectViewModel? {
-        viewModel.workspaceSidebarProjects.first { $0.id == viewModel.workspaceSidebarActiveProjectId }
     }
 
     private func actionItem(_ title: String, _ action: Selector) -> NSMenuItem {
@@ -64,99 +76,22 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         return item
     }
 
-    @objc private func showWorkspacePanel() {
-        workspacePanel?.close()
-        workspaceNameByField.removeAll(keepingCapacity: true)
-        workspaceRenameFieldByButton.removeAll(keepingCapacity: true)
-
-        let projects = viewModel.workspaceSidebarProjects
-        let workspaces = viewModel.workspaceSidebarWorkspaces
-        let contentHeight = max(
-            180,
-            projects.reduce(24) { height, project in
-                height + 34 + workspaces.filter { $0.projectId == project.id }.count * 42
-            }
-        )
-        let panelHeight = min(620, contentHeight + 40)
-        let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: panelHeight),
-            styleMask: [.titled, .closable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        panel.title = "Workspaces"
-        panel.isFloatingPanel = true
-        panel.isReleasedWhenClosed = false
-        panel.minSize = NSSize(width: 440, height: 220)
-
-        let scrollView = NSScrollView(frame: NSRect(x: 18, y: 18, width: 504, height: panelHeight - 36))
-        scrollView.autoresizingMask = [.width, .height]
-        scrollView.hasVerticalScroller = true
-        scrollView.drawsBackground = false
-
-        let document = FlippedWorkspaceListView(frame: NSRect(x: 0, y: 0, width: 504, height: contentHeight))
-        var y: CGFloat = 8
-        for project in projects {
-            let projectLabel = NSTextField(labelWithString: project.displayName)
-            projectLabel.font = .boldSystemFont(ofSize: 13)
-            projectLabel.frame = NSRect(x: 8, y: y, width: 480, height: 20)
-            document.addSubview(projectLabel)
-            y += 28
-
-            for workspace in workspaces.filter({ $0.projectId == project.id }) {
-                let field = NSTextField(
-                    string: workspace.sidebarLabel.isEmpty ? workspace.displayName : workspace.sidebarLabel
-                )
-                field.placeholderString = "Workspace name"
-                field.target = self
-                field.action = #selector(commitWorkspaceRename(_:))
-                field.frame = NSRect(x: 8, y: y, width: 376, height: 26)
-                workspaceNameByField[ObjectIdentifier(field)] = workspace.name
-                document.addSubview(field)
-
-                let button = NSButton(
-                    title: "Rename",
-                    target: self,
-                    action: #selector(commitWorkspaceRenameButton(_:))
-                )
-                button.bezelStyle = .rounded
-                button.frame = NSRect(x: 394, y: y - 1, width: 92, height: 28)
-                workspaceRenameFieldByButton[ObjectIdentifier(button)] = field
-                document.addSubview(button)
-                y += 42
-            }
-            y += 6
-        }
-
-        if workspaces.isEmpty {
-            let empty = NSTextField(labelWithString: "No workspaces")
-            empty.textColor = .secondaryLabelColor
-            empty.alignment = .center
-            empty.frame = NSRect(x: 8, y: 68, width: 480, height: 22)
-            document.addSubview(empty)
-        }
-
-        scrollView.documentView = document
-        panel.contentView?.addSubview(scrollView)
-        workspacePanel = panel
-        NSApp.activate(ignoringOtherApps: true)
-        panel.center()
-        panel.makeKeyAndOrderFront(nil)
+    @objc private func selectProject(_ item: NSMenuItem) {
+        guard let rawId = item.representedObject as? String else { return }
+        handleWorkspaceSidebarAction(.selectProject(WorkspaceProjectId(rawId)), viewModel: viewModel)
     }
 
-    @objc private func commitWorkspaceRename(_ field: NSTextField) {
-        guard let workspaceName = workspaceNameByField[ObjectIdentifier(field)] else { return }
-        let displayName = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !displayName.isEmpty else { return }
-        handleWorkspaceSidebarAction(
-            .renameWorkspace(workspaceName, displayName: displayName),
-            viewModel: viewModel
-        )
+    @objc private func selectWorkspace(_ item: NSMenuItem) {
+        guard let workspaceName = item.representedObject as? String else { return }
+        handleWorkspaceSidebarAction(.selectWorkspace(workspaceName), viewModel: viewModel)
     }
 
-    @objc private func commitWorkspaceRenameButton(_ button: NSButton) {
-        guard let field = workspaceRenameFieldByButton[ObjectIdentifier(button)] else { return }
-        commitWorkspaceRename(field)
+    @objc private func showDashboard() {
+        openWorkspaceSidebarFromCommand()
+    }
+
+    @objc private func quit() {
+        NSApp.terminate(nil)
     }
 
     @objc private func renameProject(_ item: NSMenuItem) {
@@ -167,19 +102,10 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         handleWorkspaceSidebarAction(.renameProject(project.id, displayName: name), viewModel: viewModel)
     }
 
-    @objc private func deleteProject(_ item: NSMenuItem) {
-        guard let rawId = item.representedObject as? String else { return }
-        handleWorkspaceSidebarAction(.deleteProject(WorkspaceProjectId(rawId)), viewModel: viewModel)
-    }
-
     @objc private func createProject() {
         guard let name = promptForProjectName("New project", initialValue: "") else { return }
         createWorkspaceSidebarProject(displayName: name, viewModel: viewModel)
     }
-}
-
-private final class FlippedWorkspaceListView: NSView {
-    override var isFlipped: Bool { true }
 }
 
 @MainActor

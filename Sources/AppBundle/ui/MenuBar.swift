@@ -14,98 +14,60 @@ public func menuBar(viewModel: TrayMenuModel) -> some Scene {
 
 private struct WorkspaceProjectMenuBarContent: View {
     @ObservedObject var viewModel: TrayMenuModel
-    @State private var workspaceNameDrafts: [String: String] = [:]
 
     private var selectedProjectId: WorkspaceProjectId {
         viewModel.workspaceSidebarActiveProjectId
     }
 
-    private var selectedProject: WorkspaceSidebarProjectViewModel? {
-        viewModel.workspaceSidebarProjects.first { $0.id == selectedProjectId }
-    }
-
     var body: some View {
         ForEach(viewModel.workspaceSidebarProjects) { project in
-            Menu {
-                let workspaces = workspaces(in: project)
-                if workspaces.isEmpty {
-                    Text("No workspaces")
-                } else {
-                    ForEach(workspaces) { workspace in
-                        workspaceMenu(workspace)
+            if project.id == selectedProjectId {
+                Menu {
+                    let workspaces = workspaces(in: project)
+                    if workspaces.isEmpty {
+                        Text("No workspaces")
+                    } else {
+                        ForEach(workspaces) { workspace in
+                            Button {
+                                handleWorkspaceSidebarAction(
+                                    .selectWorkspace(workspace.name),
+                                    viewModel: viewModel
+                                )
+                            } label: {
+                                if workspace.isFocused {
+                                    Label(workspace.displayName, systemImage: "checkmark")
+                                } else {
+                                    Text(workspace.displayName)
+                                }
+                            }
+                        }
                     }
-                }
-            } label: {
-                if project.id == selectedProjectId {
+                    Divider()
+                    Button("Rename current project…") { rename(project) }
+                        .disabled(!projectsAreEnabled())
+                } label: {
                     Label(project.displayName, systemImage: "checkmark")
-                } else {
-                    Text(project.displayName)
+                }
+            } else {
+                Button(project.displayName) {
+                    handleWorkspaceSidebarAction(.selectProject(project.id), viewModel: viewModel)
                 }
             }
         }
 
         Divider()
-
-        Menu("Config") {
-            if let project = selectedProject, projectsAreEnabled() {
-                Button("Rename project…") { rename(project) }
-                Button("Delete project") {
-                    handleWorkspaceSidebarAction(.deleteProject(project.id), viewModel: viewModel)
-                }
-                .disabled(!canDeleteWorkspaceProject(project.id))
-            }
-        }
-
         if projectsAreEnabled() {
             Button("New project") { createProject() }
         }
+        Divider()
+        Button("Show Dashboard") { openWorkspaceSidebarFromCommand() }
+        Button("Quit") { NSApp.terminate(nil) }
     }
 
     private func workspaces(
         in project: WorkspaceSidebarProjectViewModel
     ) -> [WorkspaceSidebarWorkspaceViewModel] {
         viewModel.workspaceSidebarWorkspaces.filter { $0.projectId == project.id }
-    }
-
-    @ViewBuilder
-    private func workspaceMenu(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> some View {
-        Menu {
-            Text("Rename")
-            TextField("Workspace name", text: workspaceNameBinding(for: workspace))
-                .textFieldStyle(.plain)
-                .frame(width: standardGap * 45)
-                .onSubmit { commitWorkspaceRename(workspace) }
-        } label: {
-            if workspace.isFocused {
-                Label(workspace.displayName, systemImage: "checkmark")
-            } else {
-                Text(workspace.displayName)
-            }
-        }
-    }
-
-    private func workspaceNameBinding(
-        for workspace: WorkspaceSidebarWorkspaceViewModel
-    ) -> Binding<String> {
-        Binding(
-            get: {
-                workspaceNameDrafts[workspace.name]
-                    ?? (workspace.sidebarLabel.isEmpty ? workspace.displayName : workspace.sidebarLabel)
-            },
-            set: { workspaceNameDrafts[workspace.name] = $0 }
-        )
-    }
-
-    private func commitWorkspaceRename(_ workspace: WorkspaceSidebarWorkspaceViewModel) {
-        let currentName = workspace.sidebarLabel.isEmpty ? workspace.displayName : workspace.sidebarLabel
-        let displayName = (workspaceNameDrafts[workspace.name] ?? currentName)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !displayName.isEmpty else { return }
-        workspaceNameDrafts[workspace.name] = displayName
-        handleWorkspaceSidebarAction(
-            .renameWorkspace(workspace.name, displayName: displayName),
-            viewModel: viewModel
-        )
     }
 
     private func createProject() {
