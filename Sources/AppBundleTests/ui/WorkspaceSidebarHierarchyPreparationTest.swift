@@ -24,6 +24,33 @@ final class WorkspaceSidebarHierarchyPreparationTest: XCTestCase {
         }
     }
 
+    func testNewTabDoesNotRetainRecreatedDefaultProject() throws {
+        let project = createWorkspaceProject(displayName: "Occupied")
+        let occupied = try XCTUnwrap(projectWorkspaces(projectId: project.id).first)
+        TestWindow.new(id: 8122, parent: occupied.rootTilingContainer)
+        XCTAssertTrue(occupied.focusWorkspace())
+        Workspace.reconcileWorkspaceState()
+        XCTAssertNil(winMuxWorkspaceState.projectsById[workspaceProjectDefaultId])
+
+        for _ in 0..<3 {
+            let blank = createFreshAdjacentBlankWorkspace(
+                folderId: occupied.folderId, monitor: mainMonitor, after: occupied
+            )
+            XCTAssertTrue(blank.focusWorkspace())
+            let hierarchy = prepareWorkspaceSidebarHierarchyInputs()
+            XCTAssertEqual(hierarchy.projects.map(\.id), [project.id])
+            XCTAssertTrue(Workspace.existing(byName: blank.name) === blank)
+            XCTAssertTrue(occupied.focusWorkspace())
+            XCTAssertNil(Workspace.existing(byName: blank.name))
+            XCTAssertEqual(prepareWorkspaceSidebarHierarchyInputs().orderedWorkspaces, [occupied])
+            _ = FrozenSidebarState(restorableWorkspaces: [occupied])
+            XCTAssertNil(winMuxWorkspaceState.projectsById[workspaceProjectDefaultId])
+        }
+
+        let background = createWorkspaceProject(displayName: "New project")
+        XCTAssertTrue(prepareWorkspaceSidebarHierarchyInputs().projects.contains { $0.id == background.id })
+    }
+
     func testPreparationMaterializesNormalizesAndIsIdempotent() {
         let focusedWorkspace = focus.workspace
         config.workspaceSidebar.projectLabels["client"] = "Client"

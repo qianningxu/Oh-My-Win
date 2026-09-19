@@ -891,6 +891,12 @@ func pruneEmptyWorkspaceProjects() {
     let emptyProjectIds = winMuxWorkspaceState.projectsById.keys.filter { projectId in
         let workspaces = projectWorkspaces(projectId: projectId)
         guard !workspaces.contains(where: workspaceAnchorsEmptySlot) else { return false }
+        // Registering a workspace creates the default project before the
+        // workspace is assigned to its destination. That internal placeholder
+        // is not a user-created background project and must not be retained.
+        if projectId == workspaceProjectDefaultId, !workspaces.contains(where: \.isVisible) {
+            return true
+        }
         // A project created in the background must survive until first selected.
         let wasSelected = winMuxWorkspaceState.monitorViewportsById.values.contains {
             $0.lastActiveWorkspaceByProject[projectId] != nil
