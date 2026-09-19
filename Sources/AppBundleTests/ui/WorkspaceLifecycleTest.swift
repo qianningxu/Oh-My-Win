@@ -319,7 +319,7 @@ final class WorkspaceLifecycleTest: XCTestCase {
         XCTAssertEqual(emptyUserFacingWorkspaces(in: occupied.projectId).map(\.name), ["2"])
     }
 
-    func testEmptyAdjacentWorkspaceIsDeletedAfterLeavingIt() async throws {
+    func testEmptyAdjacentWorkspaceIsDeletedImmediatelyAfterLeavingIt() async throws {
         let occupied = Workspace.get(byName: "1")
         occupied.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 8, parent: occupied.rootTilingContainer)
@@ -334,7 +334,6 @@ final class WorkspaceLifecycleTest: XCTestCase {
         let emptyWorkspace = try XCTUnwrap(Workspace.existing(byName: "2"))
 
         _ = occupied.focusWorkspace()
-        Workspace.reconcileWorkspaceState()
 
         XCTAssertNil(Workspace.existing(byName: emptyWorkspace.name))
         XCTAssertEqual(userFacingWorkspaces(Workspace.all, focusedWorkspace: focus.workspace), [occupied])

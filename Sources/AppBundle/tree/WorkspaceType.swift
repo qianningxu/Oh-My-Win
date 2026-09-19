@@ -2,6 +2,8 @@ import AppKit
 import Common
 
 final class Workspace: TreeNode, NonLeafTreeNodeObject, Hashable, Comparable {
+    @MainActor private static var isReconcilingState = false
+
     let id: WorkspaceId
     private(set) var name: String
     nonisolated private var nameLogicalSegments: StringLogicalSegments
@@ -68,6 +70,10 @@ final class Workspace: TreeNode, NonLeafTreeNodeObject, Hashable, Comparable {
 
     @MainActor
     static func reconcileWorkspaceState() {
+        guard !isReconcilingState else { return }
+        isReconcilingState = true
+        defer { isReconcilingState = false }
+
         for workspace in winMuxWorkspaceState.workspaceById.values {
             workspace.refreshEmptyLifecycle()
         }

@@ -132,6 +132,9 @@ func replaceWorkspaceNameInFocusState(oldName: String, newName: String) {
 
     _focus = newFocus.frozen
     newFocus.windowOrNil?.markAsMostRecentChild()
+    if oldFocus.workspace != newFocus.workspace, !isRestoringStartupLayout {
+        Workspace.reconcileWorkspaceState()
+    }
     return true
 }
 extension Window {
