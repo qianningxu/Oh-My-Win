@@ -10,11 +10,8 @@ func windowTabGroupOuterCornerRadius(innerCornerRadius _: CGFloat) -> CGFloat {
     windowTabStripCornerRadius
 }
 
-func windowTabGroupTopInnerCornerRadius(_ appCornerRadius: CGFloat) -> CGFloat {
-    min(
-        max(appCornerRadius + windowTabGroupShellHorizontalInset() + 14, windowTabStripCornerRadius + 18),
-        windowTabGroupFrameMaxTopInnerCornerRadius
-    )
+func windowTabGroupTopInnerCornerRadius(_: CGFloat) -> CGFloat {
+    0
 }
 
 func windowTabGroupTopCornerShieldRadius(_ topInnerCornerRadius: CGFloat) -> CGFloat {
