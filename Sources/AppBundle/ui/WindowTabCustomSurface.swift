@@ -7,7 +7,7 @@ struct WindowTabCustomSurface: View {
     var body: some View {
         ZStack {
             if !reduceTransparency {
-                VisualEffectBlur(material: .underWindowBackground, blendingMode: .behindWindow, opacity: 0.90)
+                VisualEffectBlur(material: .underWindowBackground, blendingMode: .behindWindow, opacity: 0.50)
             }
             Color(nsColor: palette.isDark
                 ? GeistColorTokens.windowTab100Dark
