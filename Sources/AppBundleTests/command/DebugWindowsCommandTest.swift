@@ -10,7 +10,7 @@ final class DebugWindowsCommandTest: XCTestCase {
         workspace.markAsAutomaticallyNamed()
         let window = TestWindow.new(id: 42, parent: workspace.rootTilingContainer)
 
-        XCTAssertEqual(winMuxDebugTabName(for: window), "Tab 1")
+        XCTAssertEqual(winMuxDebugTabName(for: window), "Workspace 1")
         XCTAssertEqual(window.nodeWorkspace?.name, "10")
     }
 }

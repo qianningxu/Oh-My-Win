@@ -64,7 +64,7 @@ final class ListWorkspacesTest: XCTestCase {
         let succeeded = try await command.run(.defaultEnv, io)
 
         XCTAssertTrue(succeeded)
-        XCTAssertEqual(io.stdout.filter { $0 != "setUpWorkspacesForTests" }, ["Tab 1", "Tab 2"])
+        XCTAssertEqual(io.stdout.filter { $0 != "setUpWorkspacesForTests" }, ["Workspace 1", "Workspace 2"])
     }
 
     @MainActor
@@ -84,7 +84,7 @@ final class ListWorkspacesTest: XCTestCase {
 
         XCTAssertTrue(tabSucceeded)
         XCTAssertTrue(workspaceSucceeded)
-        XCTAssertEqual(tabIo.stdout.filter { $0 != "setUpWorkspacesForTests" }, ["Tab 1"])
+        XCTAssertEqual(tabIo.stdout.filter { $0 != "setUpWorkspacesForTests" }, ["Workspace 1"])
         XCTAssertEqual(workspaceIo.stdout.filter { $0 != "setUpWorkspacesForTests" }, ["10"])
     }
 
@@ -103,8 +103,8 @@ final class ListWorkspacesTest: XCTestCase {
         let objects = try JSONSerialization.jsonObject(
             with: Data(io.stdout.joined(separator: "\n").utf8)
         ) as? [[String: Any]]
-        let tab = try XCTUnwrap(objects?.first { ($0["tab"] as? String) == "Tab 1" })
-        XCTAssertEqual(tab["tab"] as? String, "Tab 1")
+        let tab = try XCTUnwrap(objects?.first { ($0["tab"] as? String) == "Workspace 1" })
+        XCTAssertEqual(tab["tab"] as? String, "Workspace 1")
         XCTAssertNil(tab["workspace"])
         XCTAssertEqual(Set(tab.keys), ["tab"])
     }
@@ -124,7 +124,7 @@ final class ListWorkspacesTest: XCTestCase {
         let objects = try JSONSerialization.jsonObject(
             with: Data(io.stdout.joined(separator: "\n").utf8)
         ) as? [[String: Any]]
-        let tab = try XCTUnwrap(objects?.first { ($0["tab"] as? String) == "Tab 1" })
+        let tab = try XCTUnwrap(objects?.first { ($0["tab"] as? String) == "Workspace 1" })
         XCTAssertEqual(Set(tab.keys), ["tab"])
     }
 }

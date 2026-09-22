@@ -27,7 +27,7 @@ final class NewTabCommandTest: XCTestCase {
         XCTAssertTrue(focus.workspace.isEffectivelyEmpty)
         XCTAssertEqual(focus.workspace.projectId, workspaceProjectDefaultId)
         XCTAssertEqual(focus.workspace.workspaceMonitor.rect.topLeftCorner, first.workspaceMonitor.rect.topLeftCorner)
-        XCTAssertEqual(workspaceDisplayName(focus.workspace.name), "Tab 2")
+        XCTAssertEqual(workspaceDisplayName(focus.workspace.name), "Workspace 2")
         XCTAssertEqual(
             orderedWorkspacesForPresentation().filter { !$0.isArchived }.map(\.name),
             [first.name, focus.workspace.name, second.name]

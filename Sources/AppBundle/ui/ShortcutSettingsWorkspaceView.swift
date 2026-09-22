@@ -16,7 +16,7 @@ struct WorkspaceShortcutSectionView: View {
             VStack(alignment: .leading, spacing: standardGap * 5) {
                 Text("Overrides")
                     .font(.headline)
-                Text("Individual tab shortcuts override the global pattern above.")
+                Text("Individual workspace shortcuts override the global pattern above.")
                     .font(.caption)
                     .foregroundStyle(winMuxOverlayContent(.secondary))
 
@@ -100,7 +100,7 @@ struct WorkspaceOverrideRow: View {
 
     var body: some View {
         HStack(spacing: standardGap * 8) {
-            Text("Tab \(workspaceName)")
+            Text("Workspace \(workspaceName)")
                 .font(.system(size: 13, weight: .semibold))
                 .frame(width: 100, alignment: .leading)
 

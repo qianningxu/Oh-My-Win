@@ -820,11 +820,11 @@ private func confirmWorkspaceSidebarTabClosure(_ workspace: WorkspaceSidebarWork
     guard workspaceSidebarTabClosureRequiresConfirmation(windowCount: windowCount) else { return true }
 
     let alert = NSAlert()
-    alert.messageText = "Close Tab Windows?"
+    alert.messageText = "Close Workspace Windows?"
     alert.informativeText = """
-    WinMux will ask macOS to close \(windowCount) windows in “\(workspace.displayName)”. Apps may show their own confirmation dialogs for unsaved work. If any window stays open, WinMux will keep the tab.
+    WinMux will ask macOS to close \(windowCount) windows in “\(workspace.displayName)”. Apps may show their own confirmation dialogs for unsaved work. If any window stays open, WinMux will keep the workspace.
     """
-    alert.addButton(withTitle: "Close tab")
+    alert.addButton(withTitle: "Close workspace")
     alert.addButton(withTitle: "Cancel")
     alert.alertStyle = .warning
     return alert.runModal() == .alertFirstButtonReturn

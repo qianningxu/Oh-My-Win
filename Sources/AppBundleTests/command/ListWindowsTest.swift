@@ -138,7 +138,7 @@ final class ListWindowsTest: XCTestCase {
             with: Data(result.stdout.joined(separator: "\n").utf8)
         ) as? [[String: Any]]
         let window = try XCTUnwrap(objects?.first { ($0["window-id"] as? UInt32) == 42 || ($0["window-id"] as? Int) == 42 })
-        XCTAssertEqual(window["tab"] as? String, "Tab 1")
+        XCTAssertEqual(window["tab"] as? String, "Workspace 1")
         XCTAssertNil(window["workspace"])
         XCTAssertEqual(window["window-title"] as? String, "TestWindow(42)")
         XCTAssertEqual(window["app-name"] as? String, "bobko.WinMux.test-app")

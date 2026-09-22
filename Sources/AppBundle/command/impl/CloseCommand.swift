@@ -9,7 +9,7 @@ struct CloseCommand: Command {
         try await allowOnlyCancellationError { @MainActor @Sendable in
             guard let target = args.resolveTargetOrReportError(env, io) else { return false }
             guard let window = target.windowOrNil else {
-                return io.err("Empty Tab")
+                return io.err("Empty Workspace")
             }
             // Access ax directly. Not cool :(
             if try await args.quitIfLastWindow.andAsync({ @MainActor @Sendable in try await window.macAppUnsafe.getAxWindowsCount() == 1 }) {

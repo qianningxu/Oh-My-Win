@@ -8,10 +8,10 @@ struct CloseAllWindowsButCurrentCommand: Command {
     func run(_ env: CmdEnv, _ io: CmdIo) async throws -> Bool {
         guard let target = args.resolveTargetOrReportError(env, io) else { return false }
         guard let focused = target.windowOrNil else {
-            return io.err("Empty Tab")
+            return io.err("Empty Workspace")
         }
         guard let workspace = focused.nodeWorkspace else {
-            return io.err("Focused window '\(focused.windowId)' doesn't belong to a Tab")
+            return io.err("Focused window '\(focused.windowId)' doesn't belong to a Workspace")
         }
         var result = true
         for window in workspace.allLeafWindowsRecursive where window != focused {

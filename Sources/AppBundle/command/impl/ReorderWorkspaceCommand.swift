@@ -10,7 +10,7 @@ struct ReorderWorkspaceCommand: Command {
         guard let source = Workspace.existing(byName: sourceName),
               !source.isArchived
         else {
-            return io.err("Tab '\(sourceName)' doesn't exist")
+            return io.err("Workspace '\(sourceName)' doesn't exist")
         }
 
         let placement: WorkspaceReorderPlacement
@@ -25,17 +25,17 @@ struct ReorderWorkspaceCommand: Command {
         guard let target = Workspace.existing(byName: placement.targetWorkspaceName),
               !target.isArchived
         else {
-            return io.err("Tab '\(placement.targetWorkspaceName)' doesn't exist")
+            return io.err("Workspace '\(placement.targetWorkspaceName)' doesn't exist")
         }
         guard !projectsAreEnabled() || source.projectId == target.projectId else {
-            return io.err("Tabs '\(workspaceDisplayName(source.name))' and '\(workspaceDisplayName(target.name))' cannot be reordered together")
+            return io.err("Workspaces '\(workspaceDisplayName(source.name))' and '\(workspaceDisplayName(target.name))' cannot be reordered together")
         }
         guard reorderWorkspaceForSidebar(
             sourceWorkspaceName: source.name,
             folderId: target.folderId,
             placement: placement
         ) else {
-            return io.err("Tab '\(workspaceDisplayName(source.name))' is already in the requested position")
+            return io.err("Workspace '\(workspaceDisplayName(source.name))' is already in the requested position")
         }
         return true
     }

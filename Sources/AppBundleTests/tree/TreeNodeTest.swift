@@ -273,7 +273,7 @@ final class TreeNodeTest: XCTestCase {
         Workspace.reconcileWorkspaceState()
 
         XCTAssertNil(config.workspaceSidebar.workspaceLabels["__sidebar_draft_workspace_1"])
-        XCTAssertEqual(workspaceDisplayName("__sidebar_draft_workspace_1"), "Tab 1")
+        XCTAssertEqual(workspaceDisplayName("__sidebar_draft_workspace_1"), "Workspace 1")
     }
 
     func testReconcileWorkspaceStatePreservesCollectedWorkspaceLabelForRestart() {
@@ -292,7 +292,7 @@ final class TreeNodeTest: XCTestCase {
         Workspace.reconcileWorkspaceState()
 
         XCTAssertNil(config.workspaceSidebar.workspaceLabels["__sidebar_draft_workspace_7"])
-        XCTAssertEqual(workspaceDisplayName("__sidebar_draft_workspace_7"), "Tab 7")
+        XCTAssertEqual(workspaceDisplayName("__sidebar_draft_workspace_7"), "Workspace 7")
     }
 
     func testReconcileWorkspaceStatePreservesOrphanedWorkspaceLabelForRestart() {
@@ -306,7 +306,7 @@ final class TreeNodeTest: XCTestCase {
     }
 
     func testWorkspaceDisplayNameUsesSidebarDraftFallback() {
-        XCTAssertEqual(workspaceDisplayName("__sidebar_draft_workspace_4"), "Tab 4")
+        XCTAssertEqual(workspaceDisplayName("__sidebar_draft_workspace_4"), "Workspace 4")
     }
 
     func testShouldShowWorkspaceInSidebarIncludesPersistentEmptyWorkspace() {

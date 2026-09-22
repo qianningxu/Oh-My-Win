@@ -64,7 +64,7 @@ struct WorkspaceCommand: Command {
             return .backAndForth
         }
         guard let workspace = createAdjacentTransientBlankWorkspaceIfAllowed(named: workspaceName, from: focusedWs) else {
-            _ = io.err("Tab '\(workspaceName)' doesn't exist")
+            _ = io.err("Workspace '\(workspaceName)' doesn't exist")
             return .error
         }
         return .focus(workspace)
@@ -80,7 +80,7 @@ private func focusOrReportNoop(
 ) -> Bool {
     if focusedWorkspace == workspace {
         if !failIfNoop {
-            io.err("Tab '\(workspaceDisplayName(workspace.name))' is already focused. Tip: use --fail-if-noop to exit with non-zero code")
+            io.err("Workspace '\(workspaceDisplayName(workspace.name))' is already focused. Tip: use --fail-if-noop to exit with non-zero code")
         }
         return !failIfNoop
     }

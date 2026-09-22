@@ -9,19 +9,19 @@ struct SummonWorkspaceCommand: Command {
         guard let workspace = Workspace.existing(byName: args.target.val.raw),
               isUserFacingWorkspace(workspace, focusedWorkspace: focus.workspace)
         else {
-            return io.err("Tab '\(args.target.val.raw)' doesn't exist")
+            return io.err("Workspace '\(args.target.val.raw)' doesn't exist")
         }
         let monitor = focus.workspace.workspaceMonitor
         if monitor.activeWorkspace == workspace {
             if !args.failIfNoop {
-                io.err("Tab '\(workspaceDisplayName(workspace.name))' is already visible on the focused monitor. Tip: use --fail-if-noop to exit with non-zero code")
+                io.err("Workspace '\(workspaceDisplayName(workspace.name))' is already visible on the focused monitor. Tip: use --fail-if-noop to exit with non-zero code")
             }
             return !args.failIfNoop
         }
         if activateWorkspaceOnMonitorPreservingSourceViewport(workspace, targetMonitor: monitor) {
             return workspace.focusWorkspace()
         } else {
-            return io.err("Can't move Tab '\(workspaceDisplayName(workspace.name))' to monitor '\(monitor.name)'. tab-to-monitor-force-assignment doesn't allow it")
+            return io.err("Can't move Workspace '\(workspaceDisplayName(workspace.name))' to monitor '\(monitor.name)'. tab-to-monitor-force-assignment doesn't allow it")
         }
     }
 }

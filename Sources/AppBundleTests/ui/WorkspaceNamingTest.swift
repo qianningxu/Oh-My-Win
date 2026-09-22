@@ -145,8 +145,8 @@ final class WorkspaceNamingTest: XCTestCase {
         second.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 2, parent: second.rootTilingContainer)
 
-        XCTAssertEqual(workspaceDisplayName(first.name), "Tab 1")
-        XCTAssertEqual(workspaceDisplayName(second.name), "Tab 2")
+        XCTAssertEqual(workspaceDisplayName(first.name), "Workspace 1")
+        XCTAssertEqual(workspaceDisplayName(second.name), "Workspace 2")
     }
 
     func testAutomaticWorkspaceDisplayNamesFollowProjectOrderInsteadOfRawNameSort() {
@@ -163,8 +163,8 @@ final class WorkspaceNamingTest: XCTestCase {
                 .map(\.name),
             ["10", "2"],
         )
-        XCTAssertEqual(workspaceDisplayName(first.name), "Tab 1")
-        XCTAssertEqual(workspaceDisplayName(second.name), "Tab 2")
+        XCTAssertEqual(workspaceDisplayName(first.name), "Workspace 1")
+        XCTAssertEqual(workspaceDisplayName(second.name), "Workspace 2")
     }
 
     func testSidebarTabTitleFollowsFocusedWindowInComposedLayout() async {
@@ -269,7 +269,7 @@ final class WorkspaceNamingTest: XCTestCase {
                 .map(\.name),
             ["1", "2"],
         )
-        XCTAssertEqual(workspaceDisplayName(second.name), "Tab 2")
+        XCTAssertEqual(workspaceDisplayName(second.name), "Workspace 2")
     }
 
     func testNextAutomaticWorkspaceRawNameReusesLowestNumericGap() {
@@ -317,8 +317,8 @@ final class WorkspaceNamingTest: XCTestCase {
 
         XCTAssertEqual(first.name, "1")
         XCTAssertEqual(second.name, "3")
-        XCTAssertEqual(workspaceDisplayName(first.name), "Tab 1")
-        XCTAssertEqual(workspaceDisplayName(second.name), "Tab 2")
+        XCTAssertEqual(workspaceDisplayName(first.name), "Workspace 1")
+        XCTAssertEqual(workspaceDisplayName(second.name), "Workspace 2")
         XCTAssertTrue(Workspace.existing(byName: "3") === second)
     }
 
@@ -342,8 +342,8 @@ final class WorkspaceNamingTest: XCTestCase {
                 .map(\.name),
             ["10", "7"],
         )
-        XCTAssertEqual(workspaceDisplayName(first.name), "Tab 1")
-        XCTAssertEqual(workspaceDisplayName(third.name), "Tab 2")
+        XCTAssertEqual(workspaceDisplayName(first.name), "Workspace 1")
+        XCTAssertEqual(workspaceDisplayName(third.name), "Workspace 2")
     }
 
     func testWorkspaceNameAfterCompactionUsesCurrentAutomaticName() throws {
@@ -356,7 +356,7 @@ final class WorkspaceNamingTest: XCTestCase {
         try deleteWorkspaceForSidebar(workspaceName: deleted.name)
 
         XCTAssertEqual(survivor.name, "2")
-        XCTAssertEqual(workspaceDisplayName(survivor.name), "Tab 1")
+        XCTAssertEqual(workspaceDisplayName(survivor.name), "Workspace 1")
         XCTAssertNil(config.workspaceSidebar.workspaceLabels[survivor.name])
     }
 
@@ -372,7 +372,7 @@ final class WorkspaceNamingTest: XCTestCase {
         Workspace.reconcileWorkspaceState()
 
         XCTAssertEqual(focused.name, "3")
-        XCTAssertEqual(workspaceDisplayName(focused.name), "Tab 2")
+        XCTAssertEqual(workspaceDisplayName(focused.name), "Workspace 2")
         XCTAssertTrue(focus.workspace === focused)
     }
 
@@ -384,8 +384,8 @@ final class WorkspaceNamingTest: XCTestCase {
         second.markAsSidebarManaged()
         _ = TestWindow.new(id: 4, parent: second.rootTilingContainer)
 
-        XCTAssertEqual(workspaceDisplayName(first.name), "Tab 1")
-        XCTAssertEqual(workspaceDisplayName(second.name), "Tab 2")
+        XCTAssertEqual(workspaceDisplayName(first.name), "Workspace 1")
+        XCTAssertEqual(workspaceDisplayName(second.name), "Workspace 2")
     }
 
     func testSidebarWorkspaceCreationUsesAutomaticWorkspaceName() {
@@ -400,7 +400,7 @@ final class WorkspaceNamingTest: XCTestCase {
         XCTAssertEqual(focus.workspace.name, "1")
     }
 
-    func testAutomaticWorkspaceDisplayNamesAreMonitorLocalAcrossDisplays() {
+    func testAutomaticWorkspaceDisplayNamesAreUniqueAcrossDisplays() {
         let main = WorkspaceNamingTestMonitor(
             monitorAppKitNsScreenScreensId: 1,
             name: "Main",
@@ -426,13 +426,13 @@ final class WorkspaceNamingTest: XCTestCase {
         secondaryWorkspace.seedMonitorIfNeeded(secondary)
         _ = TestWindow.new(id: 11, parent: secondaryWorkspace.rootTilingContainer)
 
-        XCTAssertEqual(workspaceDisplayName(mainWorkspace.name), "Tab 1")
-        XCTAssertEqual(workspaceDisplayName(secondaryWorkspace.name), "Tab 1")
+        XCTAssertEqual(workspaceDisplayName(mainWorkspace.name), "Workspace 1")
+        XCTAssertEqual(workspaceDisplayName(secondaryWorkspace.name), "Workspace 2")
         XCTAssertEqual(mainWorkspace.projectId, workspaceProjectDefaultId)
         XCTAssertEqual(secondaryWorkspace.projectId, workspaceProjectDefaultId)
     }
 
-    func testSidebarFoldersOwnSeparateTabDisplayIndexesWhenProjectsHardDisabled() {
+    func testAutomaticWorkspaceDisplayNamesAreUniqueAcrossProjects() {
         let defaultWorkspace = Workspace.get(byName: "1")
         defaultWorkspace.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 12, parent: defaultWorkspace.rootTilingContainer)
@@ -444,8 +444,8 @@ final class WorkspaceNamingTest: XCTestCase {
         _ = TestWindow.new(id: 13, parent: projectWorkspace.rootTilingContainer)
 
         XCTAssertNotEqual(defaultWorkspace.projectId, projectWorkspace.projectId)
-        XCTAssertEqual(workspaceDisplayName(defaultWorkspace.name), "Tab 1")
-        XCTAssertEqual(workspaceDisplayName(projectWorkspace.name), "Tab 1")
+        XCTAssertEqual(workspaceDisplayName(defaultWorkspace.name), "Workspace 1")
+        XCTAssertEqual(workspaceDisplayName(projectWorkspace.name), "Workspace 2")
     }
 
     func testWorkspaceSidebarRenameUsesDisplayLabelWithoutRenamingWorkspaceIdentity() throws {
@@ -471,7 +471,7 @@ final class WorkspaceNamingTest: XCTestCase {
         try resetWorkspaceSidebarName(workspaceName: workspace.name)
 
         XCTAssertEqual(workspace.name, "1")
-        XCTAssertEqual(workspaceDisplayName(workspace.name), "Tab 1")
+        XCTAssertEqual(workspaceDisplayName(workspace.name), "Workspace 1")
         XCTAssertNil(config.workspaceSidebar.workspaceLabels[workspace.name])
     }
 
@@ -481,10 +481,10 @@ final class WorkspaceNamingTest: XCTestCase {
         _ = TestWindow.new(id: 214, parent: workspace.rootTilingContainer)
         try renameWorkspaceForSidebar(workspaceName: workspace.name, displayName: "Code")
 
-        try renameWorkspaceForSidebar(workspaceName: workspace.name, displayName: "Tab 1")
+        try renameWorkspaceForSidebar(workspaceName: workspace.name, displayName: "Workspace 1")
 
         XCTAssertEqual(workspace.name, "1")
-        XCTAssertEqual(workspaceDisplayName(workspace.name), "Tab 1")
+        XCTAssertEqual(workspaceDisplayName(workspace.name), "Workspace 1")
         XCTAssertNil(config.workspaceSidebar.workspaceLabels[workspace.name])
     }
 
@@ -510,7 +510,7 @@ final class WorkspaceNamingTest: XCTestCase {
         XCTAssertNil(Workspace.existing(byName: "1"))
         XCTAssertTrue(Workspace.existing(byName: "2") === second)
         XCTAssertTrue(firstWindow.nodeWorkspace === second)
-        XCTAssertEqual(workspaceDisplayName(second.name), "Tab 1")
+        XCTAssertEqual(workspaceDisplayName(second.name), "Workspace 1")
         XCTAssertNil(config.workspaceSidebar.workspaceLabels[first.name])
     }
 
@@ -697,7 +697,7 @@ final class WorkspaceNamingTest: XCTestCase {
         } catch {
             XCTAssertEqual(
                 error.localizedDescription,
-                "Tab 'Tab 2' was not closed because 1 window stayed open."
+                "Workspace 'Workspace 2' was not closed because 1 window stayed open."
             )
         }
 

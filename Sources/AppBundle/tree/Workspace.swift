@@ -105,15 +105,15 @@ enum WorkspaceMutationError: LocalizedError {
     var errorDescription: String? {
         switch self {
             case .workspaceNotFound(let name):
-                "Tab '\(name)' no longer exists."
+                "Workspace '\(name)' no longer exists."
             case .workspaceCannotBeDeleted(let name):
-                "Tab '\(name)' cannot be deleted."
+                "Workspace '\(name)' cannot be deleted."
             case .projectNotFound(let id):
                 "Project '\(id)' no longer exists."
             case .projectCannotBeDeleted(let name):
                 "Project '\(name)' cannot be deleted."
             case .workspaceCloseBlocked(let name, let count):
-                "Tab '\(name)' was not closed because \(count) window\(count == 1 ? "" : "s") stayed open."
+                "Workspace '\(name)' was not closed because \(count) window\(count == 1 ? "" : "s") stayed open."
             case .projectCloseBlocked(let name, let count):
                 "Project '\(name)' was not deleted because \(count) window\(count == 1 ? "" : "s") stayed open."
             case .emptyName:

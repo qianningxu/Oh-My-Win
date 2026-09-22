@@ -44,7 +44,7 @@ struct WorkspaceSidebarWindowMenuItem: Equatable, Identifiable {
 
     var id: UInt32 { windowId }
     var menuTitle: String {
-        "\(title) — \(isFloating ? "Floating" : tabName ?? "Tab")"
+        "\(title) — \(isFloating ? "Floating" : tabName ?? "Workspace")"
     }
 }
 

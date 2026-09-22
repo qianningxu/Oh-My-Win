@@ -19,7 +19,7 @@ struct MoveWorkspaceToMonitorCommand: Command {
                     return true
                 } else {
                     return io.err(
-                        "Can't move Tab '\(workspaceDisplayName(focusedWorkspace.name))' to monitor '\(targetMonitor.name)'. tab-to-monitor-force-assignment doesn't allow it",
+                        "Can't move Workspace '\(workspaceDisplayName(focusedWorkspace.name))' to monitor '\(targetMonitor.name)'. tab-to-monitor-force-assignment doesn't allow it",
                     )
                 }
             case .failure(let msg):

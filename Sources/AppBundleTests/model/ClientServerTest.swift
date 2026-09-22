@@ -114,7 +114,7 @@ final class ClientServerTest: XCTestCase {
         let testData: [(String, ServerEventType)] = [
             (#"{"_event":"focus-changed","windowId":123,"workspace":"1","monitorId":1}"#, .focusChanged),
             (#"{"_event":"focused-monitor-changed","workspace":"2","monitorId":1}"#, .focusedMonitorChanged),
-            (#"{"_event":"focused-tab-changed","tab":"Tab 2","workspace":"2","prevTab":"Tab 1","prevWorkspace":"1"}"#, .tabChanged),
+            (#"{"_event":"focused-tab-changed","tab":"Workspace 2","workspace":"2","prevTab":"Workspace 1","prevWorkspace":"1"}"#, .tabChanged),
             (#"{"_event":"focused-workspace-changed","workspace":"2","prevWorkspace":"1"}"#, .tabChanged),
             (#"{"_event":"mode-changed","mode":"resize"}"#, .modeChanged),
             (#"{"_event":"window-detected","windowId":456}"#, .windowDetected),

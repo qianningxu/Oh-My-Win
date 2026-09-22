@@ -85,7 +85,7 @@ func currentSidebarWorkspaceDropDestination(sourceWindow: Window, mouseLocation:
                     previewRect: workspaceSidebarCursorPreviewRect(at: mouseLocation),
                     interactionRect: sidebarWorkspaceDropInteractionRect(for: target),
                     title: sourceLabel,
-                    subtitle: "Drop to create a Tab and move this item there",
+                    subtitle: "Drop to create a Workspace and move this item there",
                     previewStyle: .sidebarWorkspaceMove,
                     previewGeometry: .rounded,
                     isGroup: isGroup,
