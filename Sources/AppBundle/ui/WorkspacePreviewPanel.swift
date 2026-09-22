@@ -62,18 +62,13 @@ final class WorkspacePreviewPanel: NSPanelHud {
         render()
     }
 
-    @discardableResult
-    func select(index: Int) -> Bool {
+    func select(index: Int) {
         if !isPreviewActive {
             begin(direction: 0)
         }
-        guard isPreviewActive, items.indices.contains(index) else {
-            dismiss()
-            return false
-        }
+        guard isPreviewActive, items.indices.contains(index) else { return }
         selectedIndex = index
         render()
-        return true
     }
 
     func commitIfActive() {
@@ -161,8 +156,9 @@ func handleWorkspacePreviewHotkey(_ binding: String) -> Bool {
             WorkspacePreviewPanel.shared.advance(direction: -1)
             return true
         default:
-            guard let index = workspacePreviewSelectionIndex(for: binding) else { return false }
-            return WorkspacePreviewPanel.shared.select(index: index)
+            guard workspacePreviewSelectionIndex(for: binding) != nil else { return false }
+            WorkspacePreviewPanel.shared.dismiss()
+            return false
     }
 }
 

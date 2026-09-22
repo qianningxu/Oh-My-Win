@@ -128,9 +128,9 @@ enum GlobalObserver {
         Task { @MainActor in
             if modifierFlags.contains(.option),
                !modifierFlags.contains(.shift),
-               let workspaceIndex = optionWorkspaceIndex(for: keyCode)
+               optionWorkspaceIndex(for: keyCode) != nil
             {
-                WorkspacePreviewPanel.shared.select(index: workspaceIndex)
+                WorkspacePreviewPanel.shared.dismiss()
                 return
             }
             if modifierFlags.contains(.option), keyCode == 48 {
@@ -336,7 +336,7 @@ enum GlobalObserver {
             onKeyDown(event)
             if event.modifierFlags.contains(.option),
                !event.modifierFlags.contains(.shift),
-               (event.keyCode == 48 || optionWorkspaceIndex(for: event.keyCode) != nil)
+               event.keyCode == 48
             {
                 return nil
             }
