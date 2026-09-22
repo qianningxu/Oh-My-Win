@@ -69,11 +69,11 @@ final class WorkspaceCommandTest: XCTestCase {
 
         assertEquals(result.exitCode, 0)
         XCTAssertEqual(focus.workspace.name, "3")
-        XCTAssertEqual(workspaceDisplayName("2"), "Workspace 2")
-        XCTAssertEqual(workspaceDisplayName("3"), "Workspace 3")
+        XCTAssertNil(Workspace.existing(byName: "2"))
+        XCTAssertEqual(workspaceDisplayName("3"), "Workspace 2")
     }
 
-    func testDirectWorkspaceFocusKeepsOpenedOrderedWorkspaces() async throws {
+    func testDirectWorkspaceFocusDeletesEmptyOrderedWorkspaces() async throws {
         let workspace1 = Workspace.get(byName: "1")
         workspace1.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 20, parent: workspace1.rootTilingContainer)
@@ -86,7 +86,7 @@ final class WorkspaceCommandTest: XCTestCase {
         )
         _ = workspace1.focusWorkspace()
         Workspace.reconcileWorkspaceState()
-        XCTAssertNotNil(Workspace.existing(byName: "2"))
+        XCTAssertNil(Workspace.existing(byName: "2"))
 
         let result = try await WorkspaceCommand(
             args: WorkspaceCmdArgs(target: .direct(.parse("3").getOrDie())),
@@ -94,6 +94,8 @@ final class WorkspaceCommandTest: XCTestCase {
 
         assertEquals(result.exitCode, 0)
         XCTAssertEqual(focus.workspace.name, "3")
+        XCTAssertNil(Workspace.existing(byName: "2"))
+        XCTAssertEqual(workspaceDisplayName("3"), "Workspace 2")
     }
 
     func testDirectWorkspaceShortcutUsesProjectViewportOrderInsteadOfRawNameSort() async throws {
@@ -209,7 +211,7 @@ final class WorkspaceCommandTest: XCTestCase {
         XCTAssertTrue(focus.workspace === first)
     }
 
-    func testOpenedBlankNumericWorkspaceRemainsUntilClosed() async throws {
+    func testOpenedBlankNumericWorkspaceDeletesAfterLeaving() async throws {
         let workspace1 = Workspace.get(byName: "1")
         workspace1.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 3, parent: workspace1.rootTilingContainer)
@@ -225,7 +227,7 @@ final class WorkspaceCommandTest: XCTestCase {
         _ = workspace1.focusWorkspace()
         Workspace.reconcileWorkspaceState()
 
-        XCTAssertNotNil(Workspace.existing(byName: "2"))
+        XCTAssertNil(Workspace.existing(byName: "2"))
         XCTAssertEqual(workspaceDisplayName("1"), "Workspace 1")
     }
 
@@ -247,8 +249,8 @@ final class WorkspaceCommandTest: XCTestCase {
             monitor: workspace1.workspaceMonitor,
             focusedWorkspace: focus.workspace,
         )
-        XCTAssertEqual(ordered.map { workspaceDisplayName($0.name) }, ["Workspace 1", "Workspace 2", "Workspace 3"])
-        XCTAssertTrue(focus.workspace === ordered[2])
+        XCTAssertEqual(ordered.map { workspaceDisplayName($0.name) }, ["Workspace 1", "Workspace 2"])
+        XCTAssertTrue(focus.workspace === ordered[1])
     }
 
     func testWorkspaceNextCreatesBlankNumericWorkspaceAtRightEdge() async throws {
@@ -266,7 +268,7 @@ final class WorkspaceCommandTest: XCTestCase {
         XCTAssertEqual(workspaceDisplayName("2"), "Workspace 2")
     }
 
-    func testWorkspaceNextBlankNumericWorkspaceRemainsUntilClosed() async throws {
+    func testWorkspaceNextBlankNumericWorkspaceDeletesAfterLeaving() async throws {
         let workspace1 = Workspace.get(byName: "1")
         workspace1.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 5, parent: workspace1.rootTilingContainer)
@@ -282,7 +284,7 @@ final class WorkspaceCommandTest: XCTestCase {
         _ = workspace1.focusWorkspace()
         Workspace.reconcileWorkspaceState()
 
-        XCTAssertNotNil(Workspace.existing(byName: "2"))
+        XCTAssertNil(Workspace.existing(byName: "2"))
         XCTAssertEqual(workspaceDisplayName("1"), "Workspace 1")
     }
 

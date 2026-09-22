@@ -336,7 +336,7 @@ final class TreeNodeTest: XCTestCase {
         XCTAssertEqual(result, [occupiedWorkspace])
     }
 
-    func testUserFacingWorkspacesIncludeSidebarManagedEmptyWorkspace() {
+    func testUserFacingWorkspacesExcludeUnretainedSidebarManagedEmptyWorkspace() {
         let focusedWorkspace = Workspace.get(byName: "focused")
         focusedWorkspace.markAsSidebarManaged()
         let occupiedWorkspace = Workspace.get(byName: "occupied")
@@ -347,7 +347,7 @@ final class TreeNodeTest: XCTestCase {
             focusedWorkspace: focusedWorkspace,
         )
 
-        XCTAssertEqual(result, [focusedWorkspace, occupiedWorkspace])
+        XCTAssertEqual(result, [occupiedWorkspace])
     }
 
     func testUserFacingWorkspacesIncludePersistentEmptyWorkspace() {

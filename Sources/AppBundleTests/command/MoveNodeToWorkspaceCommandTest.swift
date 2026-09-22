@@ -255,7 +255,7 @@ final class MoveNodeToWorkspaceCommandTest: XCTestCase {
         XCTAssertEqual(workspaceDisplayName("2"), "Workspace 3")
     }
 
-    func testDirectNumericMoveKeepsOpenedOrderedWorkspaces() async throws {
+    func testDirectNumericMoveDeletesEmptyOrderedWorkspaces() async throws {
         let workspace1 = Workspace.get(byName: "1")
         workspace1.markAsAutomaticallyNamed()
         let window = TestWindow.new(id: 13, parent: workspace1.rootTilingContainer)
@@ -268,7 +268,7 @@ final class MoveNodeToWorkspaceCommandTest: XCTestCase {
         )
         _ = window.focusWindow()
         Workspace.reconcileWorkspaceState()
-        XCTAssertNotNil(Workspace.existing(byName: "2"))
+        XCTAssertNil(Workspace.existing(byName: "2"))
 
         let result = try await MoveNodeToWorkspaceCommand(args: MoveNodeToWorkspaceCmdArgs(workspace: "3"))
             .run(.defaultEnv, .emptyStdin)

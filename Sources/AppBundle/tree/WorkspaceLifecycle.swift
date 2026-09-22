@@ -347,7 +347,6 @@ func workspaceShouldSurviveReconciliation(
         workspaceHasSidebarDisplayNameOverride(workspace.name)
     return (workspace.isVisible && !isReplaceableVisibleRename && shouldRetainVisibleWorkspaceDuringPrune(workspace)) ||
         workspaceHasLifecycleWindows(workspace) ||
-        workspace.lifecycle == .durable ||
         workspace.isConfiguredPersistent ||
         (!isReplaceableVisibleRename && shouldRetainLastEmptyWorkspaceInProject(workspace)) ||
         retainedEmptyWorkspaceIds[scope] == workspace.id
