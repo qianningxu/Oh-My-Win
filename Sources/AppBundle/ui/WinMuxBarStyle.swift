@@ -33,7 +33,7 @@ enum WinMuxBarStyle {
     static let workspaceBarShadowY = WinMuxSpacing.hairline
     static let workspaceBarShadowOutset = WinMuxSpacing.section
     static let topBarStrokeOpacity: CGFloat = 0
-    static let dividerOpacity: CGFloat = 0.75
+    static let dividerOpacity: CGFloat = 0.50
     static let workspaceTabUnfocusedTextOpacity: CGFloat = 0.50
     static let windowTabUnfocusedTextOpacity: CGFloat = 0.75
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
@@ -206,7 +206,7 @@ extension View {
         .clipShape(shape)
         .overlay {
             shape.strokeBorder(
-                winMuxBarSurfaceStroke(palette).opacity(0.28),
+                winMuxBarForeground(palette).opacity(WinMuxBarStyle.dividerOpacity),
                 lineWidth: WinMuxBarStyle.strokeWidth
             )
             .allowsHitTesting(false)
