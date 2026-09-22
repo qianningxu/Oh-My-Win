@@ -34,7 +34,7 @@ struct WindowTabItemView: View {
                 .fill(Color(nsColor: palette.isDark
                     ? GeistColorTokens.windowTab200Dark
                     : GeistColorTokens.windowTab200Light))
-                .opacity(tab.isActive ? 0.50 : 0)
+                .opacity(tab.isActive ? 0.75 : 0)
         }
         .contentShape(Rectangle())
     }
