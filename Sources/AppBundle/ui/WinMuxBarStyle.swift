@@ -63,6 +63,7 @@ enum WinMuxGlassStyle {
     var surfaceOpacity: CGFloat {
         switch self {
             case .workspaceBar: WinMuxBarStyle.workspaceBarSurfaceOpacity
+            case .windowBar: 0.80
             default: 1
         }
     }
@@ -199,7 +200,7 @@ extension View {
             VisualEffectBlur(
                 material: .hudWindow,
                 blendingMode: .behindWindow,
-                opacity: 0.80
+                opacity: 1
             )
             .clipShape(shape)
         }
