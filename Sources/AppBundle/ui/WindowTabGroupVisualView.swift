@@ -15,12 +15,9 @@ struct WindowTabGroupVisualView: View {
                     width: max(geometry.size.width - windowTabGroupShellHorizontalInset() * 2, 0),
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
-                .background(
-                    palette.isDark
-                        ? Color(nsColor: GeistColorTokens.sidebar100Dark)
-                        : Color(nsColor: GeistColorTokens.background1Light.nsColor).opacity(0.60),
-                    in: Capsule(style: .continuous)
-                )
+                .background {
+                    WindowTabNativeGlass(height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height))
+                }
                 .overlay {
                     Capsule(style: .continuous)
                     .strokeBorder(
