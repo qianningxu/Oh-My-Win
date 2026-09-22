@@ -31,7 +31,7 @@ struct WindowTabItemView: View {
         .padding(.horizontal, showsTitle ? max(WinMuxBarStyle.contentInset, reservesCloseButtonSpace ? windowTabStripCloseButtonReservedWidth : 0) : WinMuxSpacing.none)
         .frame(width: width, height: height, alignment: .center)
         .background {
-            RoundedRectangle(cornerRadius: WinMuxSpacing.section, style: .continuous)
+            Capsule(style: .continuous)
                 .fill(palette.content(.primary).opacity(
                     tab.isActive ? (palette.isDark ? 0.10 : 0.06) : 0
                 ))

@@ -17,16 +17,10 @@ struct WindowTabGroupVisualView: View {
                 )
                 .background(
                     palette.geistBackground(.primary).opacity(palette.isDark ? 0.70 : 0.80),
-                    in: RoundedRectangle(
-                        cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
-                        style: .continuous
-                    )
+                    in: Capsule(style: .continuous)
                 )
                 .overlay {
-                    RoundedRectangle(
-                        cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
-                        style: .continuous
-                    )
+                    Capsule(style: .continuous)
                     .strokeBorder(
                         palette.content(.primary).opacity(0.06),
                         lineWidth: WinMuxBarStyle.strokeWidth
