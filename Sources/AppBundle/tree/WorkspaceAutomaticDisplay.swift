@@ -73,16 +73,15 @@ func createAdjacentTransientBlankWorkspaceIfAllowed(
         monitor: monitor,
         focusedWorkspace: focusedWorkspace,
     )
-    guard targetIndex == automaticDisplayWorkspaces.count + 1 else { return nil }
-    if let lastWorkspace = automaticDisplayWorkspaces.last,
-       automaticDisplayWorkspaces.count > 1,
-       lastWorkspace.isOrdinaryEmptySlot {
-        return nil
-    }
+    guard targetIndex > automaticDisplayWorkspaces.count else { return nil }
 
-    let workspace = Workspace.get(byName: nextSidebarCreatedWorkspaceName(projectId: projectId, monitor: monitor))
-    workspace.markAsTransientBlank()
-    workspace.assignProject(projectId)
-    workspace.seedMonitorIfNeeded(monitor)
-    return workspace
+    var targetWorkspace: Workspace?
+    for _ in automaticDisplayWorkspaces.count ..< targetIndex {
+        let workspace = Workspace.get(byName: nextSidebarCreatedWorkspaceName(projectId: projectId, monitor: monitor))
+        workspace.markAsSidebarManaged()
+        workspace.assignProject(projectId)
+        workspace.seedMonitorIfNeeded(monitor)
+        targetWorkspace = workspace
+    }
+    return targetWorkspace
 }
