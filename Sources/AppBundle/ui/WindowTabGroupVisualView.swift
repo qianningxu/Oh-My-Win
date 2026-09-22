@@ -25,7 +25,7 @@ struct WindowTabGroupVisualView: View {
                             ? GeistColorTokens.windowTab300Dark
                             : GeistColorTokens.windowTab300Light)
                             .opacity(0.60),
-                        lineWidth: WinMuxBarStyle.strokeWidth * 0.5
+                        lineWidth: WinMuxBarStyle.strokeWidth * 0.25
                     )
                 }
                 .padding(.top, windowTabBarOuterInset())
