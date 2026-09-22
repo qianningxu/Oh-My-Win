@@ -87,7 +87,7 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
 
     @objc private func showDashboard() {
         menu.cancelTracking()
-        openWorkspaceSidebarFromMenu()
+        openDashboardFromMenu()
     }
 
     @objc private func quit() {

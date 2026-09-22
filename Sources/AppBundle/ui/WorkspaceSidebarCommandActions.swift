@@ -6,21 +6,15 @@ func openWorkspaceSidebarFromCommand() {
     guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled else { return }
     WorkspaceSidebarPanel.refreshAll()
     let focusedScopeId = TrayMenuModel.shared.workspaceSidebarFocusedMonitorScopeId
-    guard let panel = WorkspaceSidebarPanel.dashboardPanel(for: focusedScopeId) else { return }
+    let panel = WorkspaceSidebarPanel.panel(for: focusedScopeId)
+        ?? WorkspaceSidebarPanel.visiblePanels.first
+        ?? WorkspaceSidebarPanel.allPanels.first
+        ?? WorkspaceSidebarPanel.shared
     if panel.viewModel.isWorkspaceSidebarAutoHideEnabled {
         panel.revealProjectBarFromCommand()
         installWorkspaceSidebarCommandMouseUnlockMonitor(panel)
     } else {
         panel.expandSidebar(to: panel.frame.width, animated: false)
-    }
-}
-
-@MainActor
-func openWorkspaceSidebarFromMenu() {
-    // Let AppKit finish dismissing the status menu before presenting the
-    // auto-hidden dashboard so menu tracking cannot immediately collapse it.
-    DispatchQueue.main.async {
-        openWorkspaceSidebarFromCommand()
     }
 }
 
