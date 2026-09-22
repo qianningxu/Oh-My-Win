@@ -10,8 +10,8 @@ struct WindowTabCustomSurface: View {
                 VisualEffectBlur(material: .underWindowBackground, blendingMode: .behindWindow)
             }
             Color(nsColor: palette.isDark
-                ? GeistColorTokens.gray500Dark.nsColor
-                : GeistColorTokens.gray100Light.nsColor)
+                ? GeistColorTokens.windowTab100Dark
+                : GeistColorTokens.windowTab100Light)
                 .opacity(reduceTransparency ? 1 : (palette.isDark ? 0.72 : 0.60))
         }
         .clipShape(Capsule(style: .continuous))
