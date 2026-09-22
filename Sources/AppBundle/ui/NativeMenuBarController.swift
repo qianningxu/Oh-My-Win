@@ -38,7 +38,6 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         if projectsAreEnabled() {
             menu.addItem(actionItem("New project", #selector(createProject)))
         }
-        menu.addItem(.separator())
         menu.addItem(actionItem("Show Dashboard", #selector(showDashboard)))
         menu.addItem(actionItem("Quit", #selector(quit)))
     }
@@ -87,7 +86,8 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func showDashboard() {
-        openWorkspaceSidebarFromCommand()
+        menu.cancelTracking()
+        openWorkspaceSidebarFromMenu()
     }
 
     @objc private func quit() {

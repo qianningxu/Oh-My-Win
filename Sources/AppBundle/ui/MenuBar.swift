@@ -59,8 +59,7 @@ private struct WorkspaceProjectMenuBarContent: View {
         if projectsAreEnabled() {
             Button("New project") { createProject() }
         }
-        Divider()
-        Button("Show Dashboard") { openWorkspaceSidebarFromCommand() }
+        Button("Show Dashboard") { openWorkspaceSidebarFromMenu() }
         Button("Quit") { NSApp.terminate(nil) }
     }
 

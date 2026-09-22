@@ -19,6 +19,15 @@ func openWorkspaceSidebarFromCommand() {
 }
 
 @MainActor
+func openWorkspaceSidebarFromMenu() {
+    // Let AppKit finish dismissing the status menu before presenting the
+    // auto-hidden dashboard so menu tracking cannot immediately collapse it.
+    DispatchQueue.main.async {
+        openWorkspaceSidebarFromCommand()
+    }
+}
+
+@MainActor
 func closeWorkspaceSidebarFromCommand(_ panel: WorkspaceSidebarPanel) {
     panel.releaseCommandProjectBarReveal()
 }
