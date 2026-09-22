@@ -28,7 +28,7 @@ struct WindowTabGroupVisualView: View {
                         style: .continuous
                     )
                     .strokeBorder(
-                        winMuxBarSurfaceStroke(palette).opacity(WinMuxBarStyle.windowBarStrokeOpacity),
+                        winMuxBarForeground(palette).opacity(WinMuxBarStyle.windowBarStrokeOpacity),
                         lineWidth: WinMuxBarStyle.strokeWidth
                     )
                 }
