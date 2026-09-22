@@ -35,6 +35,7 @@ func isUserFacingWorkspace(_ workspace: Workspace, focusedWorkspace: Workspace? 
         (
             workspaceHasSidebarVisibleWindows(workspace) ||
                 workspace.isVisible ||
+                (workspace.usesAutomaticDisplayName && workspace.lifecycle == .durable) ||
                 workspace.isConfiguredPersistent ||
                 !workspaceOwnedMinimizedWindows(workspace).isEmpty ||
                 workspaceIsRetainedEmptySlot(workspace)

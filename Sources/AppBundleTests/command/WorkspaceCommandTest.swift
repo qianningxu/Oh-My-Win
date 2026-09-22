@@ -229,6 +229,28 @@ final class WorkspaceCommandTest: XCTestCase {
         XCTAssertEqual(workspaceDisplayName("1"), "Workspace 1")
     }
 
+    func testDirectNumericShortcutCreatesEveryMissingOrderedWorkspace() async throws {
+        let workspace1 = Workspace.get(byName: "1")
+        workspace1.markAsAutomaticallyNamed()
+        _ = TestWindow.new(id: 30, parent: workspace1.rootTilingContainer)
+        _ = workspace1.focusWorkspace()
+
+        assertEquals(
+            try await WorkspaceCommand(
+                args: WorkspaceCmdArgs(target: .direct(.parse("3").getOrDie())),
+            ).run(.defaultEnv, .emptyStdin).exitCode,
+            0,
+        )
+
+        let ordered = monitorScopedAutomaticDisplayWorkspacesInExactProject(
+            projectId: workspace1.projectId,
+            monitor: workspace1.workspaceMonitor,
+            focusedWorkspace: focus.workspace,
+        )
+        XCTAssertEqual(ordered.map { workspaceDisplayName($0.name) }, ["Workspace 1", "Workspace 2", "Workspace 3"])
+        XCTAssertTrue(focus.workspace === ordered[2])
+    }
+
     func testWorkspaceNextCreatesBlankNumericWorkspaceAtRightEdge() async throws {
         let workspace1 = Workspace.get(byName: "1")
         workspace1.markAsAutomaticallyNamed()
