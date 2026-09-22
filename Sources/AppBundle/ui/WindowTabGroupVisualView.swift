@@ -17,7 +17,7 @@ struct WindowTabGroupVisualView: View {
                 )
                 .background(
                     palette.isDark
-                        ? palette.color(.gray, .color3)
+                        ? palette.color(.gray, .color1)
                         : Color(nsColor: GeistColorTokens.background1Light.nsColor).opacity(0.60),
                     in: Capsule(style: .continuous)
                 )
