@@ -33,7 +33,7 @@ struct WindowTabItemView: View {
         .background {
             Capsule(style: .continuous)
                 .fill(palette.content(.primary).opacity(
-                    tab.isActive ? (palette.isDark ? 0.10 : 0.06) : 0
+                    tab.isActive ? (palette.isDark ? 0.18 : 0.12) : 0
                 ))
         }
         .contentShape(Rectangle())
