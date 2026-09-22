@@ -101,6 +101,19 @@ final class WorkspaceSidebarPanel: NSPanelHud {
         panelsByMonitorScopeId[monitorScopeId]
     }
 
+    static func dashboardPanel(for preferredMonitorScopeId: String) -> WorkspaceSidebarPanel? {
+        guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled else { return nil }
+        let monitors = workspaceSidebarResolvedPanelMonitors()
+        guard let monitor = monitors.first(where: {
+            workspaceSidebarMonitorScopeId(for: $0) == preferredMonitorScopeId
+        }) ?? monitors.first else { return nil }
+        let scopeId = workspaceSidebarMonitorScopeId(for: monitor)
+        let panel = panelsByMonitorScopeId[scopeId] ?? WorkspaceSidebarPanel(monitor: monitor)
+        panelsByMonitorScopeId[scopeId] = panel
+        panel.syncModelFromShared()
+        return panel
+    }
+
     static func updateVisibleDropTargets(_ targets: [WorkspaceSidebarDropTargetFrame]) {
         workspaceSidebarDropTargets = visiblePanels.flatMap { $0.convertDropTargets(targets) }
     }
@@ -108,7 +121,24 @@ final class WorkspaceSidebarPanel: NSPanelHud {
     static func refreshAll() {
         guard !isRestoringStartupLayout else { return }
         MenuBarStatusWidgetsController.shared.refreshIfInstalled()
-        removeCachedPanels()
+        guard !panelsByMonitorScopeId.isEmpty else { return }
+        guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled else {
+            removeCachedPanels()
+            return
+        }
+        let monitors = workspaceSidebarResolvedPanelMonitors()
+        let monitorsByScopeId = Dictionary(uniqueKeysWithValues: monitors.map {
+            (workspaceSidebarMonitorScopeId(for: $0), $0)
+        })
+        for (scopeId, panel) in panelsByMonitorScopeId {
+            guard let monitor = monitorsByScopeId[scopeId] else { continue }
+            panel.syncModelFromShared()
+            panel.refresh(on: monitor)
+        }
+        let inactiveScopeIds = panelsByMonitorScopeId.keys.filter { monitorsByScopeId[$0] == nil }
+        for scopeId in inactiveScopeIds {
+            panelsByMonitorScopeId.removeValue(forKey: scopeId)?.prepareForRemoval()
+        }
     }
 
     static func syncVisiblePanelModelsFromShared() {

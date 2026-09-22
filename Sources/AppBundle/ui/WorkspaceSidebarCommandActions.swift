@@ -6,10 +6,7 @@ func openWorkspaceSidebarFromCommand() {
     guard TrayMenuModel.shared.isEnabled, config.workspaceSidebar.enabled else { return }
     WorkspaceSidebarPanel.refreshAll()
     let focusedScopeId = TrayMenuModel.shared.workspaceSidebarFocusedMonitorScopeId
-    let panel = WorkspaceSidebarPanel.panel(for: focusedScopeId)
-        ?? WorkspaceSidebarPanel.visiblePanels.first
-        ?? WorkspaceSidebarPanel.allPanels.first
-        ?? WorkspaceSidebarPanel.shared
+    guard let panel = WorkspaceSidebarPanel.dashboardPanel(for: focusedScopeId) else { return }
     if panel.viewModel.isWorkspaceSidebarAutoHideEnabled {
         panel.revealProjectBarFromCommand()
         installWorkspaceSidebarCommandMouseUnlockMonitor(panel)
