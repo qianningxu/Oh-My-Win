@@ -1,12 +1,10 @@
 @MainActor
 func automaticWorkspaceDisplayIndex(_ workspace: Workspace, focusedWorkspace: Workspace?) -> Int? {
-    guard isUserFacingWorkspace(workspace, focusedWorkspace: focusedWorkspace) else { return nil }
-    return automaticWorkspaceDisplayIndexFallback(workspace.name)
-        ?? monitorScopedAutomaticDisplayWorkspacesInExactProject(
-            projectId: workspace.projectId,
-            monitor: workspace.workspaceMonitor,
-            focusedWorkspace: focusedWorkspace,
-        )
+    monitorScopedAutomaticDisplayWorkspacesInExactProject(
+        projectId: workspace.projectId,
+        monitor: workspace.workspaceMonitor,
+        focusedWorkspace: focusedWorkspace,
+    )
         .firstIndex(of: workspace)
         .map { $0 + 1 }
 }
@@ -70,21 +68,19 @@ func createAdjacentTransientBlankWorkspaceIfAllowed(
     guard let targetIndex = parsePositiveWorkspaceDisplayIndex(workspaceName) else {
         return nil
     }
-    guard Workspace.existing(byName: workspaceName) == nil,
-          isValidAssignment(workspaceName: workspaceName, screen: monitor.rect.topLeftCorner)
-    else { return nil }
     let automaticDisplayWorkspaces = monitorScopedAutomaticDisplayWorkspacesInExactProject(
         projectId: projectId,
         monitor: monitor,
         focusedWorkspace: focusedWorkspace,
     )
+    guard targetIndex == automaticDisplayWorkspaces.count + 1 else { return nil }
     if let lastWorkspace = automaticDisplayWorkspaces.last,
        automaticDisplayWorkspaces.count > 1,
        lastWorkspace.isOrdinaryEmptySlot {
         return nil
     }
 
-    let workspace = Workspace.get(byName: String(targetIndex))
+    let workspace = Workspace.get(byName: nextSidebarCreatedWorkspaceName(projectId: projectId, monitor: monitor))
     workspace.markAsTransientBlank()
     workspace.assignProject(projectId)
     workspace.seedMonitorIfNeeded(monitor)

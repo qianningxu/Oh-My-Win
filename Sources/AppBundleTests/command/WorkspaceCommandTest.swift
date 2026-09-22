@@ -57,7 +57,7 @@ final class WorkspaceCommandTest: XCTestCase {
         XCTAssertEqual(workspaceDisplayName("2"), "Workspace 2")
     }
 
-    func testDirectWorkspaceFocusCreatesRequestedNumericWorkspaceAcrossGap() async throws {
+    func testDirectWorkspaceFocusDoesNotSkipBlankNumericWorkspace() async throws {
         let workspace1 = Workspace.get(byName: "1")
         workspace1.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 2, parent: workspace1.rootTilingContainer)
@@ -67,12 +67,11 @@ final class WorkspaceCommandTest: XCTestCase {
             args: WorkspaceCmdArgs(target: .direct(.parse("3").getOrDie())),
         ).run(.defaultEnv, .emptyStdin)
 
-        assertEquals(result.exitCode, 0)
-        XCTAssertEqual(focus.workspace.name, "3")
-        XCTAssertNil(Workspace.existing(byName: "2"))
+        assertEquals(result.exitCode, 1)
+        XCTAssertNil(Workspace.existing(byName: "3"))
     }
 
-    func testDirectWorkspaceFocusCreatesRequestedNumberAfterBlankIsCollected() async throws {
+    func testDirectWorkspaceFocusDoesNotCreateMultipleHopsAfterBlankIsCollected() async throws {
         let workspace1 = Workspace.get(byName: "1")
         workspace1.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 20, parent: workspace1.rootTilingContainer)
@@ -91,8 +90,8 @@ final class WorkspaceCommandTest: XCTestCase {
             args: WorkspaceCmdArgs(target: .direct(.parse("3").getOrDie())),
         ).run(.defaultEnv, .emptyStdin)
 
-        assertEquals(result.exitCode, 0)
-        XCTAssertEqual(focus.workspace.name, "3")
+        assertEquals(result.exitCode, 1)
+        XCTAssertNil(Workspace.existing(byName: "3"))
     }
 
     func testDirectWorkspaceShortcutUsesProjectViewportOrderInsteadOfRawNameSort() async throws {
@@ -117,7 +116,7 @@ final class WorkspaceCommandTest: XCTestCase {
         XCTAssertTrue(focus.workspace === second)
     }
 
-    func testDirectWorkspaceFocusUsesStableWorkspaceNumber() async throws {
+    func testDirectWorkspaceFocusFillsDisplayIndexGapBeforeAppending() async throws {
         let first = Workspace.get(byName: "1")
         first.markAsAutomaticallyNamed()
         _ = TestWindow.new(id: 23, parent: first.rootTilingContainer)
@@ -131,11 +130,11 @@ final class WorkspaceCommandTest: XCTestCase {
         ).run(.defaultEnv, .emptyStdin)
 
         assertEquals(result.exitCode, 0)
-        XCTAssertEqual(focus.workspace.name, "3")
-        XCTAssertNil(Workspace.existing(byName: "2"))
+        XCTAssertEqual(focus.workspace.name, "2")
         XCTAssertNil(Workspace.existing(byName: "4"))
         XCTAssertEqual(workspaceDisplayName(first.name), "Workspace 1")
-        XCTAssertEqual(workspaceDisplayName(thirdRaw.name), "Workspace 3")
+        XCTAssertEqual(workspaceDisplayName(thirdRaw.name), "Workspace 2")
+        XCTAssertEqual(workspaceDisplayName("2"), "Workspace 3")
     }
 
     func testNextWorkspaceAfterRawNameGapCreatesRawTwoNotRawFour() async throws {
@@ -155,8 +154,8 @@ final class WorkspaceCommandTest: XCTestCase {
         XCTAssertEqual(focus.workspace.name, "2")
         XCTAssertNil(Workspace.existing(byName: "4"))
         XCTAssertEqual(workspaceDisplayName(first.name), "Workspace 1")
-        XCTAssertEqual(workspaceDisplayName(thirdRaw.name), "Workspace 3")
-        XCTAssertEqual(workspaceDisplayName("2"), "Workspace 2")
+        XCTAssertEqual(workspaceDisplayName(thirdRaw.name), "Workspace 2")
+        XCTAssertEqual(workspaceDisplayName("2"), "Workspace 3")
     }
 
     func testWorkspaceNextPrevFollowDisplayOrderWhenRawNamesSortDifferently() async throws {

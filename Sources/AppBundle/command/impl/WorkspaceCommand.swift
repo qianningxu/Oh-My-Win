@@ -95,12 +95,13 @@ private func createNextTransientBlankWorkspaceIfAllowed(
     usesStdin: Bool,
 ) -> Workspace? {
     guard isNext, !wrapAround, !usesStdin else { return nil }
-    let nextWorkspaceIndex = nextAutomaticWorkspaceName(
+    let nextWorkspaceIndex = monitorScopedAutomaticDisplayWorkspacesInExactProject(
         projectId: current.projectId,
         monitor: current.workspaceMonitor,
-    )
+        focusedWorkspace: current,
+    ).count + 1
     return createAdjacentTransientBlankWorkspaceIfAllowed(
-        named: nextWorkspaceIndex,
+        named: String(nextWorkspaceIndex),
         projectId: current.projectId,
         monitor: current.workspaceMonitor,
         focusedWorkspace: current,
@@ -109,12 +110,21 @@ private func createNextTransientBlankWorkspaceIfAllowed(
 
 @MainActor
 private func findDirectWorkspaceTarget(named workspaceName: String, from current: Workspace) -> Workspace? {
-    if parsePositiveWorkspaceDisplayIndex(workspaceName) != nil {
-        if let workspace = Workspace.existing(byName: workspaceName),
-           isUserFacingWorkspace(workspace, focusedWorkspace: current) {
+    if let targetIndex = parsePositiveWorkspaceDisplayIndex(workspaceName) {
+        let automaticDisplayWorkspaces = directWorkspaceShortcutCandidates(current: current)
+        if let workspace = automaticDisplayWorkspaces.getOrNil(atIndex: targetIndex - 1) {
             return workspace
         }
-        return nil
+        guard let workspace = Workspace.existing(byName: workspaceName),
+              workspace.projectId == current.projectId,
+              isUserFacingWorkspace(workspace, focusedWorkspace: current)
+        else {
+            return nil
+        }
+        guard !workspace.usesAutomaticDisplayName else {
+            return nil
+        }
+        return workspace
     }
 
     guard let workspace = Workspace.existing(byName: workspaceName),

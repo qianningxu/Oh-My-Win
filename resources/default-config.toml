@@ -18,7 +18,7 @@ on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 automatically-unhide-macos-hidden-apps = false
 auto-add-new-windows-to-folder = true
 shortcuts-preset = 'none'
-persistent-tabs = ['1', '2', '3', '4']
+persistent-tabs = []
 on-mode-changed = []
 
 [key-mapping]
