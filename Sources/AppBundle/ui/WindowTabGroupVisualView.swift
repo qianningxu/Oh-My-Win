@@ -15,13 +15,20 @@ struct WindowTabGroupVisualView: View {
                     width: max(geometry.size.width - windowTabGroupShellHorizontalInset() * 2, 0),
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
+                .background(
+                    palette.geistBackground(.primary).opacity(palette.isDark ? 0.12 : 0.18),
+                    in: RoundedRectangle(
+                        cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
+                        style: .continuous
+                    )
+                )
                 .overlay {
                     RoundedRectangle(
                         cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
                         style: .continuous
                     )
                     .strokeBorder(
-                        winMuxBarForeground(palette).opacity(WinMuxBarStyle.windowBarStrokeOpacity),
+                        palette.content(.primary).opacity(0.12),
                         lineWidth: WinMuxBarStyle.strokeWidth
                     )
                 }
