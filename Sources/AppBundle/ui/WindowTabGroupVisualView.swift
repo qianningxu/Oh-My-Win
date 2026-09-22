@@ -15,13 +15,13 @@ struct WindowTabGroupVisualView: View {
                     width: max(geometry.size.width - windowTabGroupShellHorizontalInset() * 2, 0),
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
-                .winMuxCustomGlassBarSurface(
-                    palette,
-                    cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
-                    glassStyle: .windowBar,
-                    strokeOpacity: 0
+                .background(
+                    palette.color(palette.activeGeistFamily, .color1),
+                    in: RoundedRectangle(
+                        cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
+                        style: .continuous
+                    )
                 )
-                .saturation(WinMuxBarStyle.windowBarBackdropSaturation)
                 .overlay {
                     RoundedRectangle(
                         cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
