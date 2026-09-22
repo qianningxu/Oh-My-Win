@@ -16,7 +16,7 @@ struct WindowTabGroupVisualView: View {
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
                 .background {
-                    WindowTabNativeGlass(height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height))
+                    WindowTabCustomSurface(palette: palette)
                 }
                 .overlay {
                     Capsule(style: .continuous)
