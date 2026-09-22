@@ -60,15 +60,22 @@ extension ShortcutSettingsModel {
     }
 
     enum Tab: String, CaseIterable, Identifiable {
-        case shortcuts
-        case advanced
+        case setting
+        case savedWorkspace
 
         var id: String { rawValue }
 
         var title: String {
             switch self {
-                case .shortcuts: "Shortcuts"
-                case .advanced: "Advanced"
+                case .setting: "Setting"
+                case .savedWorkspace: "Saved workspace"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+                case .setting: "gearshape"
+                case .savedWorkspace: "square.stack.3d.up"
             }
         }
     }

@@ -38,7 +38,8 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         if projectsAreEnabled() {
             menu.addItem(actionItem("New project", #selector(createProject)))
         }
-        menu.addItem(actionItem("Show Dashboard", #selector(showDashboard)))
+        menu.addItem(actionItem("Setting", #selector(showSetting)))
+        menu.addItem(savedWorkspaceMenu())
         menu.addItem(actionItem("Quit", #selector(quit)))
     }
 
@@ -75,6 +76,14 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         return item
     }
 
+    private func savedWorkspaceMenu() -> NSMenuItem {
+        let item = NSMenuItem(title: "Saved workspace", action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+        submenu.addItem(actionItem("School", #selector(openSchoolSavedWorkspace)))
+        item.submenu = submenu
+        return item
+    }
+
     @objc private func selectProject(_ item: NSMenuItem) {
         guard let rawId = item.representedObject as? String else { return }
         handleWorkspaceSidebarAction(.selectProject(WorkspaceProjectId(rawId)), viewModel: viewModel)
@@ -85,9 +94,14 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         handleWorkspaceSidebarAction(.selectWorkspace(workspaceName), viewModel: viewModel)
     }
 
-    @objc private func showDashboard() {
+    @objc private func showSetting() {
         menu.cancelTracking()
         openDashboardFromMenu()
+    }
+
+    @objc private func openSchoolSavedWorkspace() {
+        menu.cancelTracking()
+        SavedWorkspaceLauncher.shared.open(.school)
     }
 
     @objc private func quit() {

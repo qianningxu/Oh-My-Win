@@ -5,7 +5,7 @@ import Foundation
 public final class ShortcutSettingsModel: ObservableObject {
     public static let shared = ShortcutSettingsModel()
 
-    @Published var selectedTab: Tab = .shortcuts
+    @Published var selectedTab: Tab = .setting
     @Published var sections: [Section] = []
     @Published var assignments: [String: String] = [:]
     @Published var tapBindings: [Summary] = []

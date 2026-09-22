@@ -60,6 +60,28 @@ struct ShortcutSettingsView: View {
     @ObservedObject var model: ShortcutSettingsModel
 
     var body: some View {
+        NavigationSplitView {
+            List(ShortcutSettingsModel.Tab.allCases, selection: $model.selectedTab) { tab in
+                Label(tab.title, systemImage: tab.systemImage)
+                    .tag(tab)
+            }
+            .listStyle(.sidebar)
+            .navigationSplitViewColumnWidth(min: standardGap * 50, ideal: standardGap * 55)
+        } detail: {
+            switch model.selectedTab {
+                case .setting:
+                    SettingsDashboardView(model: model)
+                case .savedWorkspace:
+                    SavedWorkspacesView()
+            }
+        }
+    }
+}
+
+private struct SettingsDashboardView: View {
+    @ObservedObject var model: ShortcutSettingsModel
+
+    var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: standardGap * 20) {
                 if let error = model.errorMessage {

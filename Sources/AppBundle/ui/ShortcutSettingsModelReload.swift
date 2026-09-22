@@ -38,7 +38,8 @@ extension ShortcutSettingsModel {
         }
     }
 
-    func requestWindowOpen() {
+    func requestWindowOpen(tab: Tab = .setting) {
+        selectedTab = tab
         reload()
         openRequestId += 1
     }

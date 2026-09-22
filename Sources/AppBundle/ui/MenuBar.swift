@@ -13,9 +13,9 @@ public func menuBar(viewModel: TrayMenuModel) -> some Scene {
 }
 
 @MainActor
-func openDashboardFromMenu() {
+func openDashboardFromMenu(tab: ShortcutSettingsModel.Tab = .setting) {
     DispatchQueue.main.async {
-        ShortcutSettingsModel.shared.requestWindowOpen()
+        ShortcutSettingsModel.shared.requestWindowOpen(tab: tab)
     }
 }
 
@@ -66,7 +66,10 @@ private struct WorkspaceProjectMenuBarContent: View {
         if projectsAreEnabled() {
             Button("New project") { createProject() }
         }
-        Button("Show Dashboard") { openDashboardFromMenu() }
+        Button("Setting") { openDashboardFromMenu() }
+        Menu("Saved workspace") {
+            Button("School") { SavedWorkspaceLauncher.shared.open(.school) }
+        }
         Button("Quit") { NSApp.terminate(nil) }
     }
 
