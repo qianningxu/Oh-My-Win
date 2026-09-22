@@ -17,7 +17,7 @@ struct WindowTabGroupVisualView: View {
                 )
                 .background(
                     Color(nsColor: GeistColorTokens.background1Light.nsColor)
-                        .opacity(palette.isDark ? 0.25 : 0.60),
+                        .opacity(palette.isDark ? 0.40 : 0.60),
                     in: Capsule(style: .continuous)
                 )
                 .overlay {
