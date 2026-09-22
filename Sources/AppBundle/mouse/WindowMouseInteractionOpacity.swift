@@ -38,7 +38,7 @@ final class WindowMouseInteractionOpacityController {
               let workspace = source.nodeWorkspace else { return }
         visibleWindowInventory.invalidate()
         self.activeWindowId = activeWindowId
-        hidesActiveWindow = true
+        hidesActiveWindow = false
         let neighbors = workspace.rootTilingContainer.allLeafWindowsRecursive.filter {
             $0.windowId != activeWindowId && !$0.isHiddenInCorner
         }

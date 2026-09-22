@@ -87,7 +87,7 @@ func updateCompositedResizePreview(_ window: Window, rect: Rect) {
         return
     }
     let items = windowResizePreviewItems(
-        in: workspace, weightMap: weightMap, excludingActiveWindowId: nil)
+        in: workspace, weightMap: weightMap, excludingActiveWindowId: window.windowId)
         .filter { Window.get(byId: $0.id)?.isFloating != true }
     let canvas = workspace.workspaceMonitor.visibleRectPaddedByOuterGaps.toAppKitScreenRect
     let visible = workspace.workspaceMonitor.visibleRect.toAppKitScreenRect
