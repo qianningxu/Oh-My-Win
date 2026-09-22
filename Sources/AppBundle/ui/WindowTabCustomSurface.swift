@@ -12,7 +12,7 @@ struct WindowTabCustomSurface: View {
             Color(nsColor: palette.isDark
                 ? GeistColorTokens.windowTab100Dark
                 : GeistColorTokens.windowTab100Light)
-                .opacity(reduceTransparency ? 1 : 0.15)
+                .opacity(reduceTransparency ? 1 : 0.10)
         }
         .clipShape(Capsule(style: .continuous))
     }
