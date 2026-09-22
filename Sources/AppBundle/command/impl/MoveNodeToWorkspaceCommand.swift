@@ -83,17 +83,9 @@ private func resolveMoveTargetWorkspace(
     sourceWorkspace: Workspace,
     sourceMonitor: Monitor,
 ) -> Workspace? {
-    if let targetIndex = parsePositiveWorkspaceDisplayIndex(workspaceName) {
+    if parsePositiveWorkspaceDisplayIndex(workspaceName) != nil {
         if let workspace = Workspace.existing(byName: workspaceName),
            isUserFacingWorkspace(workspace, focusedWorkspace: sourceWorkspace) {
-            return workspace
-        }
-        let automaticDisplayWorkspaces = monitorScopedAutomaticDisplayWorkspacesInExactProject(
-            projectId: sourceWorkspace.projectId,
-            monitor: sourceMonitor,
-            focusedWorkspace: sourceWorkspace,
-        )
-        if let workspace = automaticDisplayWorkspaces.getOrNil(atIndex: targetIndex - 1) {
             return workspace
         }
         return createAdjacentTransientBlankWorkspaceIfAllowed(

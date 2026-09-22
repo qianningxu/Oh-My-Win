@@ -71,7 +71,7 @@ func createAdjacentTransientBlankWorkspaceIfAllowed(
         return nil
     }
     guard Workspace.existing(byName: workspaceName) == nil,
-          nextAutomaticWorkspaceName(projectId: projectId, monitor: monitor) == workspaceName
+          isValidAssignment(workspaceName: workspaceName, screen: monitor.rect.topLeftCorner)
     else { return nil }
     let automaticDisplayWorkspaces = monitorScopedAutomaticDisplayWorkspacesInExactProject(
         projectId: projectId,
