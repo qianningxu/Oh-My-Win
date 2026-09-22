@@ -22,7 +22,7 @@ struct WindowTabGroupVisualView: View {
                 .overlay {
                     Capsule(style: .continuous)
                     .strokeBorder(
-                        palette.content(.primary).opacity(0.06),
+                        palette.color(.gray, .color10).opacity(palette.isDark ? 0.16 : 0.06),
                         lineWidth: WinMuxBarStyle.strokeWidth
                     )
                 }
