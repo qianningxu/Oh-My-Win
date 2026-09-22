@@ -24,7 +24,7 @@ struct WindowTabGroupVisualView: View {
                         Color(nsColor: palette.isDark
                             ? GeistColorTokens.windowTab300Dark
                             : GeistColorTokens.windowTab300Light)
-                            .opacity(0.30),
+                            .opacity(0.60),
                         lineWidth: WinMuxBarStyle.strokeWidth * 0.5
                     )
                 }
