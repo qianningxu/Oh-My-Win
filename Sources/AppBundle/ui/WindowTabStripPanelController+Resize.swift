@@ -9,6 +9,8 @@ extension WindowTabStripPanelController {
             return false
         }
 
+        // Keep the active tabs attached to the live resize without revealing passive stacks.
+        mouseInteractionChromeMode = nil
         transientResizeTabGroupId = transientStrip.id
         transientResizeTabGroupStrip = transientStrip
         if hiddenPassiveTabGroupChromeIds.contains(transientStrip.id) {

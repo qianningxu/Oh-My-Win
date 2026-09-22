@@ -71,7 +71,7 @@ func resizeWithMouse(_ window: Window) async throws { // todo cover with tests
 func updateCompositedResizePreview(_ window: Window, rect: Rect) {
     syncClosedWindowsCacheToCurrentWorld()
     let boundedRect = resizeProposal(window, rect: rect)?.rect ?? rect
-    WindowTabStripPanelController.shared.hideChromeDuringMouseInteraction(showFrameOnly: false)
+    WindowTabStripPanelController.shared.updateResizingTabGroupChrome(window: window, activeWindowRect: boundedRect)
     if resizePreviewHasVisibleChange(from: rect, to: boundedRect) {
         WindowMouseInteractionDriver.shared.constrainResizePointerIfNeeded(from: rect, to: boundedRect)
         WindowMouseInteractionDriver.shared.enqueueLiveResizeFrame(window: window, frame: boundedRect)

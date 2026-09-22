@@ -40,7 +40,6 @@ extension WindowMouseInteractionDriver {
             WindowTabStripPanelController.shared.hideChromeDuringMouseInteraction()
             return
         }
-        WindowTabStripPanelController.shared.hideChromeDuringMouseInteraction(showFrameOnly: false)
         if resizeGesture == nil {
             let sample = MousePointerTracker.shared.currentSample
             resizeGesture = makeResizeGesture(window: window, observedRect: window.lastKnownActualRect, sample: sample)
