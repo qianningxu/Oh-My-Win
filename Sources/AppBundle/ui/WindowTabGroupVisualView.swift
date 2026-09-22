@@ -16,7 +16,8 @@ struct WindowTabGroupVisualView: View {
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
                 .background(
-                    palette.geistBackground(.primary).opacity(palette.isDark ? 0.25 : 0.60),
+                    Color(nsColor: GeistColorTokens.background1Light.nsColor)
+                        .opacity(palette.isDark ? 0.25 : 0.60),
                     in: Capsule(style: .continuous)
                 )
                 .overlay {
