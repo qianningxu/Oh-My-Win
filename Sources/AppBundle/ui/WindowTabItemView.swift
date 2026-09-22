@@ -33,7 +33,7 @@ struct WindowTabItemView: View {
         .background {
             RoundedRectangle(cornerRadius: WinMuxSpacing.section, style: .continuous)
                 .fill(palette.content(.primary).opacity(
-                    tab.isActive || isDragSource ? (palette.isDark ? 0.10 : 0.06) : (isHovered ? 0.04 : 0)
+                    tab.isActive ? (palette.isDark ? 0.10 : 0.06) : 0
                 ))
         }
         .contentShape(Rectangle())

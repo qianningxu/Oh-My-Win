@@ -15,13 +15,6 @@ struct WindowTabGroupVisualView: View {
                     width: max(geometry.size.width - windowTabGroupShellHorizontalInset() * 2, 0),
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
-                .background(
-                    palette.color(palette.activeGeistFamily, .color1),
-                    in: RoundedRectangle(
-                        cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
-                        style: .continuous
-                    )
-                )
                 .overlay {
                     RoundedRectangle(
                         cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
