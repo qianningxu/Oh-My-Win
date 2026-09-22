@@ -16,13 +16,13 @@ struct WindowTabGroupVisualView: View {
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
                 .background(
-                    palette.geistBackground(.primary).opacity(palette.isDark ? 0.40 : 0.60),
+                    palette.geistBackground(.primary).opacity(palette.isDark ? 0.25 : 0.60),
                     in: Capsule(style: .continuous)
                 )
                 .overlay {
                     Capsule(style: .continuous)
                     .strokeBorder(
-                        palette.color(.gray, .color10).opacity(palette.isDark ? 0.16 : 0.06),
+                        palette.color(.gray, .color10).opacity(palette.isDark ? 0.30 : 0.06),
                         lineWidth: WinMuxBarStyle.strokeWidth
                     )
                 }
