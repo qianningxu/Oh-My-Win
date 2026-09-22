@@ -199,7 +199,7 @@ extension View {
             VisualEffectBlur(
                 material: .hudWindow,
                 blendingMode: .behindWindow,
-                opacity: 1
+                opacity: 0.80
             )
             .clipShape(shape)
         }
