@@ -10,97 +10,94 @@ struct ShortcutGeneralView: View {
     @State private var projectDeletionAction = config.workspaceSidebar.projectDeletionAction
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: standardGap * 12) {
-                if projectsAreEnabled() {
-                    GeneralSection(title: "Management") {
-                        VStack(alignment: .leading, spacing: standardGap * 6) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: standardGap * 1) {
-                                    Text("Deleting folders")
-                                    Text("Close windows keeps app confirmation dialogs visible and aborts deletion if a window stays open.")
-                                        .font(.caption)
-                                        .foregroundStyle(winMuxOverlayContent(.secondary))
-                                        .fixedSize(horizontal: false, vertical: true)
-                                }
-                                Spacer()
-                                Picker("", selection: $projectDeletionAction) {
-                                    ForEach(WorkspaceProjectDeletionAction.allCases) { action in
-                                        Text(action.settingsTitle).tag(action)
-                                    }
-                                }
-                                .labelsHidden()
-                                .pickerStyle(.menu)
-                                .frame(width: 210)
-                                .onChange(of: projectDeletionAction) { newValue in
-                                    setProjectDeletionAction(newValue)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                GeneralSection(title: "Appearance") {
-                    VStack(alignment: .leading, spacing: standardGap * 7) {
+        VStack(alignment: .leading, spacing: standardGap * 12) {
+            if projectsAreEnabled() {
+                GeneralSection(title: "Management") {
+                    VStack(alignment: .leading, spacing: standardGap * 6) {
                         HStack {
-                            Text("Menu bar style")
+                            VStack(alignment: .leading, spacing: standardGap * 1) {
+                                Text("Deleting folders")
+                                Text("Close windows keeps app confirmation dialogs visible and aborts deletion if a window stays open.")
+                                    .font(.caption)
+                                    .foregroundStyle(winMuxOverlayContent(.secondary))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                             Spacer()
-                            Picker("", selection: $displayStyle) {
-                                ForEach(MenuBarStyle.allCases) { style in
-                                    Text(style.title).tag(style)
+                            Picker("", selection: $projectDeletionAction) {
+                                ForEach(WorkspaceProjectDeletionAction.allCases) { action in
+                                    Text(action.settingsTitle).tag(action)
                                 }
                             }
                             .labelsHidden()
                             .pickerStyle(.menu)
-                            .frame(width: 180)
-                            .onChange(of: displayStyle) { newValue in
-                                var settings = ExperimentalUISettings()
-                                settings.displayStyle = newValue
-                                TrayMenuModel.shared.experimentalUISettings = settings
-                                updateTrayText()
+                            .frame(width: 210)
+                            .onChange(of: projectDeletionAction) { newValue in
+                                setProjectDeletionAction(newValue)
                             }
                         }
-
-                        HStack {
-                            VStack(alignment: .leading, spacing: standardGap * 1) {
-                                Text("Workspace tabs bar menu area")
-                                Text("Use 0 px when the macOS menu bar auto-hides.")
-                                    .font(.caption)
-                                    .foregroundStyle(winMuxOverlayContent(.secondary))
-                            }
-                            Spacer()
-                            Text("\(workspaceSidebarMenuBarReserveHeight) px")
-                                .font(.system(size: 12, design: .monospaced))
-                                .foregroundStyle(winMuxOverlayContent(.secondary))
-                                .frame(width: 48, alignment: .trailing)
-                            Stepper(
-                                "",
-                                value: $workspaceSidebarMenuBarReserveHeight,
-                                in: 0 ... 72,
-                                step: 1,
-                            )
-                            .labelsHidden()
-                            .onChange(of: workspaceSidebarMenuBarReserveHeight) { newValue in
-                                setWorkspaceSidebarMenuBarReserveHeight(newValue)
-                            }
-                        }
-                    }
-                }
-
-                GeneralSection(title: "Configuration") {
-                    VStack(alignment: .leading, spacing: standardGap * 6) {
-                        HStack {
-                            Button("Open configuration file") { openConfigAction() }
-                            Button("Reload configuration") { reloadConfigAction() }
-                        }
-                        
-                        Text("Shortcuts are edited here. Advanced configuration remains in `winmux.toml`.")
-                            .font(.caption)
-                            .foregroundStyle(winMuxOverlayContent(.secondary))
                     }
                 }
             }
-            .padding(standardGap * 12)
+
+            GeneralSection(title: "Appearance") {
+                VStack(alignment: .leading, spacing: standardGap * 7) {
+                    HStack {
+                        Text("Menu bar style")
+                        Spacer()
+                        Picker("", selection: $displayStyle) {
+                            ForEach(MenuBarStyle.allCases) { style in
+                                Text(style.title).tag(style)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 180)
+                        .onChange(of: displayStyle) { newValue in
+                            var settings = ExperimentalUISettings()
+                            settings.displayStyle = newValue
+                            TrayMenuModel.shared.experimentalUISettings = settings
+                            updateTrayText()
+                        }
+                    }
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: standardGap * 1) {
+                            Text("Workspace tabs bar menu area")
+                            Text("Use 0 px when the macOS menu bar auto-hides.")
+                                .font(.caption)
+                                .foregroundStyle(winMuxOverlayContent(.secondary))
+                        }
+                        Spacer()
+                        Text("\(workspaceSidebarMenuBarReserveHeight) px")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(winMuxOverlayContent(.secondary))
+                            .frame(width: 48, alignment: .trailing)
+                        Stepper(
+                            "",
+                            value: $workspaceSidebarMenuBarReserveHeight,
+                            in: 0 ... 72,
+                            step: 1,
+                        )
+                        .labelsHidden()
+                        .onChange(of: workspaceSidebarMenuBarReserveHeight) { newValue in
+                            setWorkspaceSidebarMenuBarReserveHeight(newValue)
+                        }
+                    }
+                }
+            }
+
+            GeneralSection(title: "Configuration") {
+                VStack(alignment: .leading, spacing: standardGap * 6) {
+                    HStack {
+                        Button("Open configuration file") { openConfigAction() }
+                        Button("Reload configuration") { reloadConfigAction() }
+                    }
+
+                    Text("Shortcuts are edited here. Advanced configuration remains in `winmux.toml`.")
+                        .font(.caption)
+                        .foregroundStyle(winMuxOverlayContent(.secondary))
+                }
+            }
         }
     }
 

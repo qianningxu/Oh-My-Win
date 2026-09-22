@@ -58,6 +58,7 @@ struct ShortcutAdvancedView: View {
             TextEditor(text: $configText)
                 .font(.system(size: 12, design: .monospaced))
                 .scrollContentBackground(.hidden)
+                .frame(minHeight: standardGap * 100)
                 .padding(standardGap * 4)
                 .background(winMuxOverlayGeistBackground(.primary))
                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -66,7 +67,6 @@ struct ShortcutAdvancedView: View {
                         .stroke(winMuxOverlayBorder(.normal), lineWidth: 0.5)
                 )
         }
-        .padding(standardGap * 12)
         .task {
             guard !hasLoaded else { return }
             hasLoaded = true

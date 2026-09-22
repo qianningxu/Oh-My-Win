@@ -56,77 +56,54 @@ func presentShortcutSettingsWindowWhenAvailable(
     }
 }
 
-enum SettingsSidebarItem: Hashable, Identifiable {
-    case managedShortcuts
-    case commonShortcuts
-    case general
-    case advanced
+struct ShortcutSettingsView: View {
+    @ObservedObject var model: ShortcutSettingsModel
 
-    var id: Self { self }
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: standardGap * 20) {
+                if let error = model.errorMessage {
+                    Text(error)
+                        .foregroundStyle(winMuxOverlayGeistBackground(.primary))
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(winMuxOverlayColor(.red, .color7))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
 
-    var label: String {
-        switch self {
-            case .managedShortcuts: "Managed shortcuts"
-            case .commonShortcuts: "Common shortcuts"
-            case .general: "General"
-            case .advanced: "Advanced"
-        }
-    }
+                UnifiedSettingsSection(title: "Managed shortcuts", systemImage: "keyboard") {
+                    ShortcutCategoryView(model: model, category: .managed)
+                }
 
-    var icon: String {
-        switch self {
-            case .managedShortcuts: "keyboard"
-            case .commonShortcuts: "keyboard"
-            case .general: "gearshape"
-            case .advanced: "slider.horizontal.3"
+                UnifiedSettingsSection(title: "Common shortcuts", systemImage: "keyboard") {
+                    ShortcutCategoryView(model: model, category: .common)
+                }
+
+                UnifiedSettingsSection(title: "General", systemImage: "gearshape") {
+                    ShortcutGeneralView(model: model)
+                }
+
+                UnifiedSettingsSection(title: "Advanced", systemImage: "slider.horizontal.3") {
+                    ShortcutAdvancedView(model: model)
+                }
+            }
+            .padding(standardGap * 12)
         }
     }
 }
 
-struct ShortcutSettingsView: View {
-    @ObservedObject var model: ShortcutSettingsModel
-    @State private var selectedItem: SettingsSidebarItem? = .managedShortcuts
+private struct UnifiedSettingsSection<Content: View>: View {
+    let title: String
+    let systemImage: String
+    @ViewBuilder let content: Content
 
     var body: some View {
-        NavigationSplitView {
-            List(selection: $selectedItem) {
-                Section("Shortcuts") {
-                    NavigationLink(value: SettingsSidebarItem.managedShortcuts) {
-                        Label(SettingsSidebarItem.managedShortcuts.label, systemImage: SettingsSidebarItem.managedShortcuts.icon)
-                    }
-                    NavigationLink(value: SettingsSidebarItem.commonShortcuts) {
-                        Label(SettingsSidebarItem.commonShortcuts.label, systemImage: SettingsSidebarItem.commonShortcuts.icon)
-                    }
-                }
-
-                Section("Application") {
-                    NavigationLink(value: SettingsSidebarItem.general) {
-                        Label(SettingsSidebarItem.general.label, systemImage: SettingsSidebarItem.general.icon)
-                    }
-                    NavigationLink(value: SettingsSidebarItem.advanced) {
-                        Label(SettingsSidebarItem.advanced.label, systemImage: SettingsSidebarItem.advanced.icon)
-                    }
-                }
-            }
-            .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 200, ideal: 220)
-        } detail: {
-            Group {
-                switch selectedItem {
-                    case .managedShortcuts:
-                        ShortcutCategoryView(model: model, category: .managed)
-                    case .commonShortcuts:
-                        ShortcutCategoryView(model: model, category: .common)
-                    case .general:
-                        ShortcutGeneralView(model: model)
-                    case .advanced:
-                        ShortcutAdvancedView(model: model)
-                    case nil:
-                        Text("Select an item")
-                }
-            }
-            .navigationTitle(selectedItem?.label ?? "")
+        VStack(alignment: .leading, spacing: standardGap * 8) {
+            Label(title, systemImage: systemImage)
+                .font(.title2.weight(.semibold))
+            content
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -135,22 +112,11 @@ struct ShortcutCategoryView: View {
     let category: ShortcutSettingsModel.Category
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: standardGap * 16) {
-                if let error = model.errorMessage {
-                    Text(error)
-                        .foregroundStyle(winMuxOverlayGeistBackground(.primary))
-                        .padding()
-                        .background(winMuxOverlayColor(.red, .color7))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-
-                let sections = model.sections.filter { $0.category == category && $0.id != "managed-move" }
-                ForEach(sections) { section in
-                    ShortcutSectionView(model: model, section: section)
-                }
+        LazyVStack(alignment: .leading, spacing: standardGap * 16) {
+            let sections = model.sections.filter { $0.category == category && $0.id != "managed-move" }
+            ForEach(sections) { section in
+                ShortcutSectionView(model: model, section: section)
             }
-            .padding(standardGap * 12)
         }
     }
 }
