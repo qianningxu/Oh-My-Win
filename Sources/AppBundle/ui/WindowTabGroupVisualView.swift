@@ -21,7 +21,10 @@ struct WindowTabGroupVisualView: View {
                 .overlay {
                     Capsule(style: .continuous)
                     .strokeBorder(
-                        palette.color(.gray, .color10).opacity(palette.isDark ? 0.30 : 0.06),
+                        Color(nsColor: palette.isDark
+                            ? GeistColorTokens.windowTab300Dark
+                            : GeistColorTokens.windowTab300Light)
+                            .opacity(0.30),
                         lineWidth: WinMuxBarStyle.strokeWidth
                     )
                 }
