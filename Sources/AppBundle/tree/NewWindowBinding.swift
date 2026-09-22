@@ -79,6 +79,9 @@ func defaultNewTilingWindowPlacement() -> NewTilingWindowPlacement {
 @MainActor
 func bindingDataForNewTilingWindow(_ workspace: Workspace, window: Window?) -> BindingData {
     window?.unbindFromParent()
+    if let stackedBinding = bindingDataForNewWindowStackedWithFocus(in: workspace) {
+        return stackedBinding
+    }
     guard let mruWindow = workspace.mostRecentWindowRecursive,
           let tilingParent = mruWindow.parent as? TilingContainer
     else {
@@ -88,6 +91,34 @@ func bindingDataForNewTilingWindow(_ workspace: Workspace, window: Window?) -> B
         return bindingDataAfterTabGroup(workspace: workspace, tabGroup: tilingParent)
     }
     return BindingData(parent: tilingParent, adaptiveWeight: WEIGHT_AUTO, index: mruWindow.ownIndex.orDie() + 1)
+}
+
+@MainActor
+private func bindingDataForNewWindowStackedWithFocus(in workspace: Workspace) -> BindingData? {
+    guard config.autoAddNewWindowsToTabGroup,
+          let focusedWindow = focus.windowOrNil,
+          focusedWindow.nodeWorkspace === workspace,
+          let focusedParent = focusedWindow.parent as? TilingContainer
+    else { return nil }
+
+    if focusedParent.layout == .tabGroup {
+        return BindingData(
+            parent: focusedParent,
+            adaptiveWeight: WEIGHT_AUTO,
+            index: focusedWindow.ownIndex.orDie() + 1
+        )
+    }
+
+    let focusedBinding = focusedWindow.unbindFromParent()
+    let stack = TilingContainer(
+        parent: focusedBinding.parent,
+        adaptiveWeight: focusedBinding.adaptiveWeight,
+        focusedParent.orientation.opposite,
+        .tabGroup,
+        index: focusedBinding.index,
+    )
+    focusedWindow.bind(to: stack, adaptiveWeight: WEIGHT_AUTO, index: 0)
+    return BindingData(parent: stack, adaptiveWeight: WEIGHT_AUTO, index: INDEX_BIND_LAST)
 }
 
 @MainActor

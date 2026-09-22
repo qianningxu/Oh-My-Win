@@ -256,10 +256,10 @@ func runRefreshSessionBlocking(
                         }
                     }
                 }
-                // New dialogs must be raised after logical focus is synced back
-                // to macOS. Otherwise focusing the previous window here can put
-                // it back above a settings/dialog window detected by refresh().
-                raiseNewlyDetectedDialogsAfterFocusSync()
+                // Newly detected dialogs and auto-stacked windows take focus
+                // after the earlier logical-to-native focus sync so that sync
+                // cannot put the previous window back above them.
+                focusNewlyDetectedWindowsAfterFocusSync()
                 await updateWindowTabModel()
                 debugFocusLog("runRefreshSessionBlocking end event=\(event) nativeFocused=\(nativeFocused?.windowId.description ?? "nil") focus=\(debugDescribe(focus))")
             }

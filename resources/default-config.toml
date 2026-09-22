@@ -16,7 +16,7 @@ default-root-container-orientation = 'auto'
 on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 
 automatically-unhide-macos-hidden-apps = false
-auto-add-new-windows-to-folder = false
+auto-add-new-windows-to-folder = true
 shortcuts-preset = 'none'
 persistent-tabs = []
 on-mode-changed = []

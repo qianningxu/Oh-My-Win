@@ -83,7 +83,7 @@ import XCTest
     }
 
     @MainActor
-    func testNewTilingWindowDoesNotAutoJoinFocusedLegacyTabGroup() {
+    func testNewTilingWindowJoinsFocusedStackWhenEnabled() {
         setUpWorkspacesForTests()
         let workspace = Workspace.get(byName: "target")
         let rootTabGroup = workspace.rootTilingContainer
@@ -96,10 +96,46 @@ import XCTest
 
         let binding = bindingDataForNewTilingWindow(workspace, window: nil)
 
-        XCTAssertFalse(binding.parent === rootTabGroup)
-        XCTAssertTrue(binding.parent === workspace.rootTilingContainer)
-        XCTAssertEqual(workspace.rootTilingContainer.layout, .tiles)
-        XCTAssertTrue(workspace.rootTilingContainer.children.first === rootTabGroup)
+        XCTAssertTrue(binding.parent === rootTabGroup)
+        XCTAssertEqual(binding.index, focused.ownIndex.orDie() + 1)
+    }
+
+    @MainActor
+    func testNewTilingWindowCreatesStackWithFocusedWindowWhenEnabled() {
+        setUpWorkspacesForTests()
+        let workspace = Workspace.get(byName: "target")
+        let root = workspace.rootTilingContainer
+        let leading = TestWindow.new(id: 10, parent: root)
+        let focused = TestWindow.new(id: 11, parent: root)
+        XCTAssertTrue(focused.focusWindow())
+        config.autoAddNewWindowsToTabGroup = true
+
+        let binding = bindingDataForNewTilingWindow(workspace, window: nil)
+        let newWindow = TestWindow.new(id: 12, parent: binding.parent)
+
+        assertEquals(root.layoutDescription, .h_tiles([
+            .window(10),
+            .v_tab_group([.window(11), .window(12)]),
+        ]))
+        XCTAssertTrue(root.children.first === leading)
+        focusNewlyDetectedStackedWindow(newWindow)
+        XCTAssertEqual(focus.windowOrNil, newWindow)
+        XCTAssertEqual(TestApp.shared.focusedWindow, newWindow)
+    }
+
+    @MainActor
+    func testNewTilingWindowStillOpensBesideFocusWhenAutoStackIsDisabled() {
+        setUpWorkspacesForTests()
+        let workspace = Workspace.get(byName: "target")
+        let root = workspace.rootTilingContainer
+        let focused = TestWindow.new(id: 10, parent: root)
+        XCTAssertTrue(focused.focusWindow())
+        config.autoAddNewWindowsToTabGroup = false
+
+        let binding = bindingDataForNewTilingWindow(workspace, window: nil)
+
+        XCTAssertTrue(binding.parent === root)
+        XCTAssertEqual(binding.index, focused.ownIndex.orDie() + 1)
     }
 
     @MainActor

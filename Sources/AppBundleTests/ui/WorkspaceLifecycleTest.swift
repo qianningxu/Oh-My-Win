@@ -83,8 +83,30 @@ final class WorkspaceLifecycleTest: XCTestCase {
         ))
     }
 
+    func testForegroundAutoStackedWindowTakesFocus() {
+        XCTAssertTrue(shouldFocusNewlyDetectedStackedWindow(
+            isStartup: false,
+            wasRestored: false,
+            autoStackEnabled: true,
+            isStacked: true,
+            appIsActive: true,
+            appWasFrontmostWhenDetected: true,
+        ))
+    }
+
+    func testBackgroundAutoStackedWindowDoesNotStealFocus() {
+        XCTAssertFalse(shouldFocusNewlyDetectedStackedWindow(
+            isStartup: false,
+            wasRestored: false,
+            autoStackEnabled: true,
+            isStacked: true,
+            appIsActive: false,
+            appWasFrontmostWhenDetected: false,
+        ))
+    }
+
     func testNewDialogRaiseIsDeferredUntilAfterFocusSync() {
-        let queue = NewlyDetectedDialogRaiseQueue()
+        let queue = NewlyDetectedWindowFocusQueue()
         var raisedWindowIds: [UInt32] = []
 
         queue.schedule(windowId: 41) { raisedWindowIds.append(41) }
@@ -100,7 +122,7 @@ final class WorkspaceLifecycleTest: XCTestCase {
         let dialog = TestWindow.new(id: 502, parent: workspace)
         _ = previous.focusWindow()
         previous.nativeFocus()
-        let queue = NewlyDetectedDialogRaiseQueue()
+        let queue = NewlyDetectedWindowFocusQueue()
         queue.schedule(windowId: dialog.windowId) { focusNewlyDetectedDialog(dialog) }
 
         queue.drain()
@@ -125,7 +147,7 @@ final class WorkspaceLifecycleTest: XCTestCase {
     }
 
     func testNewDialogRaiseQueueKeepsLatestActionForWindow() {
-        let queue = NewlyDetectedDialogRaiseQueue()
+        let queue = NewlyDetectedWindowFocusQueue()
         var actions: [String] = []
 
         queue.schedule(windowId: 41) { actions.append("stale") }

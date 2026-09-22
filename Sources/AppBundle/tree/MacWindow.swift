@@ -11,8 +11,20 @@ func shouldRaiseNewlyDetectedDialog(
     !isStartup && !wasRestored && wasDetectedAsDialog && (appIsActive || appWasFrontmostWhenDetected)
 }
 
+func shouldFocusNewlyDetectedStackedWindow(
+    isStartup: Bool,
+    wasRestored: Bool,
+    autoStackEnabled: Bool,
+    isStacked: Bool,
+    appIsActive: Bool,
+    appWasFrontmostWhenDetected: Bool,
+) -> Bool {
+    !isStartup && !wasRestored && autoStackEnabled && isStacked &&
+        (appIsActive || appWasFrontmostWhenDetected)
+}
+
 @MainActor
-final class NewlyDetectedDialogRaiseQueue {
+final class NewlyDetectedWindowFocusQueue {
     private var entries: [(windowId: UInt32, action: () -> Void)] = []
 
     func schedule(windowId: UInt32, action: @escaping () -> Void) {
@@ -30,11 +42,11 @@ final class NewlyDetectedDialogRaiseQueue {
 }
 
 @MainActor
-private let newlyDetectedDialogRaiseQueue = NewlyDetectedDialogRaiseQueue()
+private let newlyDetectedWindowFocusQueue = NewlyDetectedWindowFocusQueue()
 
 @MainActor
-func raiseNewlyDetectedDialogsAfterFocusSync() {
-    newlyDetectedDialogRaiseQueue.drain()
+func focusNewlyDetectedWindowsAfterFocusSync() {
+    newlyDetectedWindowFocusQueue.drain()
 }
 
 @MainActor
@@ -45,6 +57,16 @@ func focusNewlyDetectedDialog(_ window: Window) {
     else { return }
     // Keep logical and native focus aligned so the next refresh cannot put
     // the previous tiled window back above this newly opened dialog.
+    window.nativeFocus()
+}
+
+@MainActor
+func focusNewlyDetectedStackedWindow(_ window: Window) {
+    guard let parent = window.parent as? TilingContainer,
+          parent.layout == .tabGroup,
+          window.visualWorkspace?.isVisible == true,
+          window.focusWindow()
+    else { return }
     window.nativeFocus()
 }
 
@@ -105,12 +127,27 @@ final class MacWindow: Window {
             appIsActive: macApp.nsApp.isActive,
             appWasFrontmostWhenDetected: appWasFrontmostWhenDetected,
         ) {
-            newlyDetectedDialogRaiseQueue.schedule(windowId: windowId) { [weak macApp] in
+            newlyDetectedWindowFocusQueue.schedule(windowId: windowId) { [weak macApp] in
                 guard let macApp,
                       !macApp.nsApp.isTerminated,
                       let dialog = MacWindow.allWindowsMap[windowId]
                 else { return }
                 focusNewlyDetectedDialog(dialog)
+            }
+        } else if shouldFocusNewlyDetectedStackedWindow(
+            isStartup: isStartup,
+            wasRestored: didRestorePersistedFrozenWorld || didRestoreClosedWindowsCache,
+            autoStackEnabled: config.autoAddNewWindowsToTabGroup,
+            isStacked: (window.parent as? TilingContainer)?.layout == .tabGroup,
+            appIsActive: macApp.nsApp.isActive,
+            appWasFrontmostWhenDetected: appWasFrontmostWhenDetected,
+        ) {
+            newlyDetectedWindowFocusQueue.schedule(windowId: windowId) { [weak macApp] in
+                guard let macApp,
+                      !macApp.nsApp.isTerminated,
+                      let stackedWindow = MacWindow.allWindowsMap[windowId]
+                else { return }
+                focusNewlyDetectedStackedWindow(stackedWindow)
             }
         }
         return window
