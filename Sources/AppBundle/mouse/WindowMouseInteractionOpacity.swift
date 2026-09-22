@@ -94,6 +94,11 @@ final class WindowMouseInteractionOpacityController {
         for id in windowIds { temporarilyMovedWindows.removeValue(forKey: id) }
     }
 
+    func reapplyHiddenWindowAlpha() {
+        guard !hiddenWindowIds.isEmpty else { return }
+        setWindowListAlpha(windowIds: Array(hiddenWindowIds), alpha: mouseInteractionHiddenWindowAlpha)
+    }
+
     func restore() {
         activeWindowId = nil
         hidesActiveWindow = false

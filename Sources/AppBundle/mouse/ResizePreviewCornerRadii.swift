@@ -17,5 +17,7 @@ struct ResizePreviewCornerRadii {
 }
 
 func windowResizePreviewCornerRadius(for rect: CGRect) -> CGFloat {
-    0
+    let minimumDimension = min(rect.width, rect.height)
+    guard minimumDimension > 0 else { return 0 }
+    return min(min(max(minimumDimension * 0.045, 10), 18), minimumDimension / 2)
 }

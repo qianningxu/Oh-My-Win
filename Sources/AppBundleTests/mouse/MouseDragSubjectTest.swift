@@ -144,4 +144,19 @@ final class MouseDragSubjectTest: XCTestCase {
             [1, 2, 3]
         )
     }
+
+    func testResizePreviewUsesRoundedCorners() {
+        XCTAssertEqual(
+            windowResizePreviewCornerRadius(for: CGRect(x: 0, y: 0, width: 400, height: 300)),
+            13.5
+        )
+        XCTAssertEqual(
+            windowResizePreviewCornerRadius(for: CGRect(x: 0, y: 0, width: 1_000, height: 800)),
+            18
+        )
+        XCTAssertEqual(
+            windowResizePreviewCornerRadius(for: CGRect(x: 0, y: 0, width: 0, height: 800)),
+            0
+        )
+    }
 }

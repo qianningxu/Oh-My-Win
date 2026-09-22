@@ -14,6 +14,12 @@ extension WindowMouseInteractionDriver {
         }
         renderMoveFrame(force: false)
         sampleResizeFrame(force: false)
+        if resizeSession != nil {
+            // AppKit can restore a live-resized window's alpha while the native
+            // gesture is active. Keep the native content hidden beneath the
+            // two empty compositor frames until the gesture finishes.
+            WindowMouseInteractionOpacityController.shared.reapplyHiddenWindowAlpha()
+        }
     }
 
     func finishAfterMissedMouseUpIfNeeded() {

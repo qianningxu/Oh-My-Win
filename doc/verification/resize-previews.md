@@ -4,7 +4,7 @@
 
 Based on upstream WinMux `e0ad328e109cb6d2f86b1bdbc3aea9bf7bc5935e`, specifically `mouse/resize/resizeWithMouse.swift` and `mouse/driver/WindowMouseInteractionOpacity.swift`: park neighboring native windows off screen while presenting their proposed layout, then restore native windows after release. Opacity alone does not reliably hide foreign-window edges.
 
-The user requested shading on **both** sides with app icons and without preview bars. Both previews are committed in the same compositor transaction. The opaque backing uses the existing workspace canvas color, covers the divider and outer margins, and stops below the workspace tabs. Final native writes finish beneath the preview before reveal; parked windows are not restored to obsolete pre-drag frames.
+The live resize view renders **two empty rounded frames** without app content, icons, or preview bars. Both previews are committed in the same compositor transaction. The active native window's hidden alpha is reapplied throughout the live resize because AppKit can restore it while the gesture is active. Final native writes finish beneath the preview before reveal; parked windows are not restored to obsolete pre-drag frames.
 
 The existing minimum-layout calculation still includes inactive tabs. The initial pointer offset is preserved. Resize sessions have unique identities; stale calibration callbacks are rejected, queued AX writes are canceled on stop, and the event constraint expires and clears on mouse-up or a disabled event tap.
 
@@ -22,7 +22,7 @@ Installed signed app, Built-in Retina Display, 1728 × 1117 logical points:
 - Fast 80-point resize of unfocused Safari; native width reached 980 then returned to 900.
 - Every completed initial scripted round trip returned to the same native 900/810 widths and 6-point gap.
 - 737 final two-pane preview trace samples: gap minimum/maximum **6/6**, Figma/Safari stack minimum **900**.
-- Inspected screenshots during drag and after release: both shaded panes; no preview bars; workspace-colored gaps; no native corner slivers; native windows and normal chrome restored.
+- Inspected screenshots during drag and after release: both preview frames; no preview bars; workspace-colored gaps; no native corner slivers; native windows and normal chrome restored.
 
 During a drag, native-neighbor coordinates intentionally describe parked windows. Gap measurements above use the shared preview geometry, not those hidden native frames.
 
@@ -38,8 +38,8 @@ Only one physical monitor was available, so cross-monitor live testing remains u
 
 Local evidence: `/tmp/winmux-final-*.json`, `/tmp/winmux-final-shade-drag.png`, `/tmp/winmux-final-shade-release.png`, `/tmp/winmux-resize-trace.log`, and `/tmp/winmux-gap-match-install.log`.
 
-## Final icons and pointer-update verification
+## Prior icons and pointer-update verification
 
-With detailed tracing disabled, the final installed build passed the calibration regression check and completed fast/limit round trips at the user's updated starting widths (1172/538 and 1178/532), preserving each starting layout and the 6-point released gap. An initial fast attempt was aborted on pointer interference and rerun after detecting an idle pointer. Inspected `/tmp/winmux-upstream-icons-drag.png`: app icons on both shades, no bars, workspace-colored divider and outer gutters, and no corner slivers.
+With detailed tracing disabled, the earlier installed build passed the calibration regression check and completed fast/limit round trips at the user's updated starting widths (1172/538 and 1178/532), preserving each starting layout and the 6-point released gap. An initial fast attempt was aborted on pointer interference and rerun after detecting an idle pointer. The app icons recorded in `/tmp/winmux-upstream-icons-drag.png` were subsequently removed from the resize presentation.
 
 Final signed installation: old PID 7121 exited; PID 9795 ran from `/Applications/WinMux.app/Contents/MacOS/WinMux`. Installed and candidate signatures/hashes verified. SHA-256: `4cb8dee9c0a3cca50ea96508b32a4c51c5c22db391b1c449eb5011a4645e44f4`. Installation log: `/tmp/winmux-upstream-latency-install.log`. This verifies behavior and the removal of stale-frame redraws; it is not a measured end-to-end latency benchmark.

@@ -65,7 +65,7 @@ final class WindowResizePreviewItemLayer: CALayer {
         frame = item.frame
         let localBounds = CGRect(origin: .zero, size: item.frame.size)
         if shadeOnly {
-            updateIcons(item: item, scale: scale, iconResolver: iconResolver)
+            hideIconLayers()
             topBarLayer.isHidden = true
             mockTabStrokeLayer.isHidden = true
             strokeLayer.isHidden = false
