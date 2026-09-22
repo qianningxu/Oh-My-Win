@@ -62,13 +62,18 @@ final class WorkspacePreviewPanel: NSPanelHud {
         render()
     }
 
-    func select(index: Int) {
+    @discardableResult
+    func select(index: Int) -> Bool {
         if !isPreviewActive {
             begin(direction: 0)
         }
-        guard isPreviewActive, items.indices.contains(index) else { return }
+        guard isPreviewActive, items.indices.contains(index) else {
+            dismiss()
+            return false
+        }
         selectedIndex = index
         render()
+        return true
     }
 
     func commitIfActive() {
@@ -155,18 +160,20 @@ func handleWorkspacePreviewHotkey(_ binding: String) -> Bool {
         case "alt-shift-tab":
             WorkspacePreviewPanel.shared.advance(direction: -1)
             return true
-        case "alt-1":
-            WorkspacePreviewPanel.shared.select(index: 0)
-            return true
-        case "alt-2":
-            WorkspacePreviewPanel.shared.select(index: 1)
-            return true
-        case "alt-3":
-            WorkspacePreviewPanel.shared.select(index: 2)
-            return true
         default:
-            return false
+            guard let index = workspacePreviewSelectionIndex(for: binding) else { return false }
+            return WorkspacePreviewPanel.shared.select(index: index)
     }
+}
+
+func workspacePreviewSelectionIndex(for binding: String) -> Int? {
+    guard binding.hasPrefix("alt-"),
+          let number = Int(binding.dropFirst("alt-".count)),
+          (0 ... 9).contains(number)
+    else {
+        return nil
+    }
+    return number == 0 ? 9 : number - 1
 }
 
 @MainActor

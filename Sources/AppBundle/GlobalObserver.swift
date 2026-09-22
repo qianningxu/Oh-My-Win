@@ -146,15 +146,6 @@ enum GlobalObserver {
         }
     }
 
-    private static func optionWorkspaceIndex(for keyCode: UInt16) -> Int? {
-        switch keyCode {
-            case 18, 83: 0
-            case 19, 84: 1
-            case 20, 85: 2
-            default: nil
-        }
-    }
-
     private static func onFlagsChanged(_ event: NSEvent) {
         let keyCode = event.keyCode
         let modifierFlags = event.modifierFlags
@@ -409,5 +400,21 @@ enum GlobalObserver {
         else { return }
         isWindowInventoryPollingStarted = true
         windowInventoryPollController.start()
+    }
+}
+
+func optionWorkspaceIndex(for keyCode: UInt16) -> Int? {
+    switch keyCode {
+        case 18, 83: 0
+        case 19, 84: 1
+        case 20, 85: 2
+        case 21, 86: 3
+        case 23, 87: 4
+        case 22, 88: 5
+        case 26, 89: 6
+        case 28, 91: 7
+        case 25, 92: 8
+        case 29, 82: 9
+        default: nil
     }
 }
