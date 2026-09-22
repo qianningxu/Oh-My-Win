@@ -31,9 +31,10 @@ struct WindowTabItemView: View {
         .frame(width: width, height: height, alignment: .center)
         .background {
             Capsule(style: .continuous)
-                .fill(palette.content(.primary).opacity(
-                    tab.isActive ? (palette.isDark ? 0.18 : 0.12) : 0
-                ))
+                .fill(Color(nsColor: palette.isDark
+                    ? GeistColorTokens.windowTab200Dark
+                    : GeistColorTokens.windowTab200Light))
+                .opacity(tab.isActive ? 0.90 : 0)
         }
         .contentShape(Rectangle())
     }
