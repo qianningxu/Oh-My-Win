@@ -16,7 +16,7 @@ struct WindowTabGroupVisualView: View {
                     height: min(WinMuxBarStyle.workspaceBarHeight, geometry.size.height)
                 )
                 .background(
-                    palette.geistBackground(.primary).opacity(palette.isDark ? 0.12 : 0.18),
+                    palette.geistBackground(.primary).opacity(palette.isDark ? 0.70 : 0.80),
                     in: RoundedRectangle(
                         cornerRadius: WinMuxBarStyle.workspaceTabBarCornerRadius,
                         style: .continuous
@@ -28,7 +28,7 @@ struct WindowTabGroupVisualView: View {
                         style: .continuous
                     )
                     .strokeBorder(
-                        palette.content(.primary).opacity(0.12),
+                        palette.content(.primary).opacity(0.06),
                         lineWidth: WinMuxBarStyle.strokeWidth
                     )
                 }
