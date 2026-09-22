@@ -65,13 +65,12 @@ private func createNextTransientBlankWorkspaceForMoveIfAllowed(
     usesStdin: Bool,
 ) -> Workspace? {
     guard isNext, !wrapAround, !usesStdin else { return nil }
-    let nextWorkspaceIndex = monitorScopedAutomaticDisplayWorkspacesInExactProject(
+    let nextWorkspaceIndex = nextAutomaticWorkspaceName(
         projectId: current.projectId,
         monitor: current.workspaceMonitor,
-        focusedWorkspace: current,
-    ).count + 1
+    )
     return createAdjacentTransientBlankWorkspaceIfAllowed(
-        named: String(nextWorkspaceIndex),
+        named: nextWorkspaceIndex,
         projectId: current.projectId,
         monitor: current.workspaceMonitor,
         focusedWorkspace: current,
@@ -85,6 +84,10 @@ private func resolveMoveTargetWorkspace(
     sourceMonitor: Monitor,
 ) -> Workspace? {
     if let targetIndex = parsePositiveWorkspaceDisplayIndex(workspaceName) {
+        if let workspace = Workspace.existing(byName: workspaceName),
+           isUserFacingWorkspace(workspace, focusedWorkspace: sourceWorkspace) {
+            return workspace
+        }
         let automaticDisplayWorkspaces = monitorScopedAutomaticDisplayWorkspacesInExactProject(
             projectId: sourceWorkspace.projectId,
             monitor: sourceMonitor,

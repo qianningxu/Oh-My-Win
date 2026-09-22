@@ -234,7 +234,7 @@ final class MoveNodeToWorkspaceCommandTest: XCTestCase {
         XCTAssertEqual(window.nodeWorkspace, workspace1)
     }
 
-    func testDirectNumericMoveFillsDisplayIndexGapBeforeAppending() async throws {
+    func testDirectNumericMoveUsesStableWorkspaceNumber() async throws {
         let first = Workspace.get(byName: "1")
         first.markAsAutomaticallyNamed()
         let window = TestWindow.new(id: 17, parent: first.rootTilingContainer)
@@ -247,11 +247,10 @@ final class MoveNodeToWorkspaceCommandTest: XCTestCase {
             .run(.defaultEnv, .emptyStdin)
 
         assertEquals(result.exitCode, 0)
-        XCTAssertEqual(window.nodeWorkspace?.name, "2")
+        XCTAssertEqual(window.nodeWorkspace?.name, "3")
+        XCTAssertNil(Workspace.existing(byName: "2"))
         XCTAssertNil(Workspace.existing(byName: "4"))
-        XCTAssertEqual(workspaceDisplayName(first.name), "Workspace 1")
-        XCTAssertEqual(workspaceDisplayName(thirdRaw.name), "Workspace 2")
-        XCTAssertEqual(workspaceDisplayName("2"), "Workspace 3")
+        XCTAssertEqual(workspaceDisplayName(thirdRaw.name), "Workspace 3")
     }
 
     func testDirectNumericMoveDoesNotCreateMultipleHopsAfterBlankIsCollected() async throws {
