@@ -166,6 +166,10 @@ private func instantiateSavedWorkspace(_ preset: SavedWorkspacePreset) async thr
             monitor: currentWorkspace.workspaceMonitor,
             after: currentWorkspace
         )
+        try renameWorkspaceForSidebar(
+            workspaceName: workspace.name,
+            displayName: availableSavedWorkspaceName(preset.title, excluding: workspace.name)
+        )
         guard workspace.focusWorkspace() else {
             throw SavedWorkspaceError.cannotCreateTab
         }
@@ -214,8 +218,25 @@ private func instantiateSavedWorkspace(_ preset: SavedWorkspacePreset) async thr
             )
         }
         _ = targetWorkspace.focusWorkspace()
+        if let visibleWindow = openedWindows.last {
+            _ = visibleWindow.focusWindow()
+            visibleWindow.nativeFocus()
+        }
     }
     persistSidebarStateForRestartIfPossible()
+}
+
+@MainActor
+private func availableSavedWorkspaceName(_ baseName: String, excluding workspaceName: String) -> String {
+    let existingNames = Set(Workspace.all.compactMap { workspace in
+        workspace.name == workspaceName ? nil : workspaceDisplayName(workspace.name)
+    })
+    guard existingNames.contains(baseName) else { return baseName }
+    var suffix = 2
+    while existingNames.contains("\(baseName) \(suffix)") {
+        suffix += 1
+    }
+    return "\(baseName) \(suffix)"
 }
 
 private func openObsidianWindow(_ window: SavedObsidianWindow) async throws {
