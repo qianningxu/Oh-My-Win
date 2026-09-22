@@ -39,7 +39,7 @@ enum WinMuxBarStyle {
     static let workspaceSelectedSegmentOpacity: CGFloat = 0.70
     static let windowSelectedSegmentOpacity: CGFloat = 0.80
     static let windowTabHoveredSegmentOpacity: CGFloat = 0.50
-    static let windowTabDividerOpacity: CGFloat = 0.50
+    static let windowTabDividerOpacity: CGFloat = 0.25
     static let windowBarStrokeOpacity: CGFloat = windowTabDividerOpacity
     static let windowBarBackdropSaturation: CGFloat = 0
     static let selectedSegmentOpacity: CGFloat = 0.18

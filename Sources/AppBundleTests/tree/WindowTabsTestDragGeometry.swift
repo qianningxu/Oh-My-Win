@@ -4,6 +4,11 @@ import CoreGraphics
 import XCTest
 
 @MainActor extension WindowTabsTest {
+    func testTabBarHasEqualVerticalOuterInsets() {
+        XCTAssertEqual(windowTabBarOuterInset(), WinMuxSpacing.hairline)
+        XCTAssertEqual(windowTabGroupShellTopInset(), windowTabBarOuterInset() * 2)
+    }
+
     func testTabGroupTabBarUsesAppliedContainerFrame() {
         setUpWorkspacesForTests()
         config.windowTabs.enabled = true

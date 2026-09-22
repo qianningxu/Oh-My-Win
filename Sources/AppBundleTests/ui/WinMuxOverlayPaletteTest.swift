@@ -291,7 +291,7 @@ final class WinMuxOverlayPaletteTest: XCTestCase {
         XCTAssertEqual(WinMuxBarStyle.workspaceSelectedSegmentOpacity, 0.70)
         XCTAssertEqual(WinMuxBarStyle.windowSelectedSegmentOpacity, 0.80)
         XCTAssertEqual(WinMuxBarStyle.windowTabHoveredSegmentOpacity, 0.50)
-        XCTAssertEqual(WinMuxBarStyle.windowTabDividerOpacity, 0.50)
+        XCTAssertEqual(WinMuxBarStyle.windowTabDividerOpacity, 0.25)
         XCTAssertEqual(WinMuxBarStyle.windowBarStrokeOpacity, WinMuxBarStyle.windowTabDividerOpacity)
         XCTAssertEqual(WinMuxBarStyle.windowBarBackdropSaturation, 0)
         XCTAssertEqual(WinMuxGlassStyle.clear.recipe.blurOpacity, 1)
