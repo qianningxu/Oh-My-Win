@@ -167,6 +167,48 @@ final class ProjectCommandTest: XCTestCase {
         XCTAssertEqual(mainMonitor.activeWorkspace, occupied)
     }
 
+    func testRestoredEmptyUnvisitedProjectIsPruned() {
+        let occupied = focus.workspace
+        _ = TestWindow.new(id: 25, parent: occupied.rootTilingContainer)
+        let restoredProjectId = WorkspaceProjectId("workspace-project-restored-empty")
+        config.workspaceSidebar.projectLabels[restoredProjectId.rawValue] = "Old Project"
+        materializePersistedWorkspaceProjects()
+        XCTAssertEqual(projectWorkspaces(projectId: restoredProjectId).count, 1)
+
+        pruneEmptyWorkspaceProjects()
+
+        XCTAssertNil(winMuxWorkspaceState.projectsById[restoredProjectId])
+        XCTAssertTrue(projectWorkspaces(projectId: restoredProjectId).isEmpty)
+        XCTAssertNil(config.workspaceSidebar.projectLabels[restoredProjectId.rawValue])
+        XCTAssertTrue(focus.workspace === occupied)
+    }
+
+    func testStartupCompletionPrunesRestoredEmptyProject() {
+        let occupied = focus.workspace
+        _ = TestWindow.new(id: 26, parent: occupied.rootTilingContainer)
+        let restoredProjectId = WorkspaceProjectId("workspace-project-startup-empty")
+        config.workspaceSidebar.projectLabels[restoredProjectId.rawValue] = "Old Project"
+        materializePersistedWorkspaceProjects()
+
+        beginStartupLayoutRestoration()
+        pruneEmptyWorkspaceProjects()
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[restoredProjectId])
+
+        finishStartupLayoutRestoration()
+
+        XCTAssertNil(winMuxWorkspaceState.projectsById[restoredProjectId])
+        XCTAssertTrue(focus.workspace === occupied)
+    }
+
+    func testFreshUnvisitedEmptyProjectSurvivesPruning() {
+        let project = createWorkspaceProject()
+
+        pruneEmptyWorkspaceProjects()
+
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[project.id])
+        XCTAssertEqual(projectWorkspaces(projectId: project.id).count, 1)
+    }
+
     func testMovingActiveTabToProjectFallsBackWithinSourceAndAppendsToUnfolded() throws {
         let source = Workspace.get(byName: "source")
         source.markAsAutomaticallyNamed()

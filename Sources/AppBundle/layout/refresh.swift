@@ -12,6 +12,7 @@ func beginStartupLayoutRestoration() {
 @MainActor
 func finishStartupLayoutRestoration() {
     isRestoringStartupLayout = false
+    pruneEmptyWorkspaceProjects()
     WorkspaceSidebarPanel.refreshAll()
     if refreshDeferredDuringStartup {
         refreshDeferredDuringStartup = false

@@ -38,6 +38,7 @@ struct WinMuxWorkspaceState {
         }
     }
     var monitorViewportsById: [MonitorViewportId: MonitorViewport] = [:]
+    var newlyCreatedBackgroundProjectIds: Set<WorkspaceProjectId> = []
 
     private var nextWorkspaceCounter = 1
     private var nextProjectCounter = 1
@@ -46,6 +47,7 @@ struct WinMuxWorkspaceState {
     private var nextFolderOrderCounter = 1
 
     mutating func resetProjects(defaultProjectName: String) {
+        newlyCreatedBackgroundProjectIds = []
         projectsById = [
             workspaceProjectDefaultId: WorkspaceProject(
                 id: workspaceProjectDefaultId,
@@ -76,6 +78,7 @@ struct WinMuxWorkspaceState {
     }
 
     mutating func resetWorkspaceRegistryForTests(defaultProjectName: String) {
+        newlyCreatedBackgroundProjectIds = []
         workspaceById = [:]
         workspaceIdByName = [:]
         monitorViewportsById = [:]
@@ -479,6 +482,7 @@ struct WinMuxWorkspaceState {
     }
 
     mutating func removeProject(_ projectId: WorkspaceProjectId) {
+        newlyCreatedBackgroundProjectIds.remove(projectId)
         let folderIds = Set(workspaceFoldersById.values.filter { $0.projectId == projectId }.map(\.id))
         for folderId in folderIds {
             workspaceFoldersById.removeValue(forKey: folderId)

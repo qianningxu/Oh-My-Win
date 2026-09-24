@@ -204,6 +204,7 @@ func createWorkspaceProject(displayName: String? = nil) -> WorkspaceProject {
         order: winMuxWorkspaceState.nextProjectOrder()
     )
     winMuxWorkspaceState.registerProject(project)
+    winMuxWorkspaceState.newlyCreatedBackgroundProjectIds.insert(project.id)
     winMuxWorkspaceState.ensureUnfoldedFolderExists(for: project.id)
     config.workspaceSidebar.projectLabels[project.id.rawValue] = project.name
     if !isUnitTest {
@@ -901,7 +902,10 @@ func pruneEmptyWorkspaceProjects() {
         let wasSelected = winMuxWorkspaceState.monitorViewportsById.values.contains {
             $0.lastActiveWorkspaceByProject[projectId] != nil
         }
-        if !wasSelected && !workspaces.contains(where: { $0.lifecycle == .durable }) {
+        if !wasSelected &&
+            !workspaces.contains(where: { $0.lifecycle == .durable }) &&
+            winMuxWorkspaceState.newlyCreatedBackgroundProjectIds.contains(projectId)
+        {
             return false
         }
         // Once visited and left, or emptied after use, placeholders do not retain it.
