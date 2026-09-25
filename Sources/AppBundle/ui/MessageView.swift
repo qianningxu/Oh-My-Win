@@ -98,6 +98,12 @@ struct MessageView: View {
             model.message = nil
         }
         .onAppear {
+            if model.message == nil {
+                DispatchQueue.main.async {
+                    if model.message == nil { dismiss() }
+                }
+                return
+            }
             focus = true
         }
     }

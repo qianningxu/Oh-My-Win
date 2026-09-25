@@ -14,6 +14,10 @@ final class WinMuxAppDelegate: NSObject, NSApplicationDelegate {
         menuBarController = NativeMenuBarController(viewModel: .shared)
     }
 
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !isTerminating else { return .terminateNow }
         isTerminating = true
