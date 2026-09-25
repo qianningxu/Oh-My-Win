@@ -143,7 +143,10 @@ final class WorkspacePreviewPanel: NSPanelHud {
 @MainActor
 func workspacePreviewCandidateWorkspaces(current: Workspace) -> [Workspace] {
     userFacingWorkspaces(orderedWorkspacesForPresentation(), focusedWorkspace: current)
-        .filter { $0.workspaceMonitor.rect.topLeftCorner == current.workspaceMonitor.rect.topLeftCorner }
+        .filter {
+            $0.projectId == current.projectId &&
+                $0.workspaceMonitor.rect.topLeftCorner == current.workspaceMonitor.rect.topLeftCorner
+        }
 }
 
 @MainActor
