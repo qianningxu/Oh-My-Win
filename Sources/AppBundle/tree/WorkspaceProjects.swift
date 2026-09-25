@@ -887,47 +887,8 @@ func pruneEmptyWorkspaceTabGroups() {
 
 @MainActor
 func pruneEmptyWorkspaceProjects() {
-    // Restored workspaces can be temporarily empty before their windows rebind.
-    guard !isRestoringStartupLayout else { return }
-    let emptyProjectIds = winMuxWorkspaceState.projectsById.keys.filter { projectId in
-        let workspaces = projectWorkspaces(projectId: projectId)
-        guard !workspaces.contains(where: workspaceAnchorsEmptySlot) else { return false }
-        // Registering a workspace creates the default project before the
-        // workspace is assigned to its destination. That internal placeholder
-        // is not a user-created background project and must not be retained.
-        if projectId == workspaceProjectDefaultId, !workspaces.contains(where: \.isVisible) {
-            return true
-        }
-        // A project created in the background must survive until first selected.
-        let wasSelected = winMuxWorkspaceState.monitorViewportsById.values.contains {
-            $0.lastActiveWorkspaceByProject[projectId] != nil
-        }
-        if !wasSelected &&
-            !workspaces.contains(where: { $0.lifecycle == .durable }) &&
-            winMuxWorkspaceState.newlyCreatedBackgroundProjectIds.contains(projectId)
-        {
-            return false
-        }
-        // Once visited and left, or emptied after use, placeholders do not retain it.
-        return !workspaces.contains(where: \.isVisible) || workspaces.contains { $0.lifecycle == .durable }
-    }
-    for projectId in emptyProjectIds {
-        for workspace in projectWorkspaces(projectId: projectId) {
-            removeWorkspaceFromRegistry(workspace)
-        }
-        winMuxWorkspaceState.removeProject(projectId)
-        try? clearWorkspaceSidebarProjectMetadata(projectId)
-    }
-    guard !emptyProjectIds.isEmpty else { return }
-
-    if winMuxWorkspaceState.projectsById.isEmpty {
-        _ = createWorkspaceProject(displayName: "Default")
-    }
-    ensureVisibleActiveProjectWorkspaces()
-    if winMuxWorkspaceState.workspaceById[focus.workspace.id] == nil {
-        let replacement = mainMonitor.activeWorkspace
-        _ = setFocus(to: replacement.toLiveFocus())
-    }
+    // Projects are user-owned, even when their final workspace becomes empty.
+    // Only an explicit delete action may remove a project.
 }
 
 @MainActor

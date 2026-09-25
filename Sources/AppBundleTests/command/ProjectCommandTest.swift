@@ -120,26 +120,26 @@ final class ProjectCommandTest: XCTestCase {
         XCTAssertEqual(workspaceProjects().map(\.name), ["Default"])
     }
 
-    func testProjectIsDeletedWhenItsLastTabCloses() {
+    func testProjectSurvivesWhenItsLastTabCloses() {
         let project = createWorkspaceProject()
         let tab = projectWorkspaces(projectId: project.id).singleOrNil().orDie()
         let window = TestWindow.new(id: 20, parent: tab.rootTilingContainer)
 
         window.closeAxWindow()
 
-        XCTAssertNil(winMuxWorkspaceState.projectsById[project.id])
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[project.id])
     }
 
-    func testClosingTheLastProjectTabCreatesDefaultProject() {
+    func testClosingTheLastProjectTabKeepsDefaultProject() {
         let window = TestWindow.new(id: 21, parent: focus.workspace.rootTilingContainer)
 
         window.closeAxWindow()
 
-        XCTAssertNil(winMuxWorkspaceState.projectsById[workspaceProjectDefaultId])
-        XCTAssertEqual(workspaceProjects().map(\.name), ["Default"])
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[workspaceProjectDefaultId])
+        XCTAssertEqual(workspaceProjects().map(\.name), ["Main"])
     }
 
-    func testClosingLastWindowDeletesProjectWithBlankPlaceholders() {
+    func testClosingLastWindowKeepsProjectWithBlankPlaceholders() {
         let project = createWorkspaceProject()
         let tab = projectWorkspaces(projectId: project.id).singleOrNil().orDie()
         let window = TestWindow.new(id: 23, parent: tab.rootTilingContainer)
@@ -147,11 +147,10 @@ final class ProjectCommandTest: XCTestCase {
 
         window.closeAxWindow()
 
-        XCTAssertNil(winMuxWorkspaceState.projectsById[project.id])
-        XCTAssertTrue(projectWorkspaces(projectId: project.id).isEmpty)
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[project.id])
     }
 
-    func testEmptyProjectIsRemovedAfterLeavingItsBlankWorkspace() {
+    func testEmptyProjectSurvivesAfterLeavingItsBlankWorkspace() {
         let occupied = focus.workspace
         _ = TestWindow.new(id: 24, parent: occupied.rootTilingContainer)
         let project = createWorkspaceProject()
@@ -162,12 +161,11 @@ final class ProjectCommandTest: XCTestCase {
         _ = occupied.focusWorkspace()
         pruneEmptyWorkspaceProjects()
 
-        XCTAssertNil(winMuxWorkspaceState.projectsById[project.id])
-        XCTAssertTrue(projectWorkspaces(projectId: project.id).isEmpty)
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[project.id])
         XCTAssertEqual(mainMonitor.activeWorkspace, occupied)
     }
 
-    func testRestoredEmptyUnvisitedProjectIsPruned() {
+    func testRestoredEmptyUnvisitedProjectIsPreserved() {
         let occupied = focus.workspace
         _ = TestWindow.new(id: 25, parent: occupied.rootTilingContainer)
         let restoredProjectId = WorkspaceProjectId("workspace-project-restored-empty")
@@ -177,13 +175,12 @@ final class ProjectCommandTest: XCTestCase {
 
         pruneEmptyWorkspaceProjects()
 
-        XCTAssertNil(winMuxWorkspaceState.projectsById[restoredProjectId])
-        XCTAssertTrue(projectWorkspaces(projectId: restoredProjectId).isEmpty)
-        XCTAssertNil(config.workspaceSidebar.projectLabels[restoredProjectId.rawValue])
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[restoredProjectId])
+        XCTAssertEqual(config.workspaceSidebar.projectLabels[restoredProjectId.rawValue], "Old Project")
         XCTAssertTrue(focus.workspace === occupied)
     }
 
-    func testStartupCompletionPrunesRestoredEmptyProject() {
+    func testStartupCompletionPreservesRestoredEmptyProject() {
         let occupied = focus.workspace
         _ = TestWindow.new(id: 26, parent: occupied.rootTilingContainer)
         let restoredProjectId = WorkspaceProjectId("workspace-project-startup-empty")
@@ -196,7 +193,7 @@ final class ProjectCommandTest: XCTestCase {
 
         finishStartupLayoutRestoration()
 
-        XCTAssertNil(winMuxWorkspaceState.projectsById[restoredProjectId])
+        XCTAssertNotNil(winMuxWorkspaceState.projectsById[restoredProjectId])
         XCTAssertTrue(focus.workspace === occupied)
     }
 

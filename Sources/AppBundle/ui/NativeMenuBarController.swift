@@ -25,46 +25,52 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
 
     public func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        for project in viewModel.workspaceSidebarProjects {
-            if project.id == viewModel.workspaceSidebarActiveProjectId {
-                menu.addItem(activeProjectMenu(project))
-            } else {
-                let item = actionItem(project.displayName, #selector(selectProject(_:)))
-                item.representedObject = project.id.rawValue
-                menu.addItem(item)
-            }
+        for workspace in viewModel.workspaceSidebarWorkspaces
+            where workspace.projectId == viewModel.workspaceSidebarActiveProjectId {
+            menu.addItem(workspaceMenu(workspace))
         }
         menu.addItem(.separator())
+        for project in viewModel.workspaceSidebarProjects {
+            menu.addItem(projectMenu(project))
+        }
+        menu.addItem(.separator())
+        menu.addItem(savedWorkspaceMenu())
         if projectsAreEnabled() {
             menu.addItem(actionItem("New project", #selector(createProject)))
         }
         menu.addItem(actionItem("Setting", #selector(showSetting)))
-        menu.addItem(savedWorkspaceMenu())
         menu.addItem(actionItem("Quit", #selector(quit)))
     }
 
-    private func activeProjectMenu(_ project: WorkspaceSidebarProjectViewModel) -> NSMenuItem {
-        let item = NSMenuItem(title: project.displayName, action: nil, keyEquivalent: "")
-        item.state = .on
+    private func workspaceMenu(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> NSMenuItem {
+        let item = NSMenuItem(title: workspace.displayName, action: nil, keyEquivalent: "")
+        item.state = workspace.isFocused ? .on : .off
         let submenu = NSMenu()
-        let workspaces = viewModel.workspaceSidebarWorkspaces.filter { $0.projectId == project.id }
-        if workspaces.isEmpty {
-            let emptyItem = NSMenuItem(title: "No workspaces", action: nil, keyEquivalent: "")
-            emptyItem.isEnabled = false
-            submenu.addItem(emptyItem)
-        } else {
-            for workspace in workspaces {
-                let workspaceItem = actionItem(workspace.displayName, #selector(selectWorkspace(_:)))
-                workspaceItem.representedObject = workspace.name
-                workspaceItem.state = workspace.isFocused ? .on : .off
-                submenu.addItem(workspaceItem)
-            }
-        }
-        submenu.addItem(.separator())
-        let rename = actionItem("Rename current project…", #selector(renameProject(_:)))
+        let open = actionItem("Open", #selector(selectWorkspace(_:)))
+        open.representedObject = workspace.name
+        submenu.addItem(open)
+        let rename = actionItem("Rename…", #selector(renameWorkspace(_:)))
+        rename.representedObject = workspace.name
+        submenu.addItem(rename)
+        item.submenu = submenu
+        return item
+    }
+
+    private func projectMenu(_ project: WorkspaceSidebarProjectViewModel) -> NSMenuItem {
+        let item = NSMenuItem(title: project.displayName, action: nil, keyEquivalent: "")
+        item.state = project.id == viewModel.workspaceSidebarActiveProjectId ? .on : .off
+        let submenu = NSMenu()
+        let open = actionItem("Open", #selector(selectProject(_:)))
+        open.representedObject = project.id.rawValue
+        submenu.addItem(open)
+        let rename = actionItem("Rename…", #selector(renameProject(_:)))
         rename.representedObject = project.id.rawValue
         rename.isEnabled = projectsAreEnabled()
         submenu.addItem(rename)
+        let delete = actionItem("Delete project…", #selector(deleteProject(_:)))
+        delete.representedObject = project.id.rawValue
+        delete.isEnabled = canDeleteWorkspaceProject(project.id)
+        submenu.addItem(delete)
         item.submenu = submenu
         return item
     }
@@ -77,7 +83,7 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     }
 
     private func savedWorkspaceMenu() -> NSMenuItem {
-        let item = NSMenuItem(title: "Saved workspace", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: "Open saved", action: nil, keyEquivalent: "")
         let submenu = NSMenu()
         submenu.addItem(actionItem("School", #selector(openSchoolSavedWorkspace)))
         item.submenu = submenu
@@ -110,15 +116,45 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
 
     @objc private func renameProject(_ item: NSMenuItem) {
         guard let rawId = item.representedObject as? String,
-              let project = viewModel.workspaceSidebarProjects.first(where: { $0.id.rawValue == rawId }),
-              let name = promptForProjectName("Rename project", initialValue: project.displayName)
+              let project = viewModel.workspaceSidebarProjects.first(where: { $0.id.rawValue == rawId })
         else { return }
-        handleWorkspaceSidebarAction(.renameProject(project.id, displayName: name), viewModel: viewModel)
+        presentNamePrompt("Rename project", initialValue: project.displayName) { name in
+            handleWorkspaceSidebarAction(.renameProject(project.id, displayName: name), viewModel: self.viewModel)
+        }
+    }
+
+    @objc private func renameWorkspace(_ item: NSMenuItem) {
+        guard let workspaceName = item.representedObject as? String,
+              let workspace = viewModel.workspaceSidebarWorkspaces.first(where: { $0.name == workspaceName })
+        else { return }
+        presentNamePrompt("Rename workspace", initialValue: workspace.displayName) { name in
+            renameWorkspaceFromSidebar(workspaceName, displayName: name)
+        }
+    }
+
+    @objc private func deleteProject(_ item: NSMenuItem) {
+        guard let rawId = item.representedObject as? String,
+              let project = viewModel.workspaceSidebarProjects.first(where: { $0.id.rawValue == rawId })
+        else { return }
+        menu.cancelTracking()
+        DispatchQueue.main.async {
+            deleteWorkspaceSidebarProject(project, viewModel: self.viewModel)
+        }
     }
 
     @objc private func createProject() {
-        guard let name = promptForProjectName("New project", initialValue: "") else { return }
-        createWorkspaceSidebarProject(displayName: name, viewModel: viewModel)
+        presentNamePrompt("New project", initialValue: "") { name in
+            createWorkspaceSidebarProject(displayName: name, viewModel: self.viewModel)
+        }
+    }
+
+    private func presentNamePrompt(_ title: String, initialValue: String, onSave: @escaping (String) -> Void) {
+        menu.cancelTracking()
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            guard let name = promptForProjectName(title, initialValue: initialValue) else { return }
+            onSave(name)
+        }
     }
 }
 
@@ -129,8 +165,11 @@ private func promptForProjectName(_ title: String, initialValue: String) -> Stri
     let alert = NSAlert()
     alert.messageText = title
     alert.accessoryView = field
+    alert.window.initialFirstResponder = field
     alert.addButton(withTitle: "Save")
     alert.addButton(withTitle: "Cancel")
+    alert.window.makeKeyAndOrderFront(nil)
+    alert.window.makeFirstResponder(field)
     guard alert.runModal() == .alertFirstButtonReturn else { return nil }
     let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
     return name.isEmpty ? nil : name

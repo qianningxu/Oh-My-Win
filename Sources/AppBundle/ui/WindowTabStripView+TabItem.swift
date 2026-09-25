@@ -43,13 +43,12 @@ extension WindowTabStripView {
             WorkspaceSidebarNativeContextMenu(
                 items: [
                     .init(title: "Rename tab") { beginRenamingTab(tab) },
-                ] + (projectDestinations.isEmpty ? [] : [
-                    .init(title: "Move to project", children: projectDestinations.map { project in
+                    .init(title: "Move to project", isEnabled: !projectDestinations.isEmpty, children: projectDestinations.map { project in
                         .init(title: project.displayName) {
                             moveWindowToProjectFromTabStrip(tab.windowId, projectId: project.id)
                         }
                     }),
-                ]),
+                ],
                 colorScheme: barColorScheme
             )
         }
