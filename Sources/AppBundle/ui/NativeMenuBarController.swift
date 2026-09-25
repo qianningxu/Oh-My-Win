@@ -2,6 +2,11 @@ import AppKit
 
 @MainActor
 public final class NativeMenuBarController: NSObject, NSMenuDelegate {
+    private struct WorkspaceProjectMove {
+        let workspaceName: String
+        let projectId: WorkspaceProjectId
+    }
+
     private let viewModel: TrayMenuModel
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
@@ -38,35 +43,51 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         if projectsAreEnabled() {
             menu.addItem(actionItem("New project", #selector(createProject)))
         }
-        menu.addItem(actionItem("Setting", #selector(showSetting)))
         menu.addItem(actionItem("Quit", #selector(quit)))
     }
 
     private func workspaceMenu(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> NSMenuItem {
-        let item = NSMenuItem(title: workspace.displayName, action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: boundedNativeMenuTitle(workspace.displayName), action: nil, keyEquivalent: "")
+        item.toolTip = workspace.displayName
         item.state = workspace.isFocused ? .on : .off
         let submenu = NSMenu()
-        let open = actionItem("Open", #selector(selectWorkspace(_:)))
-        open.representedObject = workspace.name
-        submenu.addItem(open)
         let rename = actionItem("Rename…", #selector(renameWorkspace(_:)))
         rename.representedObject = workspace.name
         submenu.addItem(rename)
+        let open = actionItem("Open", #selector(selectWorkspace(_:)))
+        open.representedObject = workspace.name
+        submenu.addItem(open)
+        let destinations = workspaceSidebarProjectDestinations(
+            projects: viewModel.workspaceSidebarProjects,
+            currentProjectId: workspace.projectId
+        )
+        let move = NSMenuItem(title: "Move to project", action: nil, keyEquivalent: "")
+        move.isEnabled = !destinations.isEmpty
+        let moveMenu = NSMenu()
+        for project in destinations {
+            let destination = actionItem(boundedNativeMenuTitle(project.displayName), #selector(moveWorkspaceToProject(_:)))
+            destination.toolTip = project.displayName
+            destination.representedObject = WorkspaceProjectMove(workspaceName: workspace.name, projectId: project.id)
+            moveMenu.addItem(destination)
+        }
+        move.submenu = moveMenu
+        submenu.addItem(move)
         item.submenu = submenu
         return item
     }
 
     private func projectMenu(_ project: WorkspaceSidebarProjectViewModel) -> NSMenuItem {
-        let item = NSMenuItem(title: project.displayName, action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: boundedNativeMenuTitle(project.displayName), action: nil, keyEquivalent: "")
+        item.toolTip = project.displayName
         item.state = project.id == viewModel.workspaceSidebarActiveProjectId ? .on : .off
         let submenu = NSMenu()
-        let open = actionItem("Open", #selector(selectProject(_:)))
-        open.representedObject = project.id.rawValue
-        submenu.addItem(open)
         let rename = actionItem("Rename…", #selector(renameProject(_:)))
         rename.representedObject = project.id.rawValue
         rename.isEnabled = projectsAreEnabled()
         submenu.addItem(rename)
+        let open = actionItem("Open", #selector(selectProject(_:)))
+        open.representedObject = project.id.rawValue
+        submenu.addItem(open)
         let delete = actionItem("Delete project…", #selector(deleteProject(_:)))
         delete.representedObject = project.id.rawValue
         delete.isEnabled = canDeleteWorkspaceProject(project.id)
@@ -100,11 +121,6 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         handleWorkspaceSidebarAction(.selectWorkspace(workspaceName), viewModel: viewModel)
     }
 
-    @objc private func showSetting() {
-        menu.cancelTracking()
-        openDashboardFromMenu()
-    }
-
     @objc private func openSchoolSavedWorkspace() {
         menu.cancelTracking()
         SavedWorkspaceLauncher.shared.open(.school)
@@ -132,6 +148,14 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         }
     }
 
+    @objc private func moveWorkspaceToProject(_ item: NSMenuItem) {
+        guard let destination = item.representedObject as? WorkspaceProjectMove else { return }
+        handleWorkspaceSidebarAction(
+            .moveWorkspaceToProject(destination.workspaceName, projectId: destination.projectId),
+            viewModel: viewModel
+        )
+    }
+
     @objc private func deleteProject(_ item: NSMenuItem) {
         guard let rawId = item.representedObject as? String,
               let project = viewModel.workspaceSidebarProjects.first(where: { $0.id.rawValue == rawId })
@@ -156,6 +180,21 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
             onSave(name)
         }
     }
+}
+
+private func boundedNativeMenuTitle(_ title: String) -> String {
+    let maxWidth = standardGap * 56
+    let font = NSFont.menuFont(ofSize: 0)
+    let attributes: [NSAttributedString.Key: Any] = [.font: font]
+    func width(_ value: String) -> CGFloat { (value as NSString).size(withAttributes: attributes).width }
+    guard width(title) > maxWidth else { return title }
+    var clipped = ""
+    for character in title {
+        let next = clipped + String(character)
+        guard width(next + "…") <= maxWidth else { break }
+        clipped = next
+    }
+    return clipped + "…"
 }
 
 @MainActor

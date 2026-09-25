@@ -12,13 +12,6 @@ public func menuBar(viewModel: TrayMenuModel) -> some Scene {
     }
 }
 
-@MainActor
-func openDashboardFromMenu(tab: ShortcutSettingsModel.Tab = .setting) {
-    DispatchQueue.main.async {
-        ShortcutSettingsModel.shared.requestWindowOpen(tab: tab)
-    }
-}
-
 private struct WorkspaceProjectMenuBarContent: View {
     @ObservedObject var viewModel: TrayMenuModel
 
@@ -66,7 +59,6 @@ private struct WorkspaceProjectMenuBarContent: View {
         if projectsAreEnabled() {
             Button("New project") { createProject() }
         }
-        Button("Setting") { openDashboardFromMenu() }
         Menu("Saved workspace") {
             Button("School") { SavedWorkspaceLauncher.shared.open(.school) }
         }

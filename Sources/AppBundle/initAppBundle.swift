@@ -75,11 +75,6 @@ import Foundation
             _ = try await config.afterStartupCommand.runCmdSeq(.defaultEnv, .emptyStdin)
         }
         GlobalObserver.completeStartupRefreshAndSetWindowInventoryPollingEnabled(TrayMenuModel.shared.isEnabled)
-        if bootstrappedConfigUrl != nil {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                ShortcutSettingsModel.shared.requestWindowOpen()
-            }
-        }
     }
 }
 

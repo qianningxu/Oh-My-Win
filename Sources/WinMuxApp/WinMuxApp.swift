@@ -32,7 +32,6 @@ final class WinMuxAppDelegate: NSObject, NSApplicationDelegate {
 struct WinMuxApp: App {
     @NSApplicationDelegateAdaptor(WinMuxAppDelegate.self) var appDelegate
     @StateObject var messageModel = MessageModel.shared
-    @StateObject var shortcutSettingsModel = ShortcutSettingsModel.shared
     @Environment(\.openWindow) var openWindow: OpenWindowAction
 
     init() {
@@ -40,10 +39,6 @@ struct WinMuxApp: App {
     }
 
     var body: some Scene {
-        getShortcutSettingsWindow(model: shortcutSettingsModel)
-            .onChange(of: shortcutSettingsModel.openRequestId) { _ in
-                openShortcutSettingsWindow(openWindow)
-            }
         getMessageWindow(messageModel: messageModel)
             .onChange(of: messageModel.message) { message in
                 if message != nil {
