@@ -17,6 +17,14 @@ enum AxUiElementWindowType: String {
 
 // Covered by tests in ./axDumps in the repo root
 extension AxUiElementMock {
+    private func isChatGPTMainWindow(_ id: KnownBundleId?, _ windowLevel: MacOsWindowLevel?) -> Bool {
+        guard (id == .chatgpt || id == .codex), windowLevel == .normalWindow,
+              get(Ax.isMainAttr) == true
+        else { return false }
+        let subrole = get(Ax.subroleAttr)
+        return subrole != kAXDialogSubrole && subrole != kAXFloatingWindowSubrole
+    }
+
     // 'isDialogHeuristic' function name is referenced in the guide
     func isDialogHeuristic(
         _ id: KnownBundleId?,
@@ -31,6 +39,10 @@ extension AxUiElementMock {
         if id == .iphonesimulator {
             return true
         }
+
+        // ChatGPT's main window can omit the standard subrole or an enabled
+        // fullscreen button. Those AX traits do not make it a dialog.
+        if isChatGPTMainWindow(id, windowLevel) { return false }
 
         // Don't tile:
         // - Chrome cmd+f window ("AXUnknown" value)
@@ -107,6 +119,7 @@ extension AxUiElementMock {
         // Status helpers such as Typeless's invisible overlay expose AX window
         // controls, but must not keep a workspace alive after its real windows close.
         if isNativeOverlayWindow(level: windowLevel, appId: id) { return false }
+        if isChatGPTMainWindow(id, windowLevel) { return true }
         if windowLevel != .normalWindow &&
             // Slowly roll out windowLevel for applications for which we have the appropriate dumps
             (id == .slack || id == .chrome || id?.isFirefox == true || id == .braveBrowser || id == .screenstudio || id == .cleanshotx || id == .iterm2)

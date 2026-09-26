@@ -2,6 +2,19 @@
 import XCTest
 
 final class NativeOverlayWindowTest: XCTestCase {
+    func testChatGPTMainWindowTilesDespiteMissingFullscreenControlOrStandardSubrole() {
+        let mainWindow = ChatGPTWindowAxMock(isMain: true, subrole: "AXUnknown")
+        for id in [KnownBundleId.chatgpt, .codex] {
+            XCTAssertEqual(mainWindow.getWindowType(axApp: mainWindow, id, .regular, .normalWindow), .window)
+            XCTAssertEqual(mainWindow.getWindowType(axApp: mainWindow, id, .regular, .alwaysOnTopWindow), .popup)
+        }
+
+        let dialog = ChatGPTWindowAxMock(isMain: true, subrole: kAXDialogSubrole)
+        XCTAssertEqual(dialog.getWindowType(axApp: dialog, .codex, .regular, .normalWindow), .dialog)
+        let secondary = ChatGPTWindowAxMock(isMain: false, subrole: kAXStandardWindowSubrole)
+        XCTAssertEqual(secondary.getWindowType(axApp: secondary, .codex, .regular, .normalWindow), .dialog)
+    }
+
     func testChatGPTCompanionsStayUnmanagedWithoutExcludingMainWindows() {
         for id in [KnownBundleId.chatgpt, .codex] {
             XCTAssertTrue(isNativeOverlayWindow(level: .alwaysOnTopWindow, appId: id))
@@ -25,6 +38,21 @@ final class NativeOverlayWindowTest: XCTestCase {
         XCTAssertFalse(workspace.allLeafWindowsRecursive.contains(window))
         window.unbindFromParent()
     }
+}
+
+private struct ChatGPTWindowAxMock: AxUiElementMock {
+    let isMain: Bool
+    let subrole: String?
+
+    func get<Attr: ReadableAttr>(_ attr: Attr) -> Attr.T? {
+        switch attr.key {
+            case kAXMainAttribute: isMain as? Attr.T
+            case kAXSubroleAttribute: subrole as? Attr.T
+            default: nil
+        }
+    }
+
+    func containingWindowId() -> CGWindowID? { nil }
 }
 
 private final class CompanionApp: AbstractApp {
