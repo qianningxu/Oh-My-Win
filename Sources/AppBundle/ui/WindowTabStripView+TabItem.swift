@@ -10,7 +10,7 @@ extension WindowTabStripView {
         let isHovered = hoveredTabId == tab.windowId
         let isEditing = editingTabId == tab.windowId
         let projectDestinations = projectDestinations(for: tab)
-        return ZStack(alignment: .trailing) {
+        return ZStack(alignment: .leading) {
             if isEditing {
                 tabRenameEditor(tab, context: context, itemHeight: itemHeight)
             } else {
@@ -19,7 +19,7 @@ extension WindowTabStripView {
 
             if isHovered && draggingTabId == nil && !isEditing && context.showsTabTitles {
                 tabCloseButton(tab)
-                    .padding(.trailing, windowTabStripCloseButtonTrailingInset)
+                    .padding(.leading, windowTabStripCloseButtonLeadingInset)
                     .transition(.opacity)
             }
         }
