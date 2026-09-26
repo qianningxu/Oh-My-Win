@@ -48,15 +48,14 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
 
     private func workspaceMenu(_ workspace: WorkspaceSidebarWorkspaceViewModel) -> NSMenuItem {
         let item = NSMenuItem(title: boundedNativeMenuTitle(workspace.displayName), action: nil, keyEquivalent: "")
-        item.toolTip = workspace.displayName
         item.state = workspace.isFocused ? .on : .off
         let submenu = NSMenu()
+        let open = actionItem("Switch", #selector(selectWorkspace(_:)))
+        open.representedObject = workspace.name
+        submenu.addItem(open)
         let rename = actionItem("Rename…", #selector(renameWorkspace(_:)))
         rename.representedObject = workspace.name
         submenu.addItem(rename)
-        let open = actionItem("Open", #selector(selectWorkspace(_:)))
-        open.representedObject = workspace.name
-        submenu.addItem(open)
         let destinations = workspaceSidebarProjectDestinations(
             projects: viewModel.workspaceSidebarProjects,
             currentProjectId: workspace.projectId
@@ -66,7 +65,6 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         let moveMenu = NSMenu()
         for project in destinations {
             let destination = actionItem(boundedNativeMenuTitle(project.displayName), #selector(moveWorkspaceToProject(_:)))
-            destination.toolTip = project.displayName
             destination.representedObject = WorkspaceProjectMove(workspaceName: workspace.name, projectId: project.id)
             moveMenu.addItem(destination)
         }
@@ -78,16 +76,15 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
 
     private func projectMenu(_ project: WorkspaceSidebarProjectViewModel) -> NSMenuItem {
         let item = NSMenuItem(title: boundedNativeMenuTitle(project.displayName), action: nil, keyEquivalent: "")
-        item.toolTip = project.displayName
         item.state = project.id == viewModel.workspaceSidebarActiveProjectId ? .on : .off
         let submenu = NSMenu()
+        let open = actionItem("Open", #selector(selectProject(_:)))
+        open.representedObject = project.id.rawValue
+        submenu.addItem(open)
         let rename = actionItem("Rename…", #selector(renameProject(_:)))
         rename.representedObject = project.id.rawValue
         rename.isEnabled = projectsAreEnabled()
         submenu.addItem(rename)
-        let open = actionItem("Open", #selector(selectProject(_:)))
-        open.representedObject = project.id.rawValue
-        submenu.addItem(open)
         let delete = actionItem("Delete project…", #selector(deleteProject(_:)))
         delete.representedObject = project.id.rawValue
         delete.isEnabled = canDeleteWorkspaceProject(project.id)
@@ -208,7 +205,11 @@ private func promptForProjectName(_ title: String, initialValue: String) -> Stri
     alert.addButton(withTitle: "Save")
     alert.addButton(withTitle: "Cancel")
     alert.window.makeKeyAndOrderFront(nil)
-    alert.window.makeFirstResponder(field)
+    DispatchQueue.main.async {
+        alert.window.makeKeyAndOrderFront(nil)
+        alert.window.makeFirstResponder(field)
+        field.selectText(nil)
+    }
     guard alert.runModal() == .alertFirstButtonReturn else { return nil }
     let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
     return name.isEmpty ? nil : name
