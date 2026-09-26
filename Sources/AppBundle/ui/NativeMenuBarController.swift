@@ -204,12 +204,6 @@ private func promptForProjectName(_ title: String, initialValue: String) -> Stri
     alert.window.initialFirstResponder = field
     alert.addButton(withTitle: "Save")
     alert.addButton(withTitle: "Cancel")
-    alert.window.makeKeyAndOrderFront(nil)
-    DispatchQueue.main.async {
-        alert.window.makeKeyAndOrderFront(nil)
-        alert.window.makeFirstResponder(field)
-        field.selectText(nil)
-    }
     guard alert.runModal() == .alertFirstButtonReturn else { return nil }
     let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
     return name.isEmpty ? nil : name
