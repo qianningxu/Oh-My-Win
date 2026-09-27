@@ -75,6 +75,7 @@ extension WindowTabStripView {
             )
         }
         .buttonStyle(.plain)
+        .windowTabWithoutFocusRing()
         .highPriorityGesture(tabDragGesture(for: tab, context: context))
         .onTapGesture(count: 2) {
             beginRenamingTab(tab)
@@ -150,7 +151,19 @@ extension WindowTabStripView {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .windowTabWithoutFocusRing()
         .help("Close \(tab.title)")
         .accessibilityLabel("Close \(tab.title)")
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func windowTabWithoutFocusRing() -> some View {
+        if #available(macOS 14.0, *) {
+            focusEffectDisabled()
+        } else {
+            focusable(false)
+        }
     }
 }

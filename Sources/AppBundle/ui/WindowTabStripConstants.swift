@@ -15,8 +15,9 @@ let windowTabStripInnerCornerRadius: CGFloat = 9
 let windowTabStripTabSpacing: CGFloat = WinMuxSpacing.hairline
 let windowTabStripPreferredTabWidth: CGFloat = WinMuxBarStyle.maximumTabWidth
 let windowTabStripCloseButtonSize: CGFloat = 18
-let windowTabStripCloseButtonReservedWidth: CGFloat = 22
 let windowTabStripCloseButtonLeadingInset: CGFloat = standardGap * 2.5
+let windowTabStripCloseButtonReservedWidth = windowTabStripCloseButtonLeadingInset
+    + windowTabStripCloseButtonSize + WinMuxSpacing.compact
 let windowTabStripScrollFadeWidth: CGFloat = 22
 let windowTabStripAutoScrollEdgeWidth: CGFloat = 28
 let windowTabStripAutoScrollDuration: TimeInterval = 0.12
