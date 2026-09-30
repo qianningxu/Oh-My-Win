@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 
 @MainActor
 public final class NativeMenuBarController: NSObject, NSMenuDelegate {
@@ -10,22 +11,61 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
     private let viewModel: TrayMenuModel
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
+    private var activeProjectObservation: AnyCancellable?
 
     public init(viewModel: TrayMenuModel) {
         self.viewModel = viewModel
         super.init()
-        statusItem.button?.attributedTitle = NSAttributedString(
-            string: "oh!",
-            attributes: [
-                .font: NSFont(name: "SignPainter-HouseScriptSemibold", size: 20)
-                    ?? NSFont.boldSystemFont(ofSize: 18),
-                .foregroundColor: NSColor.labelColor,
-            ]
-        )
-        statusItem.button?.toolTip = "Oh-My-Win"
+        updateStatusItemTitle(projectName: nil)
+        activeProjectObservation = viewModel.$workspaceSidebarProjects
+            .combineLatest(viewModel.$workspaceSidebarActiveProjectId)
+            .sink { [weak self] projects, activeProjectId in
+                let projectName = projects.first { $0.id == activeProjectId }?.displayName
+                DispatchQueue.main.async {
+                    self?.updateStatusItemTitle(projectName: projectName)
+                }
+            }
         menu.delegate = self
         menu.autoenablesItems = false
         statusItem.menu = menu
+    }
+
+    private func updateStatusItemTitle(projectName: String?) {
+        let name = projectName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let visibleName = name.flatMap { $0.isEmpty ? nil : $0 }
+        let brandFont = NSFont(name: "SignPainter-HouseScriptSemibold", size: 20)
+            ?? NSFont.boldSystemFont(ofSize: 18)
+        let projectFont = NSFont.systemFont(ofSize: 12, weight: .medium)
+        let title = NSMutableAttributedString(
+            string: "oh!",
+            attributes: [
+                .font: brandFont,
+                .foregroundColor: NSColor.labelColor,
+            ]
+        )
+
+        if let visibleName {
+            title.append(NSAttributedString(
+                string: "  ·  ",
+                attributes: [
+                    .font: projectFont,
+                    .foregroundColor: NSColor.secondaryLabelColor,
+                ]
+            ))
+            title.append(NSAttributedString(
+                string: boundedStatusProjectName(visibleName, font: projectFont),
+                attributes: [
+                    .font: projectFont,
+                    .foregroundColor: NSColor.labelColor,
+                ]
+            ))
+        }
+
+        statusItem.button?.attributedTitle = title
+        statusItem.button?.toolTip = visibleName.map { "Oh-My-Win — \($0)" } ?? "Oh-My-Win"
+        statusItem.button?.setAccessibilityLabel(
+            visibleName.map { "Oh-My-Win, project \($0)" } ?? "Oh-My-Win"
+        )
     }
 
     public func menuNeedsUpdate(_ menu: NSMenu) {
@@ -177,6 +217,19 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
             onSave(name)
         }
     }
+}
+
+private func boundedStatusProjectName(_ title: String, font: NSFont) -> String {
+    let maxWidth = standardGap * 32
+    let attributes: [NSAttributedString.Key: Any] = [.font: font]
+    func width(_ value: String) -> CGFloat { (value as NSString).size(withAttributes: attributes).width }
+    guard width(title) > maxWidth else { return title }
+
+    var clipped = title
+    while !clipped.isEmpty && width(clipped + "…") > maxWidth {
+        clipped.removeLast()
+    }
+    return clipped + "…"
 }
 
 private func boundedNativeMenuTitle(_ title: String) -> String {
