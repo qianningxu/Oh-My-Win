@@ -35,31 +35,14 @@ public final class NativeMenuBarController: NSObject, NSMenuDelegate {
         let visibleName = name.flatMap { $0.isEmpty ? nil : $0 }
         let brandFont = NSFont(name: "SignPainter-HouseScriptSemibold", size: 20)
             ?? NSFont.boldSystemFont(ofSize: 18)
-        let projectFont = NSFont.systemFont(ofSize: 12, weight: .medium)
-        let title = NSMutableAttributedString(
-            string: "oh!",
+        let displayedName = visibleName.map { " · \(boundedStatusProjectName($0, font: brandFont))" } ?? ""
+        let title = NSAttributedString(
+            string: "oh!\(displayedName)",
             attributes: [
                 .font: brandFont,
                 .foregroundColor: NSColor.labelColor,
             ]
         )
-
-        if let visibleName {
-            title.append(NSAttributedString(
-                string: "  ·  ",
-                attributes: [
-                    .font: projectFont,
-                    .foregroundColor: NSColor.secondaryLabelColor,
-                ]
-            ))
-            title.append(NSAttributedString(
-                string: boundedStatusProjectName(visibleName, font: projectFont),
-                attributes: [
-                    .font: projectFont,
-                    .foregroundColor: NSColor.labelColor,
-                ]
-            ))
-        }
 
         statusItem.button?.attributedTitle = title
         statusItem.button?.toolTip = visibleName.map { "Oh-My-Win — \($0)" } ?? "Oh-My-Win"
