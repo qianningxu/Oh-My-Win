@@ -1,22 +1,18 @@
 import AppKit
 import CoreGraphics
 
-// Observe physical releases before Carbon consumes registered shortcut events.
+// Observe modifier transitions before Carbon consumes registered shortcuts.
 private let workspacePreviewKeyboardCallback: CGEventTapCallBack = { _, type, event, _ in
-    let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-    let optionPressed = event.flags.contains(.maskAlternate)
+    var flags: NSEvent.ModifierFlags = []
+    if event.flags.contains(.maskAlternate) { flags.insert(.option) }
+    if event.flags.contains(.maskCommand) { flags.insert(.command) }
+    let modifierFlags = flags
     DispatchQueue.main.async {
         switch type {
             case .tapDisabledByTimeout, .tapDisabledByUserInput:
                 WorkspacePreviewKeyboardObserver.shared.enable()
-            case .keyUp:
-                WorkspacePreviewPanel.shared.shortcutKeyReleased(keyCode)
             case .flagsChanged:
-                if optionPressed {
-                    WorkspacePreviewPanel.shared.optionPressed()
-                } else {
-                    WorkspacePreviewPanel.shared.optionReleased()
-                }
+                WorkspacePreviewPanel.shared.modifierFlagsChanged(modifierFlags)
             default: break
         }
     }
@@ -31,7 +27,7 @@ final class WorkspacePreviewKeyboardObserver {
 
     func install() {
         guard tap == nil else { return }
-        let mask = CGEventMask(1 << CGEventType.keyUp.rawValue) | CGEventMask(1 << CGEventType.flagsChanged.rawValue)
+        let mask = CGEventMask(1 << CGEventType.flagsChanged.rawValue)
         guard let tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap,
                                          options: .listenOnly, eventsOfInterest: mask,
                                          callback: workspacePreviewKeyboardCallback, userInfo: nil),

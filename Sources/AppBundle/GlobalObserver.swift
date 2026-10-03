@@ -69,7 +69,6 @@ enum GlobalObserver {
     @MainActor private static var isWindowInventoryPollingStarted = false
     @MainActor private static var isWindowInventoryPollingSuspendedForSleep = false
     @MainActor private static var resizeCandidateCaptureGeneration: UInt64 = 0
-    @MainActor private static var isOptionRevealPressed = false
     private static let pointerActivityCoalescer = PointerActivityCoalescer()
 
     private static func onNotif(_ notification: Notification) {
@@ -134,28 +133,12 @@ enum GlobalObserver {
         }
     }
 
-    private static func onKeyUp(_ event: NSEvent) {
-        let keyCode = event.keyCode
-        Task { @MainActor in WorkspacePreviewPanel.shared.shortcutKeyReleased(keyCode) }
-    }
-
     private static func onFlagsChanged(_ event: NSEvent) {
         let keyCode = event.keyCode
         let modifierFlags = event.modifierFlags
         Task { @MainActor in
             noteTapBindingFlagsChanged(keyCode: keyCode, modifierFlags: modifierFlags)
-            updateOptionKeyWorkspaceBarReveal(isPressed: modifierFlags.contains(.option))
-        }
-    }
-
-    @MainActor
-    private static func updateOptionKeyWorkspaceBarReveal(isPressed: Bool) {
-        guard isOptionRevealPressed != isPressed else { return }
-        isOptionRevealPressed = isPressed
-        if isPressed {
-            WorkspacePreviewPanel.shared.optionPressed()
-        } else {
-            WorkspacePreviewPanel.shared.optionReleased()
+            WorkspacePreviewPanel.shared.modifierFlagsChanged(modifierFlags)
         }
     }
 
@@ -322,12 +305,6 @@ enum GlobalObserver {
         retainEventMonitor(NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged, handler: onFlagsChanged))
         retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
             onFlagsChanged(event)
-            return event
-        })
-
-        retainEventMonitor(NSEvent.addGlobalMonitorForEvents(matching: .keyUp, handler: onKeyUp))
-        retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .keyUp) { event in
-            onKeyUp(event)
             return event
         })
 

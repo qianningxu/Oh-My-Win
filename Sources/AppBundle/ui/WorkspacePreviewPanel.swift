@@ -36,6 +36,19 @@ struct WorkspacePreviewWindowItem: Identifiable {
     var stackId: UInt32? = nil
 }
 
+struct WorkspacePreviewShortcutCycle {
+    private(set) var pendingModifier: NSEvent.ModifierFlags?
+
+    mutating func select(modifier: NSEvent.ModifierFlags) { pendingModifier = modifier }
+    mutating func cancel() { pendingModifier = nil }
+
+    mutating func updateModifiers(_ flags: NSEvent.ModifierFlags) -> Bool {
+        guard let modifier = pendingModifier, !flags.contains(modifier) else { return false }
+        pendingModifier = nil
+        return true
+    }
+}
+
 @MainActor
 final class WorkspacePreviewPanel: NSPanelHud {
     static let shared = WorkspacePreviewPanel()
@@ -45,7 +58,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
     private var currentIndex: Int = 0
     private var selectedIndex: Int = 0
     private var selectedWindowId: UInt32?
-    private var pendingKeyCode: UInt16?
+    private var shortcutCycle = WorkspacePreviewShortcutCycle()
     private var pendingCommands: [any Command]?
     private var isOptionPressed = false
     private(set) var isPreviewActive = false
@@ -95,7 +108,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         guard isPreviewActive else { return }
         let targetWindow = selectedWindowId.flatMap { Window.get(byId: $0) }
         let target = items.getOrNil(atIndex: selectedIndex)?.workspace
-        pendingKeyCode = nil
+        shortcutCycle.cancel()
         pendingCommands = nil
         if !isOptionPressed { dismiss() }
         if let targetWindow {
@@ -127,7 +140,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         items = []
         selectedIndex = 0
         selectedWindowId = nil
-        pendingKeyCode = nil
+        shortcutCycle.cancel()
         pendingCommands = nil
         orderOut(nil)
         hostingView.rootView = AnyView(EmptyView())
@@ -199,9 +212,10 @@ final class WorkspacePreviewPanel: NSPanelHud {
         )
     }
 
-    // Preview selection changes on key-down; native focus changes on key-up.
-    func previewShortcut(commands: [any Command], keyCode: UInt16) -> Bool {
-        guard commands.count == 1 else { return false }
+    // Shortcut keys only select; releasing the held modifier commits once.
+    func previewShortcut(commands: [any Command], modifiers: NSEvent.ModifierFlags) -> Bool {
+        guard commands.count == 1, modifiers.contains(.option) else { return false }
+        let commitModifier: NSEvent.ModifierFlags = .option
         pendingCommands = nil
         if let command = commands[0] as? FocusCommand,
            case .tabRelative(let direction) = command.args.target {
@@ -210,7 +224,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
             let workspace = items[currentIndex].workspace
             let window = selectedWindowId.flatMap { Window.get(byId: $0) } ?? focus.windowOrNil
             let target = LiveFocus(windowOrNil: window, workspace: workspace)
-            pendingKeyCode = keyCode
+            shortcutCycle.select(modifier: commitModifier)
             guard let candidate = workspacePreviewRelativeWindow(target, command.args.boundariesAction, direction) else { return true }
             selectedWindowId = candidate.windowId
             selectedIndex = currentIndex
@@ -230,54 +244,42 @@ final class WorkspacePreviewPanel: NSPanelHud {
             }
             guard let target, let index = items.firstIndex(where: { $0.workspace == target }) else {
                 pendingCommands = commands
-                pendingKeyCode = keyCode
+                shortcutCycle.select(modifier: commitModifier)
                 return true
             }
             selectedWindowId = nil
             selectedIndex = index
-            pendingKeyCode = keyCode
+            shortcutCycle.select(modifier: commitModifier)
             render()
             return true
         }
         return false
     }
 
-    func shortcutKeyReleased(_ keyCode: UInt16) {
-        guard pendingKeyCode == keyCode else { return }
-        pendingKeyCode = nil
+    private func commitShortcutSelection() {
         if let commands = pendingCommands {
-            pendingCommands = nil
-            if !isOptionPressed { dismiss() }
+            dismiss()
             Task { @MainActor in
                 guard let token: RunSessionGuard = .isServerEnabled else { return }
                 try await runLightSession(.hotkeyBinding, token, shouldSchedulePostRefresh: !commands.canSkipPostCommandRefresh) {
                     _ = try await commands.runCmdSeq(.defaultEnv, .emptyStdin)
                 }
-                refreshAfterShortcutSwitch()
             }
             return
         }
         commitIfActive()
     }
 
-    func optionReleased() {
-        isOptionPressed = false
-        // Releasing Option alone cancels the reveal. A selected shortcut waits
-        // for its physical key-up even if Option is released first.
-        if pendingKeyCode == nil { dismiss() }
-    }
-
-    func optionPressed() {
-        guard !isOptionPressed else { return }
-        isOptionPressed = true
-        present()
-    }
-
-    func hotkeyReleased(_ keyCode: UInt16) {
-        // Carbon reports a chord release when its modifier is lifted too.
-        // Commit only after the physical S/number key is actually up.
-        guard !CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(keyCode)) else { return }
-        shortcutKeyReleased(keyCode)
+    func modifierFlagsChanged(_ flags: NSEvent.ModifierFlags) {
+        let wasOptionPressed = isOptionPressed
+        isOptionPressed = flags.contains(.option)
+        if shortcutCycle.updateModifiers(flags) {
+            commitShortcutSelection()
+        } else if isOptionPressed && !wasOptionPressed {
+            present()
+        } else if !isOptionPressed && shortcutCycle.pendingModifier == nil {
+            dismiss()
+        }
     }
 
     override func keyDown(with event: NSEvent) {

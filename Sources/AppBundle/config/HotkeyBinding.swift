@@ -78,17 +78,13 @@ extension HotKey {
             Task { @MainActor in
                 if hotkeysSuspended { return }
                 noteTapBindingKeyDown()
-                if WorkspacePreviewPanel.shared.previewShortcut(commands: binding.commands, keyCode: UInt16(binding.keyCode.carbonKeyCode)) {
+                if WorkspacePreviewPanel.shared.previewShortcut(commands: binding.commands, modifiers: binding.modifiers) {
                     if let activeMode {
                         broadcastEvent(.bindingTriggered(mode: activeMode, binding: binding.descriptionWithKeyNotation))
                     }
                 } else {
                     triggerBinding(binding.descriptionWithKeyNotation, binding.commands)
                 }
-            }
-        }, keyUpHandler: {
-            Task { @MainActor in
-                WorkspacePreviewPanel.shared.hotkeyReleased(UInt16(binding.keyCode.carbonKeyCode))
             }
         })
     }

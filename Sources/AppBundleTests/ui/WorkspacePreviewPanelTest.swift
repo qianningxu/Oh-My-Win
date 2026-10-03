@@ -1,7 +1,26 @@
 @testable import AppBundle
 import XCTest
+import AppKit
 
 final class WorkspacePreviewPanelTest: XCTestCase {
+    func testPreviewWaitsForOptionReleaseAndCommitsOnlyOnce() {
+        var cycle = WorkspacePreviewShortcutCycle()
+        cycle.select(modifier: .option)
+        XCTAssertFalse(cycle.updateModifiers([.option, .command]))
+        XCTAssertFalse(cycle.updateModifiers(.option))
+        cycle.select(modifier: .option)
+        XCTAssertFalse(cycle.updateModifiers(.option))
+        XCTAssertTrue(cycle.updateModifiers([]))
+        XCTAssertFalse(cycle.updateModifiers([]))
+    }
+
+    func testCancellingPreviewPreventsSwitchOnOptionRelease() {
+        var cycle = WorkspacePreviewShortcutCycle()
+        cycle.select(modifier: .option)
+        cycle.cancel()
+        XCTAssertFalse(cycle.updateModifiers([]))
+    }
+
     @MainActor
     func testOptionPreviewOnlyShowsWorkspacesInFocusedProject() {
         setUpWorkspacesForTests()
