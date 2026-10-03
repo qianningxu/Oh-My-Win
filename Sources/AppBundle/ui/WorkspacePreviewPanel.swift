@@ -43,6 +43,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
     private var selectedIndex: Int = 0
     private var selectedWindowId: UInt32?
     private var pendingKeyCode: UInt16?
+    private var pendingCommands: [any Command]?
     private(set) var isPreviewActive = false
 
     override private init() {
@@ -115,6 +116,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         selectedIndex = 0
         selectedWindowId = nil
         pendingKeyCode = nil
+        pendingCommands = nil
         orderOut(nil)
         hostingView.rootView = AnyView(EmptyView())
     }
@@ -184,6 +186,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
     // Preview selection changes on key-down; native focus changes on key-up.
     func previewShortcut(commands: [any Command], keyCode: UInt16) -> Bool {
         guard commands.count == 1 else { return false }
+        pendingCommands = nil
         if let command = commands[0] as? FocusCommand,
            case .tabRelative(let direction) = command.args.target {
             present()
@@ -206,10 +209,14 @@ final class WorkspacePreviewPanel: NSPanelHud {
             let target: Workspace?
             switch command.args.target.val {
                 case .direct(let name): target = findDirectWorkspaceTarget(named: name.raw, from: current)
-                case .relative(let direction): target = getNextPrevWorkspace(current: current, isNext: direction == .next, wrapAround: command.args.wrapAround, stdin: nil)
+                case .relative(let direction): target = getNextPrevWorkspace(current: current, isNext: direction == .next, wrapAround: true, stdin: nil)
                 case .fresh: return false
             }
-            guard let target, let index = items.firstIndex(where: { $0.workspace == target }) else { return false }
+            guard let target, let index = items.firstIndex(where: { $0.workspace == target }) else {
+                pendingCommands = commands
+                pendingKeyCode = keyCode
+                return true
+            }
             selectedWindowId = nil
             selectedIndex = index
             pendingKeyCode = keyCode
@@ -222,6 +229,16 @@ final class WorkspacePreviewPanel: NSPanelHud {
     func shortcutKeyReleased(_ keyCode: UInt16) {
         guard pendingKeyCode == keyCode else { return }
         pendingKeyCode = nil
+        if let commands = pendingCommands {
+            dismiss()
+            Task { @MainActor in
+                guard let token: RunSessionGuard = .isServerEnabled else { return }
+                try await runLightSession(.hotkeyBinding, token, shouldSchedulePostRefresh: !commands.canSkipPostCommandRefresh) {
+                    _ = try await commands.runCmdSeq(.defaultEnv, .emptyStdin)
+                }
+            }
+            return
+        }
         commitIfActive()
     }
 
