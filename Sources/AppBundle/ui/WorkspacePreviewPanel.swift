@@ -780,6 +780,8 @@ private struct WorkspacePreviewLegacyCard: View {
 }
 
 private struct WorkspacePreviewSwitcherSurface: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: standardGap * 8, style: .continuous)
         ZStack {
@@ -788,6 +790,9 @@ private struct WorkspacePreviewSwitcherSurface: View {
                 blendingMode: .behindWindow,
                 opacity: 0.95
             )
+            if colorScheme == .light {
+                shape.fill(GeistColorTokens.previewBlack.swiftUIColor.opacity(0.12))
+            }
             shape.fill(GeistColorTokens.previewWhite.swiftUIColor.opacity(0.01))
             shape.strokeBorder(GeistColorTokens.previewWhite.swiftUIColor.opacity(0.12), lineWidth: 0.5)
         }
