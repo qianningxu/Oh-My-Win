@@ -6,7 +6,8 @@ import SwiftUI
 extension GeistColorTokens {
     static let previewWhite: GeistColorTokenValue = .gray(1)
     static let previewBlack: GeistColorTokenValue = .gray(0)
-    static let previewFocusGray: GeistColorTokenValue = .gray(0.5)
+    static let previewFocusGray: GeistColorTokenValue = .gray(0.75)
+    static let previewWorkspaceFocusGray: GeistColorTokenValue = .gray(0.25)
 }
 
 extension GeistColorTokenValue {
@@ -15,7 +16,11 @@ extension GeistColorTokenValue {
 
 extension WinMuxOverlayPalette {
     var workspacePreviewFocusRing: Color {
-        GeistColorTokens.previewFocusGray.swiftUIColor.opacity(0.45)
+        GeistColorTokens.previewFocusGray.swiftUIColor.opacity(0.55)
+    }
+
+    var workspacePreviewWorkspaceFocusRing: Color {
+        GeistColorTokens.previewWorkspaceFocusGray.swiftUIColor.opacity(0.55)
     }
 
     var workspacePreviewTileBackground: Color {

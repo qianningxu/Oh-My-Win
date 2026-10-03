@@ -702,7 +702,7 @@ private struct WorkspacePreviewView: View {
                                 ForEach(Array(workspaceRows.enumerated()), id: \.offset) { _, row in
                                     HStack(spacing: workspacePreviewColumnSpacing) {
                                         ForEach(row, id: \.self) { index in
-                                            WorkspacePreviewLegacyCard(item: items[index], isSelected: index == selectedIndex && selectedWindowId == nil)
+                                            WorkspacePreviewLegacyCard(item: items[index], isSelected: index == selectedIndex)
                                                 .id("workspace-\(index)")
                                                 .contentShape(Rectangle())
                                                 .onTapGesture { onSelect(index) }
@@ -790,7 +790,7 @@ private struct WorkspacePreviewLegacyCard: View {
                 .overlay {
                     if isSelected {
                         RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
-                            .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
+                            .strokeBorder(palette.workspacePreviewWorkspaceFocusRing, lineWidth: workspacePreviewFocusRingWidth)
                             .padding(-workspacePreviewFocusRingWidth)
                     }
                 }
