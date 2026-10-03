@@ -103,6 +103,25 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(optionWorkspaceIndex(for: 82), 9)
     }
 
+    func testPreviewRowsKeepStacksSeparateAndLimitEachRowToFive() {
+        func item(_ id: UInt32, _ stack: UInt32?) -> WorkspacePreviewWindowItem {
+            WorkspacePreviewWindowItem(id: id, title: "Window", appName: "App", appIcon: nil, thumbnail: nil, stackId: stack)
+        }
+        let windows = [item(1, 1), item(2, 2), item(3, 1), item(4, nil)]
+        XCTAssertEqual(workspacePreviewStackRows(windows).map { $0.map(\.id) }, [[1, 3], [2], [4]])
+        let largeStack = (1...20).map { item(UInt32($0), 1) }
+        XCTAssertEqual(workspacePreviewStackRows(largeStack).map(\.count), [5, 5, 5])
+    }
+
+    func testWorkspaceArtworkFillsSameBoundsAsWindowThumbnail() {
+        let window = WorkspacePreviewWindowItem(id: 1, title: "Window", appName: "App", appIcon: nil, thumbnail: nil,
+                                               layoutFrame: CGRect(x: 0.02, y: 0.04, width: 0.96, height: 0.92))
+        let size = CGSize(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
+        let placed = workspacePreviewPlacedWindows(windows: [window], workspaceAspectRatio: 2.5,
+                                                   in: size, fillsCanvas: true)
+        XCTAssertEqual(placed[0].frame, CGRect(origin: .zero, size: size))
+    }
+
     func testPreviewColumnWidthAdaptsAndReservesWorkspaceColumn() {
         XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 2, availableWidth: 2000, windowCount: 1), 432.5)
         XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 3), 816.5)

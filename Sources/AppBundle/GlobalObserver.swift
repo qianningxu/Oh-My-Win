@@ -153,7 +153,7 @@ enum GlobalObserver {
         guard isOptionRevealPressed != isPressed else { return }
         isOptionRevealPressed = isPressed
         if isPressed {
-            WorkspacePreviewPanel.shared.present()
+            WorkspacePreviewPanel.shared.optionPressed()
         } else {
             WorkspacePreviewPanel.shared.optionReleased()
         }
@@ -256,6 +256,7 @@ enum GlobalObserver {
 
     @MainActor
     static func initObserver() {
+        WorkspacePreviewKeyboardObserver.shared.install()
         guard !isInitialized else { return }
         isInitialized = true
 

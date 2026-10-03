@@ -88,7 +88,7 @@ extension HotKey {
             }
         }, keyUpHandler: {
             Task { @MainActor in
-                WorkspacePreviewPanel.shared.shortcutKeyReleased(UInt16(binding.keyCode.carbonKeyCode))
+                WorkspacePreviewPanel.shared.hotkeyReleased(UInt16(binding.keyCode.carbonKeyCode))
             }
         })
     }
