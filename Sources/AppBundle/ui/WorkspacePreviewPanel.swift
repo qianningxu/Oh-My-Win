@@ -791,7 +791,7 @@ private struct WorkspacePreviewSwitcherSurface: View {
                 opacity: 0.95
             )
             if colorScheme == .light {
-                shape.fill(GeistColorTokens.previewBlack.swiftUIColor.opacity(0.12))
+                shape.fill(GeistColorTokens.previewBlack.swiftUIColor.opacity(0.05))
             }
             shape.fill(GeistColorTokens.previewWhite.swiftUIColor.opacity(0.01))
             shape.strokeBorder(GeistColorTokens.previewWhite.swiftUIColor.opacity(0.12), lineWidth: 0.5)
