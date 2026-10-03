@@ -21,15 +21,15 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertFalse(cycle.updateModifiers([]))
     }
 
-    func testOptionTabCyclesWindowsInDisplayedStackOrder() {
+    func testOptionTabCyclesWindowsInDisplayedRowOrder() {
         func item(_ id: UInt32, _ stack: UInt32?) -> WorkspacePreviewWindowItem {
             WorkspacePreviewWindowItem(id: id, title: "Window", appName: "App", appIcon: nil, thumbnail: nil, stackId: stack)
         }
         let windows = [item(1, 1), item(2, 2), item(3, 1)]
-        XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: 1, direction: 1), 3)
-        XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: 3, direction: 1), 2)
-        XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: 2, direction: 1), 1)
-        XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: 1, direction: -1), 2)
+        XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: 1, direction: 1), 2)
+        XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: 3, direction: 1), 1)
+        XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: 2, direction: 1), 3)
+        XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: 1, direction: -1), 3)
         XCTAssertEqual(workspacePreviewNextWindowId(windows, selectedWindowId: nil, direction: 1), 1)
         XCTAssertNil(workspacePreviewNextWindowId([], selectedWindowId: nil, direction: 1))
     }
@@ -135,14 +135,14 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(optionWorkspaceIndex(for: 82), 9)
     }
 
-    func testPreviewRowsKeepStacksSeparateAndLimitEachRowToFive() {
+    func testPreviewRowsFlowAcrossStacksAndLimitEachRowToFive() {
         func item(_ id: UInt32, _ stack: UInt32?) -> WorkspacePreviewWindowItem {
             WorkspacePreviewWindowItem(id: id, title: "Window", appName: "App", appIcon: nil, thumbnail: nil, stackId: stack)
         }
         let windows = [item(1, 1), item(2, 2), item(3, 1), item(4, nil)]
-        XCTAssertEqual(workspacePreviewStackRows(windows).map { $0.map(\.id) }, [[1, 3], [2], [4]])
-        let largeStack = (1...20).map { item(UInt32($0), 1) }
-        XCTAssertEqual(workspacePreviewStackRows(largeStack).map(\.count), [5, 5, 5])
+        XCTAssertEqual(workspacePreviewWindowRows(windows).map { $0.map(\.id) }, [[1, 2, 3, 4]])
+        let windowsAcrossStacks = (1...20).map { item(UInt32($0), UInt32($0 % 3)) }
+        XCTAssertEqual(workspacePreviewWindowRows(windowsAcrossStacks).map(\.count), [5, 5, 5])
     }
 
     func testWorkspaceArtworkFillsAssignedCanvasBounds() {

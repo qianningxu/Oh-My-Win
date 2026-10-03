@@ -167,7 +167,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         selectedWindowId = direction == 0 ? focus.windowOrNil?.windowId : nil
         isPreviewActive = true
         let screenFrame = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
-        let rows = workspacePreviewStackRows(items[currentIndex].windows)
+        let rows = workspacePreviewWindowRows(items[currentIndex].windows)
         let widestRow = rows.map(\.count).max() ?? 1
         let width = workspacePreviewPanelWidth(itemCount: items.count, availableWidth: screenFrame.width, windowCount: widestRow, workspaceAspectRatio: items[currentIndex].workspaceAspectRatio)
         let height = workspacePreviewPanelHeight(
@@ -613,29 +613,16 @@ func workspacePreviewFrame(for normalizedFrame: CGRect, in canvasRect: CGRect) -
     )
 }
 
-// Preserve tree order, keeping each stack separate. Large stacks continue in
-// another row after five windows; the panel scrolls beyond three visible rows.
-func workspacePreviewStackRows(_ windows: [WorkspacePreviewWindowItem]) -> [[WorkspacePreviewWindowItem]] {
-    var groups: [[WorkspacePreviewWindowItem]] = []
-    var indices: [UInt32: Int] = [:]
-    for window in windows.prefix(workspacePreviewMaximumWindows) {
-        let key = window.stackId ?? window.id
-        if let index = indices[key] {
-            groups[index].append(window)
-        } else {
-            indices[key] = groups.count
-            groups.append([window])
-        }
-    }
-    return groups.flatMap { group in
-        stride(from: 0, to: group.count, by: workspacePreviewColumns).map {
-            Array(group[$0..<min($0 + workspacePreviewColumns, group.count)])
-        }
+// Preserve window order across stacks, with at most five windows per row.
+func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem]) -> [[WorkspacePreviewWindowItem]] {
+    let displayed = Array(windows.prefix(workspacePreviewMaximumWindows))
+    return stride(from: 0, to: displayed.count, by: workspacePreviewColumns).map {
+        Array(displayed[$0..<min($0 + workspacePreviewColumns, displayed.count)])
     }
 }
 
 func workspacePreviewNextWindowId(_ windows: [WorkspacePreviewWindowItem], selectedWindowId: UInt32?, direction: Int) -> UInt32? {
-    let ordered = workspacePreviewStackRows(windows).flatMap { $0 }
+    let ordered = workspacePreviewWindowRows(windows).flatMap { $0 }
     guard !ordered.isEmpty else { return nil }
     guard let index = ordered.firstIndex(where: { $0.id == selectedWindowId }) else {
         return direction < 0 ? ordered.last?.id : ordered.first?.id
@@ -690,7 +677,7 @@ private struct WorkspacePreviewView: View {
         let workspaceSize = workspacePreviewWorkspaceSize(aspectRatio: current.workspaceAspectRatio)
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         GeometryReader { geometry in
-            let rows = workspacePreviewStackRows(current.windows)
+            let rows = workspacePreviewWindowRows(current.windows)
             let availableHeight = max(geometry.size.height - workspacePreviewPanelPadding * 2, 1)
             let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2, 1)
             let hasOtherWorkspaces = items.count > 1
@@ -702,7 +689,7 @@ private struct WorkspacePreviewView: View {
                     ScrollViewReader { proxy in
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: workspacePreviewColumnSpacing) {
-                                ForEach(Array(items.enumerated()).filter { $0.offset != currentIndex }, id: \.element.id) { index, item in
+                                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                                     WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex && selectedWindowId == nil)
                                         .id(index)
                                         .contentShape(Rectangle())
