@@ -698,6 +698,32 @@ private struct WorkspacePreviewView: View {
             let separatorHeight = workspacePreviewStackSeparatorHeight - workspacePreviewRingInset * 2
             let windowAreaHeight = max(availableHeight - (hasOtherWorkspaces ? workspaceRowHeight + separatorHeight : 0), 1)
             VStack(spacing: 0) {
+                if hasOtherWorkspaces {
+                    ScrollViewReader { proxy in
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: workspacePreviewColumnSpacing) {
+                                ForEach(Array(items.enumerated()).filter { $0.offset != currentIndex }, id: \.element.id) { index, item in
+                                    WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex && selectedWindowId == nil)
+                                        .id(index)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { onSelect(index) }
+                                }
+                            }
+                            .padding(workspacePreviewRingInset)
+                            .frame(minWidth: gridWidth)
+                        }
+                        .onChange(of: selectedIndex) { index in
+                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
+                        }
+                    }
+                    .frame(width: gridWidth, height: workspaceRowHeight)
+                    Rectangle()
+                        .fill(palette.workspacePreviewForeground(0.12))
+                        .frame(height: standardGap * 0.125)
+                        .padding(.horizontal, workspacePreviewRingInset)
+                        .padding(.top, standardGap)
+                        .padding(.bottom, standardGap * 3)
+                }
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .center, spacing: 0) {
@@ -762,32 +788,7 @@ private struct WorkspacePreviewView: View {
                     }
                 }
                 .frame(width: gridWidth, height: windowAreaHeight)
-                if hasOtherWorkspaces {
-                    Rectangle()
-                        .fill(palette.workspacePreviewForeground(0.12))
-                        .frame(height: standardGap * 0.125)
-                        .padding(.horizontal, workspacePreviewRingInset)
-                        .padding(.top, standardGap)
-                        .padding(.bottom, standardGap * 3)
-                    ScrollViewReader { proxy in
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: workspacePreviewColumnSpacing) {
-                                ForEach(Array(items.enumerated()).filter { $0.offset != currentIndex }, id: \.element.id) { index, item in
-                                    WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex && selectedWindowId == nil)
-                                        .id(index)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { onSelect(index) }
-                                }
-                            }
-                            .padding(workspacePreviewRingInset)
-                            .frame(minWidth: gridWidth)
-                        }
-                        .onChange(of: selectedIndex) { index in
-                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
-                        }
-                    }
-                    .frame(width: gridWidth, height: workspaceRowHeight)
-                }
+
             }
             .padding(workspacePreviewPanelPadding)
         }
