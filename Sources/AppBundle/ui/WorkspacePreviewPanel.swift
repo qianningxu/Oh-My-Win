@@ -649,15 +649,6 @@ private struct WorkspacePreviewLegacyCard: View {
         VStack(spacing: WinMuxSpacing.comfortable) {
             WorkspacePreviewLayoutCanvas(windows: item.legacyWindows, workspaceAspectRatio: item.workspaceAspectRatio)
                 .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
-                .background(palette.workspacePreviewTileBackground)
-                .clipShape(RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous))
-                .overlay {
-                    if isSelected {
-                        RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous)
-                            .strokeBorder(palette.workspacePreviewForeground(0.76), lineWidth: WinMuxSpacing.hairline)
-                    }
-                }
-                .shadow(color: palette.workspacePreviewShadow(0.24, lightOpacity: 0.14), radius: standardGap * 1.25, y: WinMuxSpacing.hairline)
             Text(item.displayName)
                 .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
