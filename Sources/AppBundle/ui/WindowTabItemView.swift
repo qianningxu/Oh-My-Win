@@ -10,6 +10,7 @@ struct WindowTabItemView: View {
     let showsTitle: Bool
     let reservesCloseButtonSpace: Bool
     var hidesTitle = false
+    var renameField: AnyView? = nil
     @Environment(\.colorScheme) var colorScheme
 
     @ObservedObject private var trayModel = TrayMenuModel.shared
@@ -20,10 +21,14 @@ struct WindowTabItemView: View {
             appIcon(size: iconSize)
 
             if showsTitle {
-                Text(hidesTitle ? "" : tab.title)
-                    .font(.system(size: WinMuxBarStyle.fontSize, weight: .regular))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                if let renameField {
+                    renameField
+                } else {
+                    Text(hidesTitle ? "" : tab.title)
+                        .font(.system(size: WinMuxBarStyle.fontSize, weight: .regular))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
             }
         }
         .foregroundStyle(tabForegroundStyle)
@@ -61,7 +66,7 @@ struct WindowTabRenameTextField: NSViewRepresentable {
         field.drawsBackground = false
         field.focusRingType = .none
         field.textColor = winMuxBarForegroundNSColor(WinMuxOverlayPalette(colorScheme: colorScheme))
-        field.font = .systemFont(ofSize: WinMuxBarStyle.fontSize, weight: .semibold)
+        field.font = .systemFont(ofSize: WinMuxBarStyle.fontSize, weight: .regular)
         field.lineBreakMode = .byTruncatingTail
         field.usesSingleLineMode = true
         field.cell?.wraps = false
@@ -74,7 +79,7 @@ struct WindowTabRenameTextField: NSViewRepresentable {
     }
 
     func updateNSView(_ field: NSTextField, context: Context) {
-        field.font = .systemFont(ofSize: WinMuxBarStyle.fontSize, weight: .semibold)
+        field.font = .systemFont(ofSize: WinMuxBarStyle.fontSize, weight: .regular)
         field.textColor = winMuxBarForegroundNSColor(WinMuxOverlayPalette(colorScheme: colorScheme))
         if field.stringValue != text {
             field.stringValue = text

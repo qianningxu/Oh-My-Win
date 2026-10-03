@@ -87,26 +87,31 @@ extension WindowTabStripView {
         context: WindowTabStripLayoutContext,
         itemHeight: CGFloat,
     ) -> some View {
-        ZStack(alignment: .leading) {
-            WindowTabItemView(
-                tab: tab,
-                width: context.tabWidth,
-                height: itemHeight,
-                isDragSource: false,
-                isHovered: true,
-                showsTitle: true,
-                reservesCloseButtonSpace: false,
-                hidesTitle: true
+        WindowTabItemView(
+            tab: tab,
+            width: context.tabWidth,
+            height: itemHeight,
+            isDragSource: false,
+            isHovered: true,
+            showsTitle: true,
+            reservesCloseButtonSpace: false,
+            renameField: AnyView(
+                WindowTabRenameTextField(
+                    text: $editingTabTitle,
+                    onCommit: { commitRenamingTab(tab) },
+                    onCancel: cancelRenamingTab,
+                )
+                .frame(width: renameFieldWidth(tabWidth: context.tabWidth), height: itemHeight)
             )
-            WindowTabRenameTextField(
-                text: $editingTabTitle,
-                onCommit: { commitRenamingTab(tab) },
-                onCancel: cancelRenamingTab,
-            )
-            .padding(.leading, WinMuxBarStyle.contentInset + workspaceSidebarAppIconSize + 2 + WinMuxBarStyle.iconSpacing)
-            .padding(.trailing, WinMuxBarStyle.contentInset)
-            .frame(width: context.tabWidth, height: itemHeight, alignment: .leading)
-        }
+        )
+    }
+
+    private func renameFieldWidth(tabWidth: CGFloat) -> CGFloat {
+        let font = NSFont.systemFont(ofSize: 15, weight: .regular)
+        let textWidth = (editingTabTitle as NSString).size(withAttributes: [.font: font]).width
+        let availableWidth = tabWidth - 2 * WinMuxBarStyle.contentInset
+            - (workspaceSidebarAppIconSize + 2) - WinMuxBarStyle.iconSpacing
+        return max(1, min(textWidth + 12, availableWidth))
     }
 
     func beginRenamingTab(_ tab: WindowTabItemViewModel) {
