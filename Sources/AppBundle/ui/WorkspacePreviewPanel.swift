@@ -598,12 +598,11 @@ private struct WorkspacePreviewView: View {
             let columns = workspacePreviewColumnCount(windowCount: current.windows.count, workspaceCount: items.count, availableWidth: geometry.size.width)
             HStack(alignment: .top, spacing: 0) {
                 VStack(spacing: WinMuxSpacing.section) {
-                    sectionHeading("Workspaces", palette: palette)
                     ScrollViewReader { proxy in
                         ScrollView(.vertical, showsIndicators: false) {
                             VStack(spacing: workspacePreviewRowSpacing) {
                                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                                    WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex)
+                                    WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex && selectedWindowId == nil)
                                         .id(index)
                                         .contentShape(Rectangle())
                                         .onTapGesture { onSelect(index) }
@@ -632,7 +631,7 @@ private struct WorkspacePreviewView: View {
                                         .overlay {
                                             if window.id == selectedWindowId {
                                                 RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
-                                                    .strokeBorder(palette.workspacePreviewForeground(0.76), lineWidth: WinMuxSpacing.hairline)
+                                                    .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: standardGap)
                                             }
                                         }
                                     Text(window.title)
@@ -678,6 +677,12 @@ private struct WorkspacePreviewLegacyCard: View {
             WorkspacePreviewLayoutCanvas(windows: item.legacyWindows, workspaceAspectRatio: item.workspaceAspectRatio)
                 .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
                 .clipShape(RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous))
+                .overlay {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
+                            .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: standardGap)
+                    }
+                }
             Text(item.displayName)
                 .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
