@@ -11,7 +11,8 @@ let workspacePreviewMaximumWindows = workspacePreviewColumns * workspacePreviewM
 private let workspacePreviewTileHeight = standardGap * 33
 private let workspacePreviewRowSpacing = standardGap * 3
 private let workspacePreviewPanelPadding = WinMuxSpacing.page
-let workspacePreviewMaximumWidth = standardGap * 280
+let workspacePreviewMaximumWidth = standardGap * 300.125
+let workspacePreviewCornerRadius = standardGap * 1.75
 let workspacePreviewMaximumHeight = standardGap * 180
 
 private struct WorkspacePreviewItem: Identifiable {
@@ -141,7 +142,8 @@ final class WorkspacePreviewPanel: NSPanelHud {
         let height = workspacePreviewPanelHeight(
             maximumWindowCount: items[currentIndex].windows.count,
             availableHeight: screenFrame.height,
-            workspaceCount: items.count
+            workspaceCount: items.count,
+            columns: workspacePreviewColumnCount(windowCount: items[currentIndex].windows.count, workspaceCount: items.count, availableWidth: width)
         )
         setFrame(CGRect(
             x: screenFrame.midX - width / 2,
@@ -538,23 +540,27 @@ func workspacePreviewFrame(for normalizedFrame: CGRect, in canvasRect: CGRect) -
     )
 }
 
-func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int) -> Int {
-    min(max(windowCount, workspaceCount - 1, 1), workspacePreviewColumns)
+func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity) -> Int {
+    let sidebarWidth = workspacePreviewWindowWidth + WinMuxSpacing.section * 2 + standardGap * 0.125
+    let availableGridWidth = availableWidth - workspacePreviewPanelPadding * 2 - sidebarWidth
+    let fittingColumns = availableWidth.isFinite ? max(Int((availableGridWidth + workspacePreviewRowSpacing) / (workspacePreviewWindowWidth + workspacePreviewRowSpacing)), 1) : workspacePreviewColumns
+    return min(max(windowCount, 1), workspacePreviewColumns, fittingColumns)
 }
 
 func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewMaximumWindows) -> CGFloat {
-    let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount)
-    return min(workspacePreviewWindowWidth * CGFloat(columns) +
-        workspacePreviewRowSpacing * CGFloat(columns - 1) + workspacePreviewPanelPadding * 2,
-        workspacePreviewMaximumWidth, availableWidth * 0.92)
+    let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
+    let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount, availableWidth: maximum)
+    let contentWidth = workspacePreviewWindowWidth * CGFloat(columns + 1) + workspacePreviewRowSpacing * CGFloat(columns - 1) +
+        WinMuxSpacing.section * 2 + standardGap * 0.125 + workspacePreviewPanelPadding * 2
+    return min(contentWidth, maximum)
 }
 
-func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2) -> CGFloat {
-    let rows = min(max((max(maximumWindowCount, 0) + workspacePreviewColumns - 1) / workspacePreviewColumns, 1), workspacePreviewMaximumRows)
+func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns) -> CGFloat {
+    let rows = min(max((max(maximumWindowCount, 0) + columns - 1) / columns, 1), workspacePreviewMaximumRows)
     let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewRowSpacing
-    // Heading, grid, divider spacing, legacy row and balanced outer padding.
-    let contentHeight = workspacePreviewPanelPadding * 2 + standardGap * 8 + gridHeight +
-        (workspaceCount > 1 ? standardGap * 8 + standardGap * 0.125 + standardGap * 34.5 : 0)
+    let visibleWorkspaces = min(max(workspaceCount, 1), 4)
+    let workspaceHeight = CGFloat(visibleWorkspaces) * (workspacePreviewWindowHeight + WinMuxSpacing.comfortable + standardGap * 5) + CGFloat(visibleWorkspaces - 1) * workspacePreviewRowSpacing
+    let contentHeight = workspacePreviewPanelPadding * 2 + standardGap * 8 + max(gridHeight, workspaceHeight)
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
 
@@ -571,17 +577,36 @@ private struct WorkspacePreviewView: View {
     var body: some View {
         let current = items[currentIndex]
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
-        let columns = workspacePreviewColumnCount(windowCount: current.windows.count, workspaceCount: items.count)
         GeometryReader { geometry in
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    Text(current.displayName)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(palette.workspacePreviewForeground(0.98))
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, minHeight: standardGap * 5)
-                        .padding(.bottom, WinMuxSpacing.section)
-                    ScrollView(.horizontal, showsIndicators: false) {
+            let columns = workspacePreviewColumnCount(windowCount: current.windows.count, workspaceCount: items.count, availableWidth: geometry.size.width)
+            HStack(alignment: .top, spacing: 0) {
+                VStack(spacing: WinMuxSpacing.section) {
+                    sectionHeading("Workspaces", palette: palette)
+                    ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(spacing: workspacePreviewRowSpacing) {
+                                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                                    WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex)
+                                        .id(index)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { onSelect(index) }
+                                }
+                            }
+                        }
+                        .onChange(of: selectedIndex) { index in
+                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
+                        }
+                        .onAppear { proxy.scrollTo(selectedIndex, anchor: .center) }
+                    }
+                }
+                .frame(width: workspacePreviewWindowWidth)
+                Rectangle()
+                    .fill(palette.workspacePreviewForeground(0.12))
+                    .frame(width: standardGap * 0.125)
+                    .padding(.horizontal, WinMuxSpacing.section)
+                VStack(spacing: WinMuxSpacing.section) {
+                    sectionHeading(current.displayName, palette: palette)
+                    ScrollView([.horizontal, .vertical], showsIndicators: false) {
                         LazyVGrid(columns: Array(repeating: GridItem(.fixed(workspacePreviewWindowWidth), spacing: workspacePreviewRowSpacing), count: columns), spacing: workspacePreviewRowSpacing) {
                             ForEach(Array(current.windows.prefix(workspacePreviewMaximumWindows))) { window in
                                 VStack(spacing: WinMuxSpacing.comfortable) {
@@ -589,7 +614,7 @@ private struct WorkspacePreviewView: View {
                                         .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
                                         .overlay {
                                             if window.id == selectedWindowId {
-                                                RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous)
+                                                RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
                                                     .strokeBorder(palette.workspacePreviewForeground(0.76), lineWidth: WinMuxSpacing.hairline)
                                             }
                                         }
@@ -605,38 +630,24 @@ private struct WorkspacePreviewView: View {
                                 .help(window.title)
                             }
                         }
-                        .frame(minHeight: workspacePreviewTileHeight)
-                    }
-                    if items.count > 1 {
-                    Rectangle()
-                        .fill(palette.workspacePreviewForeground(0.12))
-                        .frame(height: standardGap * 0.125)
-                        .padding(.vertical, WinMuxSpacing.panel)
-                    ScrollViewReader { proxy in
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(alignment: .top, spacing: workspacePreviewRowSpacing) {
-                                ForEach(Array(items.enumerated()).filter { $0.offset != currentIndex }, id: \.element.id) { index, item in
-                                    WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex)
-                                        .id(index)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { onSelect(index) }
-                                }
-                            }
-                            .frame(minWidth: max(geometry.size.width - workspacePreviewPanelPadding * 2, 0), alignment: .center)
-                        }
-                        .onChange(of: selectedIndex) { index in
-                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
-                        }
-                        .onAppear { proxy.scrollTo(selectedIndex, anchor: .center) }
-                    }
+                        .frame(minHeight: max(geometry.size.height - workspacePreviewPanelPadding * 2 - standardGap * 8, workspacePreviewTileHeight), alignment: .topLeading)
                     }
                 }
-                .padding(workspacePreviewPanelPadding)
+                .frame(maxWidth: .infinity, alignment: .top)
             }
+            .padding(workspacePreviewPanelPadding)
         }
         .background { WorkspacePreviewSwitcherSurface() }
         .clipShape(RoundedRectangle(cornerRadius: standardGap * 8, style: .continuous))
         .onExitCommand(perform: onDismiss)
+    }
+
+    private func sectionHeading(_ title: String, palette: WinMuxOverlayPalette) -> some View {
+        Text(title)
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(palette.workspacePreviewForeground(0.98))
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, minHeight: standardGap * 5)
     }
 }
 
@@ -649,6 +660,7 @@ private struct WorkspacePreviewLegacyCard: View {
         VStack(spacing: WinMuxSpacing.comfortable) {
             WorkspacePreviewLayoutCanvas(windows: item.legacyWindows, workspaceAspectRatio: item.workspaceAspectRatio)
                 .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
+                .clipShape(RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous))
             Text(item.displayName)
                 .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
@@ -708,7 +720,7 @@ private struct WorkspacePreviewLayoutCanvas: View {
                     }
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: WinMuxSpacing.regular, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous))
         }
     }
 
@@ -731,7 +743,7 @@ private struct WorkspacePreviewWindowTile: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous)
+                RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
                     .fill(palette.workspacePreviewTileBackground)
                 if let thumbnail = refreshedThumbnail ?? window.thumbnail {
                     Image(nsImage: thumbnail)
@@ -743,7 +755,7 @@ private struct WorkspacePreviewWindowTile: View {
                 }
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
-            .clipShape(RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous))
         }
         .shadow(color: palette.workspacePreviewShadow(0.24, lightOpacity: 0.14), radius: standardGap * 1.25, x: 0, y: WinMuxSpacing.hairline)
         .task(id: window.id) {
