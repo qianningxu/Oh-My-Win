@@ -10,6 +10,7 @@ public func getMessageWindow(messageModel: MessageModel) -> some Scene {
                 NSApp.setActivationPolicy(.accessory)
                 NSApplication.shared.windows.forEach {
                     if $0.identifier?.rawValue == messageWindowId {
+                        if messageModel.message == nil { $0.orderOut(nil) }
                         $0.level = WinMuxPanelLayer.overlay.level
                         $0.styleMask.remove(.miniaturizable) // Disable minimize button, because we don't unminimize the window on config error
                     }
@@ -40,9 +41,11 @@ struct MessageView: View {
     public var body: some View {
         VStack(alignment: .leading) {
             HStack(alignment: .center) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(palette.color(.amber, .color9))
-                    .font(.system(size: 48))
+                if model.message != nil {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(palette.color(.amber, .color9))
+                        .font(.system(size: 48))
+                }
                 Text("\(model.message?.description ?? "")")
                     .padding(.horizontal)
                     .focusable()
@@ -99,9 +102,7 @@ struct MessageView: View {
         }
         .onAppear {
             if model.message == nil {
-                DispatchQueue.main.async {
-                    if model.message == nil { dismiss() }
-                }
+                dismiss()
                 return
             }
             focus = true
