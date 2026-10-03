@@ -79,27 +79,36 @@ final class WorkspacePreviewPanelTest: XCTestCase {
     func testSingleWorkspacePanelUsesEqualTopAndHorizontalPadding() {
         XCTAssertEqual(
             workspacePreviewPanelWidth(itemCount: 1, availableWidth: 1_000),
-            standardGap * 108
+            920
         )
     }
 
     func testWorkspacePanelWidthIncludesSpacingBetweenCards() {
         XCTAssertEqual(
             workspacePreviewPanelWidth(itemCount: 2, availableWidth: 1_000),
-            standardGap * 207.5
+            920
         )
     }
 
     func testPreviewHasMaximumDimensionsEvenWithManyWorkspacesAndWindows() {
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 100, availableWidth: 3_000), workspacePreviewMaximumWidth)
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 100, availableHeight: 2_000), workspacePreviewMaximumHeight)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 100, availableWidth: 3_000), 996)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 100, availableHeight: 2_000), 670.5)
     }
 
     func testPreviewHeightStaysWithinSmallScreenAndUsesFixedRows() {
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 1_000), 236)
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 2, availableHeight: 1_000), 236)
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 3, availableHeight: 1_000), 396)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 1_000), 382.5)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 2, availableHeight: 1_000), 382.5)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 3, availableHeight: 1_000), 382.5)
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 100, availableHeight: 600), 480)
+    }
+
+    func testPreviewUsesFiveColumnsAndCapsAtThreeRows() {
+        XCTAssertEqual(workspacePreviewColumns, 5)
+        XCTAssertEqual(workspacePreviewMaximumWindows, 15)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 5, availableHeight: 2_000), 382.5)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 6, availableHeight: 2_000), 526.5)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2_000), 670.5)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 16, availableHeight: 2_000), 670.5)
     }
 
     func testWorkspacePanelWidthStaysWithinScreen() {
