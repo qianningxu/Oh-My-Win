@@ -4,17 +4,17 @@ import Common
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
 let workspacePreviewWindowWidth = standardGap * 55
-let workspacePreviewWindowHeight = standardGap * 34
+let workspacePreviewWindowHeight = workspacePreviewWindowWidth
 let workspacePreviewColumns = 5
 let workspacePreviewMaximumRows = 3
 let workspacePreviewMaximumWindows = workspacePreviewColumns * workspacePreviewMaximumRows
-private let workspacePreviewTileHeight = standardGap * 39
+private let workspacePreviewTileHeight = workspacePreviewWindowHeight + WinMuxSpacing.comfortable + standardGap * 3.5
 private let workspacePreviewRowSpacing = standardGap * 3
 private let workspacePreviewPanelPadding = WinMuxSpacing.page
-let workspacePreviewMaximumWidth = standardGap * 360.125
+let workspacePreviewMaximumWidth = standardGap * 420
 let workspacePreviewCornerRadius = standardGap * 1.75
 let workspacePreviewFocusRingWidth = standardGap * 2
-let workspacePreviewMaximumHeight = standardGap * 210
+let workspacePreviewMaximumHeight = standardGap * 250
 
 private struct WorkspacePreviewItem: Identifiable {
     let id: String
@@ -143,7 +143,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
                 displayName: workspaceDisplayName(workspace.name),
                 windows: workspacePreviewWindowItems(for: workspace),
                 legacyWindows: workspacePreviewWindowItems(for: workspace, workspaceRect: workspacePreviewRect(for: workspace)),
-                workspaceAspectRatio: workspacePreviewAspectRatio(for: workspacePreviewRect(for: workspace)),
+                workspaceAspectRatio: workspacePreviewAspectRatio(for: workspace.workspaceMonitor.rect),
             )
         }
         currentIndex = items.firstIndex { $0.workspace == current } ?? 0
@@ -153,13 +153,14 @@ final class WorkspacePreviewPanel: NSPanelHud {
         let screenFrame = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
         let rows = workspacePreviewStackRows(items[currentIndex].windows)
         let widestRow = rows.map(\.count).max() ?? 1
-        let width = workspacePreviewPanelWidth(itemCount: items.count, availableWidth: screenFrame.width, windowCount: widestRow)
+        let width = workspacePreviewPanelWidth(itemCount: items.count, availableWidth: screenFrame.width, windowCount: widestRow, workspaceAspectRatio: items[currentIndex].workspaceAspectRatio)
         let height = workspacePreviewPanelHeight(
             maximumWindowCount: items[currentIndex].windows.count,
             availableHeight: screenFrame.height,
             workspaceCount: max(items.count - 1, 0),
-            columns: workspacePreviewColumnCount(windowCount: widestRow, workspaceCount: items.count, availableWidth: width),
-            stackRowCount: rows.count
+            columns: workspacePreviewColumnCount(windowCount: widestRow, workspaceCount: items.count, availableWidth: width, workspaceAspectRatio: items[currentIndex].workspaceAspectRatio),
+            stackRowCount: rows.count,
+            workspaceAspectRatio: items[currentIndex].workspaceAspectRatio
         )
         setFrame(CGRect(
             x: screenFrame.midX - width / 2,
@@ -617,26 +618,33 @@ func workspacePreviewStackRows(_ windows: [WorkspacePreviewWindowItem]) -> [[Wor
     }
 }
 
-func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity) -> Int {
-    let sidebarWidth = workspacePreviewWindowWidth + WinMuxSpacing.section * 2 + standardGap * 0.125
+func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
+    let ratio = aspectRatio.isFinite && aspectRatio > 0 ? aspectRatio : 1
+    return ratio >= 1
+        ? CGSize(width: workspacePreviewWindowWidth * ratio, height: workspacePreviewWindowWidth)
+        : CGSize(width: workspacePreviewWindowWidth, height: workspacePreviewWindowWidth / ratio)
+}
+
+func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity, workspaceAspectRatio: CGFloat = 1.6) -> Int {
+    let sidebarWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width + WinMuxSpacing.section * 2 + standardGap * 0.125
     let availableGridWidth = availableWidth - workspacePreviewPanelPadding * 2 - sidebarWidth
     let fittingColumns = availableWidth.isFinite ? max(Int((availableGridWidth + workspacePreviewRowSpacing) / (workspacePreviewWindowWidth + workspacePreviewRowSpacing)), 1) : workspacePreviewColumns
     return min(max(windowCount, 1), workspacePreviewColumns, fittingColumns)
 }
 
-func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewMaximumWindows) -> CGFloat {
+func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewMaximumWindows, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
     let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
-    let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount, availableWidth: maximum)
-    let contentWidth = workspacePreviewWindowWidth * CGFloat(columns + 1) + workspacePreviewRowSpacing * CGFloat(columns - 1) +
+    let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
+    let contentWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width + workspacePreviewWindowWidth * CGFloat(columns) + workspacePreviewRowSpacing * CGFloat(columns - 1) +
         WinMuxSpacing.section * 2 + standardGap * 0.125 + workspacePreviewPanelPadding * 2
     return min(contentWidth, maximum)
 }
 
-func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil) -> CGFloat {
+func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
     let rows = min(max(stackRowCount ?? ((max(maximumWindowCount, 0) + columns - 1) / columns), 1), workspacePreviewMaximumRows)
     let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewRowSpacing
     let visibleWorkspaces = min(max(workspaceCount, 1), 4)
-    let workspaceHeight = CGFloat(visibleWorkspaces) * (workspacePreviewWindowHeight + WinMuxSpacing.comfortable + standardGap * 5) + CGFloat(visibleWorkspaces - 1) * workspacePreviewRowSpacing
+    let workspaceHeight = CGFloat(visibleWorkspaces) * (workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + WinMuxSpacing.comfortable + standardGap * 5) + CGFloat(visibleWorkspaces - 1) * workspacePreviewRowSpacing
     let contentHeight = workspacePreviewPanelPadding * 2 + standardGap * 8 + max(gridHeight, workspaceHeight)
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
@@ -653,11 +661,12 @@ private struct WorkspacePreviewView: View {
 
     var body: some View {
         let current = items[currentIndex]
+        let workspaceSize = workspacePreviewWorkspaceSize(aspectRatio: current.workspaceAspectRatio)
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         GeometryReader { geometry in
             let rows = workspacePreviewStackRows(current.windows)
             let availableHeight = max(geometry.size.height - workspacePreviewPanelPadding * 2, 1)
-            let sidebarWidth = workspacePreviewWindowWidth + WinMuxSpacing.section * 2 + standardGap * 0.125
+            let sidebarWidth = workspaceSize.width + WinMuxSpacing.section * 2 + standardGap * 0.125
             let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2 - sidebarWidth, 1)
             HStack(alignment: .center, spacing: 0) {
                 ScrollViewReader { proxy in
@@ -670,14 +679,14 @@ private struct WorkspacePreviewView: View {
                                     .onTapGesture { onSelect(index) }
                             }
                         }
-                        .frame(width: workspacePreviewWindowWidth)
+                        .frame(width: workspaceSize.width)
                         .frame(minHeight: availableHeight, alignment: .center)
                     }
                     .onChange(of: selectedIndex) { index in
                         withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
                     }
                 }
-                .frame(width: workspacePreviewWindowWidth, height: availableHeight)
+                .frame(width: workspaceSize.width, height: availableHeight)
                 Rectangle()
                     .fill(palette.workspacePreviewForeground(0.12))
                     .frame(width: standardGap * 0.125)
@@ -748,14 +757,15 @@ private struct WorkspacePreviewLegacyCard: View {
     @Environment(\.colorScheme) private var colorScheme
     var body: some View {
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
+        let size = workspacePreviewWorkspaceSize(aspectRatio: item.workspaceAspectRatio)
         VStack(spacing: WinMuxSpacing.comfortable) {
             Text(item.displayName)
                 .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
                 .lineLimit(1)
-                .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
+                .frame(width: size.width, height: standardGap * 5)
             WorkspacePreviewLayoutCanvas(windows: item.legacyWindows, workspaceAspectRatio: item.workspaceAspectRatio)
-                .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
+                .frame(width: size.width, height: size.height)
                 .clipShape(RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous))
                 .overlay {
                     if isSelected {
@@ -765,7 +775,7 @@ private struct WorkspacePreviewLegacyCard: View {
                 }
 
         }
-        .frame(width: workspacePreviewWindowWidth)
+        .frame(width: size.width)
     }
 }
 

@@ -113,7 +113,7 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(workspacePreviewStackRows(largeStack).map(\.count), [5, 5, 5])
     }
 
-    func testWorkspaceArtworkFillsSameBoundsAsWindowThumbnail() {
+    func testWorkspaceArtworkFillsAssignedCanvasBounds() {
         let window = WorkspacePreviewWindowItem(id: 1, title: "Window", appName: "App", appIcon: nil, thumbnail: nil,
                                                layoutFrame: CGRect(x: 0.02, y: 0.04, width: 0.96, height: 0.92))
         let size = CGSize(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
@@ -122,18 +122,25 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(placed[0].frame, CGRect(origin: .zero, size: size))
     }
 
+    func testWorkspaceScreenRatioAndSquareWindowsShareScale() {
+        XCTAssertEqual(workspacePreviewWindowWidth, workspacePreviewWindowHeight)
+        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 1.6), CGSize(width: 352, height: 220))
+        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 0.625), CGSize(width: 220, height: 352))
+        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 0), CGSize(width: 220, height: 220))
+    }
+
     func testPreviewColumnWidthAdaptsAndReservesWorkspaceColumn() {
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 2, availableWidth: 2000, windowCount: 1), 512.5)
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 3), 976.5)
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 15), 1440.5)
-        XCTAssertEqual(workspacePreviewColumnCount(windowCount: 15, workspaceCount: 6, availableWidth: 976.5), 3)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 2, availableWidth: 2000, windowCount: 1), 644.5)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 3), 1108.5)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 15), 1572.5)
+        XCTAssertEqual(workspacePreviewColumnCount(windowCount: 15, workspaceCount: 6, availableWidth: 1108.5), 3)
         XCTAssertLessThanOrEqual(workspacePreviewPanelWidth(itemCount: 100, availableWidth: 600), 552)
     }
 
     func testPreviewHeightFitsBothColumnsWithinScreen() {
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 1), 242)
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 1), 572)
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 6), 764)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 1), 326)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 1), 824)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 6), 1000)
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 100, availableHeight: 600, workspaceCount: 100), 480)
         XCTAssertEqual(workspacePreviewMaximumWindows, 15)
         XCTAssertEqual(workspacePreviewCornerRadius, 7)
