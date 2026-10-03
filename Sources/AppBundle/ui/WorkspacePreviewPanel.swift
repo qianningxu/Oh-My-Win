@@ -723,50 +723,65 @@ private struct WorkspacePreviewView: View {
                         .padding(.horizontal, workspacePreviewRingInset)
                         .padding(.top, workspacePreviewRingInset)
                     ScrollViewReader { proxy in
-                        ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                        ScrollView(.vertical, showsIndicators: false) {
                             VStack(alignment: .center, spacing: 0) {
                                 ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                                     if index > 0 {
                                         Rectangle()
                                             .fill(palette.workspacePreviewForeground(0.12))
                                             .frame(height: standardGap * 0.125)
-                                            .padding(.top, standardGap * 5)
-                                            .padding(.bottom, workspacePreviewFocusRingWidth + standardGap * 4)
+                                            .padding(.horizontal, workspacePreviewRingInset)
+                                            .padding(.top, standardGap)
+                                            .padding(.bottom, standardGap * 3)
                                     }
-                                    HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
-                                        ForEach(row) { window in
-                                            VStack(spacing: workspacePreviewCaptionSpacing) {
-                                                WorkspacePreviewWindowTile(window: window)
-                                                    .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
-                                                    .overlay {
-                                                        if window.id == selectedWindowId {
-                                                            RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
-                                                                .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
-                                                                .padding(-workspacePreviewFocusRingWidth)
-                                                        }
+                                    ScrollViewReader { rowProxy in
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
+                                                ForEach(row) { window in
+                                                    VStack(spacing: workspacePreviewCaptionSpacing) {
+                                                        WorkspacePreviewWindowTile(window: window)
+                                                            .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
+                                                            .overlay {
+                                                                if window.id == selectedWindowId {
+                                                                    RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
+                                                                        .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
+                                                                        .padding(-workspacePreviewFocusRingWidth)
+                                                                }
+                                                            }
+                                                        Text(window.title)
+                                                            .font(.system(size: 13, weight: .medium))
+                                                            .foregroundStyle(palette.workspacePreviewForeground(0.98))
+                                                            .lineLimit(1)
+                                                            .multilineTextAlignment(.center)
+                                                            .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
                                                     }
-                                                Text(window.title)
-                                                    .font(.system(size: 13, weight: .medium))
-                                                    .foregroundStyle(palette.workspacePreviewForeground(0.98))
-                                                    .lineLimit(1)
-                                                    .multilineTextAlignment(.center)
-                                                    .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
+                                                    .frame(width: workspacePreviewWindowWidth, height: workspacePreviewTileHeight)
+                                                    .contentShape(Rectangle())
+                                                    .onTapGesture { onWindowSelect(window.id) }
+                                                    .help(window.title)
+                                                    .id(window.id)
+                                                }
                                             }
-                                            .frame(width: workspacePreviewWindowWidth, height: workspacePreviewTileHeight)
-                                            .contentShape(Rectangle())
-                                            .onTapGesture { onWindowSelect(window.id) }
-                                            .help(window.title)
-                                            .id(window.id)
+                                            .padding(.horizontal, workspacePreviewRingInset)
+                                            .frame(minWidth: gridWidth)
+                                            .padding(.vertical, workspacePreviewRingInset)
+                                        }
+                                        .frame(width: gridWidth, height: workspacePreviewTileHeight + workspacePreviewRingInset * 2)
+                                        .onChange(of: selectedWindowId) { id in
+                                            if let id, row.contains(where: { $0.id == id }) {
+                                                withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { rowProxy.scrollTo(id, anchor: .center) }
+                                            }
                                         }
                                     }
+                                    .id(index)
                                 }
                             }
-                            .padding(workspacePreviewRingInset)
-                            .frame(minWidth: gridWidth, minHeight: max(availableHeight - workspacePreviewRingInset - standardGap * 5, 1), alignment: .top)
+                            .frame(width: gridWidth)
+                            .frame(minHeight: max(availableHeight - workspacePreviewRingInset - standardGap * 5, 1), alignment: .top)
                         }
                         .onChange(of: selectedWindowId) { id in
-                            if let id {
-                                withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(id, anchor: .center) }
+                            if let id, let index = rows.firstIndex(where: { $0.contains(where: { $0.id == id }) }) {
+                                withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
                             }
                         }
                     }
