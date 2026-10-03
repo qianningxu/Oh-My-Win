@@ -8,8 +8,9 @@ let workspacePreviewWindowHeight = workspacePreviewWindowWidth
 let workspacePreviewColumns = 5
 let workspacePreviewMaximumRows = 3
 let workspacePreviewMaximumWindows = workspacePreviewColumns * workspacePreviewMaximumRows
-private let workspacePreviewTileHeight = workspacePreviewWindowHeight + WinMuxSpacing.comfortable + standardGap * 3.5
-private let workspacePreviewRowSpacing = standardGap * 3
+private let workspacePreviewCaptionSpacing = standardGap * 3
+private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 3.5
+private let workspacePreviewRowSpacing = standardGap * 6
 private let workspacePreviewPanelPadding = WinMuxSpacing.page
 let workspacePreviewMaximumWidth = standardGap * 420
 let workspacePreviewCornerRadius = standardGap * 1.75
@@ -644,7 +645,7 @@ func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFlo
     let rows = min(max(stackRowCount ?? ((max(maximumWindowCount, 0) + columns - 1) / columns), 1), workspacePreviewMaximumRows)
     let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewRowSpacing
     let visibleWorkspaces = min(max(workspaceCount, 1), 4)
-    let workspaceHeight = CGFloat(visibleWorkspaces) * (workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + WinMuxSpacing.comfortable + standardGap * 5) + CGFloat(visibleWorkspaces - 1) * workspacePreviewRowSpacing
+    let workspaceHeight = CGFloat(visibleWorkspaces) * (workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5) + CGFloat(visibleWorkspaces - 1) * workspacePreviewRowSpacing
     let contentHeight = workspacePreviewPanelPadding * 2 + standardGap * 8 + max(gridHeight, workspaceHeight)
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
@@ -699,13 +700,14 @@ private struct WorkspacePreviewView: View {
                                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                                     HStack(alignment: .center, spacing: workspacePreviewRowSpacing) {
                                         ForEach(row) { window in
-                                            VStack(spacing: WinMuxSpacing.comfortable) {
+                                            VStack(spacing: workspacePreviewCaptionSpacing) {
                                                 WorkspacePreviewWindowTile(window: window)
                                                     .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
                                                     .overlay {
                                                         if window.id == selectedWindowId {
-                                                            RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
+                                                            RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
                                                                 .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
+                                                                .padding(-workspacePreviewFocusRingWidth)
                                                         }
                                                     }
                                                 Text(window.title)
@@ -758,7 +760,7 @@ private struct WorkspacePreviewLegacyCard: View {
     var body: some View {
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         let size = workspacePreviewWorkspaceSize(aspectRatio: item.workspaceAspectRatio)
-        VStack(spacing: WinMuxSpacing.comfortable) {
+        VStack(spacing: workspacePreviewCaptionSpacing) {
             Text(item.displayName)
                 .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
@@ -769,8 +771,9 @@ private struct WorkspacePreviewLegacyCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous))
                 .overlay {
                     if isSelected {
-                        RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
+                        RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
                             .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
+                            .padding(-workspacePreviewFocusRingWidth)
                     }
                 }
 
