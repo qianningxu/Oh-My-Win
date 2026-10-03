@@ -50,7 +50,7 @@ on-mode-changed = []
     ]
 
 [mode.main.binding]
-    cmd-s = 'focus --wrap-around pane-next'
+    alt-d = 'focus --wrap-around pane-next'
     alt-s = 'focus --wrap-around stack-next'
     ctrl-tab = []
     ctrl-shift-tab = []

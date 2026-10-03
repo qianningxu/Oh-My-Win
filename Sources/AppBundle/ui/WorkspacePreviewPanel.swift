@@ -11,6 +11,7 @@ let workspacePreviewMaximumWindows = workspacePreviewColumns * workspacePreviewM
 private let workspacePreviewCaptionSpacing = workspacePreviewFocusRingWidth + standardGap * 2
 private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 3.5
 private let workspacePreviewRowSpacing = workspacePreviewFocusRingWidth + standardGap * 3
+private let workspacePreviewStackSeparatorHeight = workspacePreviewFocusRingWidth + standardGap * 6 + standardGap * 0.125
 private let workspacePreviewColumnSpacing = workspacePreviewFocusRingWidth * 2 + standardGap * 3
 private let workspacePreviewRingInset = workspacePreviewFocusRingWidth + standardGap
 private let workspacePreviewPanelPadding = WinMuxSpacing.page
@@ -667,7 +668,7 @@ func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowC
 
 func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
     let rows = min(max(stackRowCount ?? ((max(maximumWindowCount, 0) + columns - 1) / columns), 1), workspacePreviewMaximumRows)
-    let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewRowSpacing
+    let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewStackSeparatorHeight
     let visibleWorkspaces = min(max(workspaceCount, 1), 4)
     let workspaceHeight = CGFloat(visibleWorkspaces) * (workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5) + CGFloat(visibleWorkspaces - 1) * workspacePreviewRowSpacing
     let contentHeight = workspacePreviewPanelPadding * 2 + standardGap * 10 + max(gridHeight, workspaceHeight) + workspacePreviewRingInset * 2
@@ -693,7 +694,7 @@ private struct WorkspacePreviewView: View {
             let availableHeight = max(geometry.size.height - workspacePreviewPanelPadding * 2, 1)
             let sidebarWidth = workspaceSize.width + workspacePreviewRingInset * 2 + WinMuxSpacing.section * 2 + standardGap * 0.125
             let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2 - sidebarWidth, 1)
-            HStack(alignment: .center, spacing: 0) {
+            HStack(alignment: .top, spacing: 0) {
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: workspacePreviewRowSpacing) {
@@ -706,7 +707,7 @@ private struct WorkspacePreviewView: View {
                         }
                         .frame(width: workspaceSize.width)
                         .padding(workspacePreviewRingInset)
-                        .frame(minHeight: availableHeight, alignment: .center)
+                        .frame(minHeight: availableHeight, alignment: .top)
                     }
                     .onChange(of: selectedIndex) { index in
                         withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
@@ -717,12 +718,21 @@ private struct WorkspacePreviewView: View {
                     .fill(palette.workspacePreviewForeground(0.12))
                     .frame(width: standardGap * 0.125)
                     .padding(.horizontal, WinMuxSpacing.section)
-                ScrollViewReader { proxy in
-                    ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                        VStack(spacing: workspacePreviewCaptionSpacing) {
-                            sectionHeading(current.displayName, palette: palette)
-                            VStack(alignment: .center, spacing: workspacePreviewRowSpacing) {
-                                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                VStack(spacing: standardGap) {
+                    sectionHeading(current.displayName, palette: palette)
+                        .padding(.horizontal, workspacePreviewRingInset)
+                        .padding(.top, workspacePreviewRingInset)
+                    ScrollViewReader { proxy in
+                        ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                            VStack(alignment: .center, spacing: 0) {
+                                ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                                    if index > 0 {
+                                        Rectangle()
+                                            .fill(palette.workspacePreviewForeground(0.12))
+                                            .frame(height: standardGap * 0.125)
+                                            .padding(.top, standardGap * 3)
+                                            .padding(.bottom, workspacePreviewFocusRingWidth + standardGap * 3)
+                                    }
                                     HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
                                         ForEach(row) { window in
                                             VStack(spacing: workspacePreviewCaptionSpacing) {
@@ -751,17 +761,18 @@ private struct WorkspacePreviewView: View {
                                     }
                                 }
                             }
+                            .padding(workspacePreviewRingInset)
+                            .frame(minWidth: gridWidth, minHeight: max(availableHeight - workspacePreviewRingInset - standardGap * 6, 1), alignment: .top)
                         }
-                        .padding(workspacePreviewRingInset)
-                        .frame(minWidth: gridWidth, minHeight: availableHeight, alignment: .center)
-                    }
-                    .onChange(of: selectedWindowId) { id in
-                        if let id {
-                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(id, anchor: .center) }
+                        .onChange(of: selectedWindowId) { id in
+                            if let id {
+                                withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(id, anchor: .center) }
+                            }
                         }
                     }
                 }
-                .frame(width: gridWidth, height: availableHeight)
+                .frame(width: gridWidth, height: availableHeight, alignment: .top)
+
             }
             .padding(workspacePreviewPanelPadding)
         }

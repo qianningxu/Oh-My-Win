@@ -171,7 +171,7 @@ final class WorkspacePreviewPanelTest: XCTestCase {
 
     func testPreviewHeightFitsBothColumnsWithinScreen() {
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 1), 380)
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 1), 930)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 1), 955)
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 6), 1000)
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 100, availableHeight: 600, workspaceCount: 100), 480)
         XCTAssertEqual(workspacePreviewMaximumWindows, 15)
