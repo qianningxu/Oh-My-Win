@@ -3,17 +3,18 @@ import SwiftUI
 import Common
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
-let workspacePreviewWindowWidth = standardGap * 45
-let workspacePreviewWindowHeight = standardGap * 28
+let workspacePreviewWindowWidth = standardGap * 55
+let workspacePreviewWindowHeight = standardGap * 34
 let workspacePreviewColumns = 5
 let workspacePreviewMaximumRows = 3
 let workspacePreviewMaximumWindows = workspacePreviewColumns * workspacePreviewMaximumRows
-private let workspacePreviewTileHeight = standardGap * 33
+private let workspacePreviewTileHeight = standardGap * 39
 private let workspacePreviewRowSpacing = standardGap * 3
 private let workspacePreviewPanelPadding = WinMuxSpacing.page
-let workspacePreviewMaximumWidth = standardGap * 300.125
+let workspacePreviewMaximumWidth = standardGap * 360.125
 let workspacePreviewCornerRadius = standardGap * 1.75
-let workspacePreviewMaximumHeight = standardGap * 180
+let workspacePreviewFocusRingWidth = standardGap * 2
+let workspacePreviewMaximumHeight = standardGap * 210
 
 private struct WorkspacePreviewItem: Identifiable {
     let id: String
@@ -655,72 +656,75 @@ private struct WorkspacePreviewView: View {
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         GeometryReader { geometry in
             let rows = workspacePreviewStackRows(current.windows)
-            HStack(alignment: .top, spacing: 0) {
-                VStack(spacing: WinMuxSpacing.section) {
-                    ScrollViewReader { proxy in
-                        ScrollView(.vertical, showsIndicators: false) {
-                            VStack(spacing: workspacePreviewRowSpacing) {
-                                ForEach(Array(items.enumerated()).filter { $0.offset != currentIndex }, id: \.element.id) { index, item in
-                                    WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex && selectedWindowId == nil)
-                                        .id(index)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { onSelect(index) }
-                                }
+            let availableHeight = max(geometry.size.height - workspacePreviewPanelPadding * 2, 1)
+            let sidebarWidth = workspacePreviewWindowWidth + WinMuxSpacing.section * 2 + standardGap * 0.125
+            let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2 - sidebarWidth, 1)
+            HStack(alignment: .center, spacing: 0) {
+                ScrollViewReader { proxy in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: workspacePreviewRowSpacing) {
+                            ForEach(Array(items.enumerated()).filter { $0.offset != currentIndex }, id: \.element.id) { index, item in
+                                WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex && selectedWindowId == nil)
+                                    .id(index)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { onSelect(index) }
                             }
                         }
-                        .onChange(of: selectedIndex) { index in
-                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
-                        }
-                        .onAppear { proxy.scrollTo(selectedIndex, anchor: .center) }
+                        .frame(width: workspacePreviewWindowWidth)
+                        .frame(minHeight: availableHeight, alignment: .center)
+                    }
+                    .onChange(of: selectedIndex) { index in
+                        withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
                     }
                 }
-                .frame(width: workspacePreviewWindowWidth)
+                .frame(width: workspacePreviewWindowWidth, height: availableHeight)
                 Rectangle()
                     .fill(palette.workspacePreviewForeground(0.12))
                     .frame(width: standardGap * 0.125)
                     .padding(.horizontal, WinMuxSpacing.section)
-                VStack(spacing: WinMuxSpacing.section) {
-                    sectionHeading(current.displayName, palette: palette)
-                    ScrollViewReader { proxy in
+                ScrollViewReader { proxy in
                     ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: workspacePreviewRowSpacing) {
-                            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                                HStack(alignment: .top, spacing: workspacePreviewRowSpacing) {
-                                    ForEach(row) { window in
-                                        VStack(spacing: WinMuxSpacing.comfortable) {
-                                            WorkspacePreviewWindowTile(window: window)
-                                                .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
-                                                .overlay {
-                                                    if window.id == selectedWindowId {
-                                                        RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
-                                                            .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: standardGap)
+                        VStack(spacing: WinMuxSpacing.section) {
+                            sectionHeading(current.displayName, palette: palette)
+                            VStack(alignment: .center, spacing: workspacePreviewRowSpacing) {
+                                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                                    HStack(alignment: .center, spacing: workspacePreviewRowSpacing) {
+                                        ForEach(row) { window in
+                                            VStack(spacing: WinMuxSpacing.comfortable) {
+                                                WorkspacePreviewWindowTile(window: window)
+                                                    .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
+                                                    .overlay {
+                                                        if window.id == selectedWindowId {
+                                                            RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
+                                                                .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
+                                                        }
                                                     }
-                                                }
-                                            Text(window.title)
-                                                .font(.system(size: 11, weight: .medium))
-                                                .foregroundStyle(palette.workspacePreviewForeground(0.98))
-                                                .lineLimit(1)
-                                                .frame(width: workspacePreviewWindowWidth, height: standardGap * 3.5)
+                                                Text(window.title)
+                                                    .font(.system(size: 11, weight: .medium))
+                                                    .foregroundStyle(palette.workspacePreviewForeground(0.98))
+                                                    .lineLimit(1)
+                                                    .multilineTextAlignment(.center)
+                                                    .frame(width: workspacePreviewWindowWidth, height: standardGap * 3.5)
+                                            }
+                                            .frame(width: workspacePreviewWindowWidth, height: workspacePreviewTileHeight)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture { onWindowSelect(window.id) }
+                                            .help(window.title)
+                                            .id(window.id)
                                         }
-                                        .frame(width: workspacePreviewWindowWidth, height: workspacePreviewTileHeight)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { onWindowSelect(window.id) }
-                                        .help(window.title)
-                                        .id(window.id)
                                     }
                                 }
                             }
                         }
-                        .frame(minHeight: max(geometry.size.height - workspacePreviewPanelPadding * 2 - standardGap * 8, workspacePreviewTileHeight), alignment: .topLeading)
+                        .frame(minWidth: gridWidth, minHeight: availableHeight, alignment: .center)
                     }
                     .onChange(of: selectedWindowId) { id in
                         if let id {
                             withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(id, anchor: .center) }
                         }
                     }
-                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .top)
+                .frame(width: gridWidth, height: availableHeight)
             }
             .padding(workspacePreviewPanelPadding)
         }
@@ -745,20 +749,21 @@ private struct WorkspacePreviewLegacyCard: View {
     var body: some View {
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         VStack(spacing: WinMuxSpacing.comfortable) {
+            Text(item.displayName)
+                .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
+                .lineLimit(1)
+                .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
             WorkspacePreviewLayoutCanvas(windows: item.legacyWindows, workspaceAspectRatio: item.workspaceAspectRatio)
                 .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
                 .clipShape(RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous))
                 .overlay {
                     if isSelected {
                         RoundedRectangle(cornerRadius: workspacePreviewCornerRadius, style: .continuous)
-                            .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: standardGap)
+                            .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
                     }
                 }
-            Text(item.displayName)
-                .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-                .foregroundStyle(palette.workspacePreviewForeground(isSelected ? 0.98 : 0.76))
-                .lineLimit(1)
-                .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
+
         }
         .frame(width: workspacePreviewWindowWidth)
     }
