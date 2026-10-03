@@ -173,9 +173,9 @@ final class WorkspacePreviewPanel: NSPanelHud {
         let height = workspacePreviewPanelHeight(
             maximumWindowCount: items[currentIndex].windows.count,
             availableHeight: screenFrame.height,
-            workspaceCount: max(items.count - 1, 0),
+            workspaceCount: items.count,
             columns: workspacePreviewColumnCount(windowCount: widestRow, workspaceCount: items.count, availableWidth: width, workspaceAspectRatio: items[currentIndex].workspaceAspectRatio),
-            stackRowCount: rows.count,
+            workspaceColumns: workspacePreviewWorkspaceColumnCount(itemCount: items.count, availableWidth: width, workspaceAspectRatio: items[currentIndex].workspaceAspectRatio),
             workspaceAspectRatio: items[currentIndex].workspaceAspectRatio
         )
         setFrame(CGRect(
@@ -643,20 +643,32 @@ func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availabl
     return min(max(windowCount, 1), workspacePreviewColumns, fittingColumns)
 }
 
+func workspacePreviewWorkspaceColumnCount(itemCount: Int, availableWidth: CGFloat, workspaceAspectRatio: CGFloat = 1.6) -> Int {
+    let tileWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width
+    let contentWidth = availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2
+    let fittingColumns = max(Int((contentWidth + workspacePreviewColumnSpacing) / (tileWidth + workspacePreviewColumnSpacing)), 1)
+    return min(max(itemCount, 1), 4, fittingColumns)
+}
+
 func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewMaximumWindows, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
     let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
     let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
     let windowWidth = workspacePreviewWindowWidth * CGFloat(columns) + workspacePreviewColumnSpacing * CGFloat(columns - 1)
-    let workspaceWidth = itemCount > 1 ? workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width : 0
+    let workspaceColumns = workspacePreviewWorkspaceColumnCount(itemCount: itemCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
+    let workspaceWidth = itemCount > 1
+        ? workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width * CGFloat(workspaceColumns) + workspacePreviewColumnSpacing * CGFloat(workspaceColumns - 1)
+        : 0
     let contentWidth = max(windowWidth, workspaceWidth) + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2
     return min(contentWidth, maximum)
 }
 
-func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
+func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil, workspaceColumns: Int = 4, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
     let rows = min(max(stackRowCount ?? ((max(maximumWindowCount, 0) + columns - 1) / columns), 1), workspacePreviewMaximumRows)
     let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewStackSeparatorHeight
-    let workspaceHeight = workspaceCount > 0
-        ? workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5 + workspacePreviewStackSeparatorHeight
+    let workspaceRows = workspaceCount > 1 ? (workspaceCount + workspaceColumns - 1) / workspaceColumns : 0
+    let workspaceTileHeight = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5
+    let workspaceHeight = workspaceRows > 0
+        ? CGFloat(workspaceRows) * workspaceTileHeight + CGFloat(workspaceRows - 1) * workspacePreviewColumnSpacing + workspacePreviewStackSeparatorHeight
         : 0
     let contentHeight = workspacePreviewPanelPadding * 2 + gridHeight + workspacePreviewRingInset * 2 + workspaceHeight
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
@@ -674,108 +686,78 @@ private struct WorkspacePreviewView: View {
 
     var body: some View {
         let current = items[currentIndex]
-        let workspaceSize = workspacePreviewWorkspaceSize(aspectRatio: current.workspaceAspectRatio)
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         GeometryReader { geometry in
-            let rows = workspacePreviewWindowRows(current.windows)
-            let availableHeight = max(geometry.size.height - workspacePreviewPanelPadding * 2, 1)
             let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2, 1)
-            let hasOtherWorkspaces = items.count > 1
-            let workspaceRowHeight = workspaceSize.height + workspacePreviewCaptionSpacing + standardGap * 5 + workspacePreviewRingInset * 2
-            let separatorHeight = workspacePreviewStackSeparatorHeight - workspacePreviewRingInset * 2
-            let windowAreaHeight = max(availableHeight - (hasOtherWorkspaces ? workspaceRowHeight + separatorHeight : 0), 1)
-            VStack(spacing: 0) {
-                if hasOtherWorkspaces {
-                    ScrollViewReader { proxy in
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: workspacePreviewColumnSpacing) {
-                                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                                    WorkspacePreviewLegacyCard(item: item, isSelected: index == selectedIndex && selectedWindowId == nil)
-                                        .id(index)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { onSelect(index) }
+            let columns = workspacePreviewColumnCount(windowCount: current.windows.count, workspaceCount: items.count, availableWidth: geometry.size.width, workspaceAspectRatio: current.workspaceAspectRatio)
+            let displayed = Array(current.windows.prefix(workspacePreviewMaximumWindows))
+            let rows = stride(from: 0, to: displayed.count, by: columns).map { Array(displayed[$0..<min($0 + columns, displayed.count)]) }
+            let workspaceColumns = workspacePreviewWorkspaceColumnCount(itemCount: items.count, availableWidth: geometry.size.width, workspaceAspectRatio: current.workspaceAspectRatio)
+            let workspaceRows = stride(from: 0, to: items.count, by: workspaceColumns).map { Array($0..<min($0 + workspaceColumns, items.count)) }
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        if items.count > 1 {
+                            VStack(spacing: workspacePreviewColumnSpacing) {
+                                ForEach(Array(workspaceRows.enumerated()), id: \.offset) { _, row in
+                                    HStack(spacing: workspacePreviewColumnSpacing) {
+                                        ForEach(row, id: \.self) { index in
+                                            WorkspacePreviewLegacyCard(item: items[index], isSelected: index == selectedIndex && selectedWindowId == nil)
+                                                .id("workspace-\(index)")
+                                                .contentShape(Rectangle())
+                                                .onTapGesture { onSelect(index) }
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
                                 }
                             }
                             .padding(workspacePreviewRingInset)
-                            .frame(minWidth: gridWidth)
+                            rowDivider(palette: palette)
                         }
-                        .onChange(of: selectedIndex) { index in
-                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
-                        }
-                    }
-                    .frame(width: gridWidth, height: workspaceRowHeight)
-                    Rectangle()
-                        .fill(palette.workspacePreviewForeground(0.12))
-                        .frame(height: standardGap * 0.125)
-                        .padding(.horizontal, workspacePreviewRingInset)
-                        .padding(.top, standardGap)
-                        .padding(.bottom, standardGap * 3)
-                }
-                ScrollViewReader { proxy in
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .center, spacing: 0) {
-                            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                                if index > 0 {
-                                    Rectangle()
-                                        .fill(palette.workspacePreviewForeground(0.12))
-                                        .frame(height: standardGap * 0.125)
-                                        .padding(.horizontal, workspacePreviewRingInset)
-                                        .padding(.top, standardGap)
-                                        .padding(.bottom, standardGap * 3)
-                                }
-                                ScrollViewReader { rowProxy in
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
-                                            ForEach(row) { window in
-                                                VStack(spacing: workspacePreviewCaptionSpacing) {
-                                                    WorkspacePreviewWindowTile(window: window)
-                                                        .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
-                                                        .overlay {
-                                                            if window.id == selectedWindowId {
-                                                                RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
-                                                                    .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
-                                                                    .padding(-workspacePreviewFocusRingWidth)
-                                                            }
-                                                        }
-                                                    Text(window.title)
-                                                        .font(.system(size: 13, weight: .medium))
-                                                        .foregroundStyle(palette.workspacePreviewForeground(0.98))
-                                                        .lineLimit(1)
-                                                        .multilineTextAlignment(.center)
-                                                        .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
+                        ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                            if index > 0 { rowDivider(palette: palette) }
+                            HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
+                                ForEach(row) { window in
+                                    VStack(spacing: workspacePreviewCaptionSpacing) {
+                                        WorkspacePreviewWindowTile(window: window)
+                                            .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
+                                            .overlay {
+                                                if window.id == selectedWindowId {
+                                                    RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
+                                                        .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
+                                                        .padding(-workspacePreviewFocusRingWidth)
                                                 }
-                                                .frame(width: workspacePreviewWindowWidth, height: workspacePreviewTileHeight)
-                                                .contentShape(Rectangle())
-                                                .onTapGesture { onWindowSelect(window.id) }
-                                                .help(window.title)
-                                                .id(window.id)
                                             }
-                                        }
-                                        .padding(.horizontal, workspacePreviewRingInset)
-                                        .frame(minWidth: gridWidth)
-                                        .padding(.vertical, workspacePreviewRingInset)
+                                        Text(window.title)
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundStyle(palette.workspacePreviewForeground(0.98))
+                                            .lineLimit(1)
+                                            .multilineTextAlignment(.center)
+                                            .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
                                     }
-                                    .frame(width: gridWidth, height: workspacePreviewTileHeight + workspacePreviewRingInset * 2)
-                                    .onChange(of: selectedWindowId) { id in
-                                        if let id, row.contains(where: { $0.id == id }) {
-                                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { rowProxy.scrollTo(id, anchor: .center) }
-                                        }
-                                    }
+                                    .frame(width: workspacePreviewWindowWidth, height: workspacePreviewTileHeight)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { onWindowSelect(window.id) }
+                                    .help(window.title)
+                                    .id(window.id)
                                 }
-                                .id(index)
                             }
+                            .padding(workspacePreviewRingInset)
+                            .frame(maxWidth: .infinity)
                         }
-                        .frame(width: gridWidth)
-                        .frame(minHeight: windowAreaHeight, alignment: .top)
                     }
-                    .onChange(of: selectedWindowId) { id in
-                        if let id, let index = rows.firstIndex(where: { $0.contains(where: { $0.id == id }) }) {
-                            withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
-                        }
+                    .frame(width: gridWidth)
+                }
+                .onChange(of: selectedIndex) { index in
+                    if selectedWindowId == nil {
+                        withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo("workspace-\(index)", anchor: .center) }
                     }
                 }
-                .frame(width: gridWidth, height: windowAreaHeight)
-
+                .onChange(of: selectedWindowId) { id in
+                    if let id {
+                        withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(id, anchor: .center) }
+                    }
+                }
             }
             .padding(workspacePreviewPanelPadding)
         }
@@ -783,6 +765,15 @@ private struct WorkspacePreviewView: View {
         .clipShape(RoundedRectangle(cornerRadius: standardGap * 8, style: .continuous))
         .onExitCommand(perform: onDismiss)
     }
+    private func rowDivider(palette: WinMuxOverlayPalette) -> some View {
+        Rectangle()
+            .fill(palette.workspacePreviewForeground(0.12))
+            .frame(height: standardGap * 0.125)
+            .padding(.horizontal, workspacePreviewRingInset)
+            .padding(.top, standardGap)
+            .padding(.bottom, standardGap * 3)
+    }
+
 }
 
 private struct WorkspacePreviewLegacyCard: View {
