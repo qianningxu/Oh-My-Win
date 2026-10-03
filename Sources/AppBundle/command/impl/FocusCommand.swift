@@ -275,3 +275,21 @@ extension TreeNode {
         }
     }
 }
+
+// Resolve preview navigation without changing the tiling tree, MRU or native focus.
+@MainActor
+func workspacePreviewRelativeWindow(_ target: LiveFocus, _ boundariesAction: FocusCmdArgs.WhenBoundariesCrossed, _ direction: TabNextPrev) -> Window? {
+    let windows: [Window] = switch direction {
+        case .tabNext, .tabPrev: composedWindowsInActiveTab(target)
+        case .paneNext, .panePrev: paneWindowsForFocus(target.workspace.rootTilingContainer, focusedWindow: target.windowOrNil)
+        case .stackNext, .stackPrev: target.windowOrNil?.nearestWindowTabGroup?.allLeafWindowsRecursive ?? []
+    }
+    guard let currentIndex = windows.firstIndex(where: { $0 == target.windowOrNil }), !windows.isEmpty else { return nil }
+    let index = currentIndex + direction.focusOffset
+    if windows.indices.contains(index) { return windows[index] }
+    switch boundariesAction {
+        case .wrapAroundTheWorkspace: return windows[(index + windows.count) % windows.count]
+        case .stop: return target.windowOrNil
+        case .fail, .wrapAroundAllMonitors: return nil
+    }
+}

@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import Common
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
 let workspacePreviewWindowWidth = standardGap * 45
@@ -39,6 +40,8 @@ final class WorkspacePreviewPanel: NSPanelHud {
     private var items: [WorkspacePreviewItem] = []
     private var currentIndex: Int = 0
     private var selectedIndex: Int = 0
+    private var selectedWindowId: UInt32?
+    private var pendingKeyCode: UInt16?
     private(set) var isPreviewActive = false
 
     override private init() {
@@ -67,6 +70,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
             return
         }
         guard !items.isEmpty else { return }
+        selectedWindowId = nil
         selectedIndex = (selectedIndex + direction + items.count) % items.count
         render()
     }
@@ -76,14 +80,23 @@ final class WorkspacePreviewPanel: NSPanelHud {
             begin(direction: 0)
         }
         guard isPreviewActive, items.indices.contains(index) else { return }
+        selectedWindowId = nil
         selectedIndex = index
         render()
     }
 
     func commitIfActive() {
         guard isPreviewActive else { return }
+        let targetWindow = selectedWindowId.flatMap { Window.get(byId: $0) }
         let target = items.getOrNil(atIndex: selectedIndex)?.workspace
         dismiss()
+        if let targetWindow {
+            Task { @MainActor in
+                guard let token: RunSessionGuard = .isServerEnabled else { return }
+                try await runLightSession(.menuBarButton, token) { _ = targetWindow.focusWindow() }
+            }
+            return
+        }
         guard let target, target != focus.workspace else { return }
         Task { @MainActor in
             guard let token: RunSessionGuard = .isServerEnabled else { return }
@@ -99,6 +112,8 @@ final class WorkspacePreviewPanel: NSPanelHud {
         isPreviewActive = false
         items = []
         selectedIndex = 0
+        selectedWindowId = nil
+        pendingKeyCode = nil
         orderOut(nil)
         hostingView.rootView = AnyView(EmptyView())
     }
@@ -119,6 +134,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         }
         currentIndex = items.firstIndex { $0.workspace == current } ?? 0
         selectedIndex = (currentIndex + direction + items.count) % items.count
+        selectedWindowId = direction == 0 ? focus.windowOrNil?.windowId : nil
         isPreviewActive = true
         let screenFrame = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
         let width = workspacePreviewPanelWidth(itemCount: items.count, availableWidth: screenFrame.width, windowCount: items[currentIndex].windows.count)
@@ -143,7 +159,9 @@ final class WorkspacePreviewPanel: NSPanelHud {
                 items: items,
                 currentIndex: currentIndex,
                 selectedIndex: selectedIndex,
+                selectedWindowId: selectedWindowId,
                 onSelect: { [weak self] index in
+                    self?.selectedWindowId = nil
                     self?.selectedIndex = index
                     self?.commitIfActive()
                 },
@@ -159,6 +177,56 @@ final class WorkspacePreviewPanel: NSPanelHud {
                 onDismiss: { [weak self] in self?.dismiss() },
             )
         )
+    }
+
+    // Preview selection changes on key-down; native focus changes on key-up.
+    func previewShortcut(commands: [any Command], keyCode: UInt16) -> Bool {
+        guard commands.count == 1 else { return false }
+        if let command = commands[0] as? FocusCommand,
+           case .tabRelative(let direction) = command.args.target {
+            present()
+            guard isPreviewActive else { return true }
+            let workspace = items[currentIndex].workspace
+            let window = selectedWindowId.flatMap { Window.get(byId: $0) } ?? focus.windowOrNil
+            let target = LiveFocus(windowOrNil: window, workspace: workspace)
+            pendingKeyCode = keyCode
+            guard let candidate = workspacePreviewRelativeWindow(target, command.args.boundariesAction, direction) else { return true }
+            selectedWindowId = candidate.windowId
+            selectedIndex = currentIndex
+            render()
+            return true
+        }
+        if let command = commands[0] as? WorkspaceCommand {
+            if case .fresh = command.args.target.val { return false }
+            present()
+            guard isPreviewActive else { return true }
+            let current = items[selectedIndex].workspace
+            let target: Workspace?
+            switch command.args.target.val {
+                case .direct(let name): target = findDirectWorkspaceTarget(named: name.raw, from: current)
+                case .relative(let direction): target = getNextPrevWorkspace(current: current, isNext: direction == .next, wrapAround: command.args.wrapAround, stdin: nil)
+                case .fresh: return false
+            }
+            guard let target, let index = items.firstIndex(where: { $0.workspace == target }) else { return false }
+            selectedWindowId = nil
+            selectedIndex = index
+            pendingKeyCode = keyCode
+            render()
+            return true
+        }
+        return false
+    }
+
+    func shortcutKeyReleased(_ keyCode: UInt16) {
+        guard pendingKeyCode == keyCode else { return }
+        pendingKeyCode = nil
+        commitIfActive()
+    }
+
+    func optionReleased() {
+        // Releasing Option alone cancels the reveal. A selected shortcut waits
+        // for its physical key-up even if Option is released first.
+        if pendingKeyCode == nil { dismiss() }
     }
 
     override func keyDown(with event: NSEvent) {
@@ -177,22 +245,6 @@ func workspacePreviewCandidateWorkspaces(current: Workspace) -> [Workspace] {
             $0.projectId == current.projectId &&
                 $0.workspaceMonitor.rect.topLeftCorner == current.workspaceMonitor.rect.topLeftCorner
         }
-}
-
-@MainActor
-func handleWorkspacePreviewHotkey(_ binding: String) -> Bool {
-    switch binding {
-        case "alt-tab":
-            WorkspacePreviewPanel.shared.advance(direction: 1)
-            return true
-        case "alt-shift-tab":
-            WorkspacePreviewPanel.shared.advance(direction: -1)
-            return true
-        default:
-            guard workspacePreviewSelectionIndex(for: binding) != nil else { return false }
-            WorkspacePreviewPanel.shared.dismiss()
-            return false
-    }
 }
 
 func workspacePreviewSelectionIndex(for binding: String) -> Int? {
@@ -510,6 +562,7 @@ private struct WorkspacePreviewView: View {
     let items: [WorkspacePreviewItem]
     let currentIndex: Int
     let selectedIndex: Int
+    let selectedWindowId: UInt32?
     let onSelect: (Int) -> Void
     let onWindowSelect: (UInt32) -> Void
     let onDismiss: () -> Void
@@ -534,6 +587,12 @@ private struct WorkspacePreviewView: View {
                                 VStack(spacing: WinMuxSpacing.comfortable) {
                                     WorkspacePreviewWindowTile(window: window)
                                         .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
+                                        .overlay {
+                                            if window.id == selectedWindowId {
+                                                RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous)
+                                                    .strokeBorder(palette.workspacePreviewForeground(0.76), lineWidth: WinMuxSpacing.hairline)
+                                            }
+                                        }
                                     Text(window.title)
                                         .font(.system(size: 11, weight: .medium))
                                         .foregroundStyle(palette.workspacePreviewForeground(0.98))
@@ -679,19 +738,22 @@ private struct WorkspacePreviewWindowTile: View {
     private var palette: WinMuxOverlayPalette { WinMuxOverlayPalette(colorScheme: colorScheme) }
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous)
-                .fill(palette.workspacePreviewTileBackground)
-            if let thumbnail = refreshedThumbnail ?? window.thumbnail {
-                Image(nsImage: thumbnail)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .clipShape(RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous))
-            } else {
-                WorkspacePreviewWindowFallback(window: window)
+        GeometryReader { geometry in
+            ZStack {
+                RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous)
+                    .fill(palette.workspacePreviewTileBackground)
+                if let thumbnail = refreshedThumbnail ?? window.thumbnail {
+                    Image(nsImage: thumbnail)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    WorkspacePreviewWindowFallback(window: window)
+                }
             }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .clipShape(RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous))
         }
-        .clipShape(RoundedRectangle(cornerRadius: standardGap * 1.75, style: .continuous))
         .shadow(color: palette.workspacePreviewShadow(0.24, lightOpacity: 0.14), radius: standardGap * 1.25, x: 0, y: WinMuxSpacing.hairline)
         .task(id: window.id) {
             guard let image = await captureExposeThumbnail(window.id) else { return }

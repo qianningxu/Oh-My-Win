@@ -109,7 +109,7 @@ private func createNextTransientBlankWorkspaceIfAllowed(
 }
 
 @MainActor
-private func findDirectWorkspaceTarget(named workspaceName: String, from current: Workspace) -> Workspace? {
+func findDirectWorkspaceTarget(named workspaceName: String, from current: Workspace) -> Workspace? {
     if let targetIndex = parsePositiveWorkspaceDisplayIndex(workspaceName) {
         let automaticDisplayWorkspaces = directWorkspaceShortcutCandidates(current: current)
         if let workspace = automaticDisplayWorkspaces.getOrNil(atIndex: targetIndex - 1) {

@@ -61,6 +61,33 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(workspacePreviewWindowItems(for: workspace).map(\.id), [431])
     }
 
+    @MainActor
+    func testPreviewWindowNavigationResolvesTargetWithoutSwitchingFocus() {
+        setUpWorkspacesForTests()
+        let workspace = focus.workspace
+        let first = TestWindow.new(id: 441, parent: workspace.rootTilingContainer)
+        let second = TestWindow.new(id: 442, parent: workspace.rootTilingContainer)
+        _ = first.focusWindow()
+        let before = focus.windowOrNil
+        let target = LiveFocus(windowOrNil: first, workspace: workspace)
+        XCTAssertTrue(workspacePreviewRelativeWindow(target, .wrapAroundTheWorkspace, .paneNext) === second)
+        XCTAssertTrue(focus.windowOrNil === before)
+        XCTAssertTrue(workspacePreviewRelativeWindow(LiveFocus(windowOrNil: second, workspace: workspace), .wrapAroundTheWorkspace, .paneNext) === first)
+        XCTAssertTrue(focus.windowOrNil === before)
+    }
+
+    @MainActor
+    func testPreviewStackNavigationStaysInsideItsStack() {
+        setUpWorkspacesForTests()
+        let workspace = focus.workspace
+        let stack = TilingContainer(parent: workspace.rootTilingContainer, adaptiveWeight: WEIGHT_AUTO, .h, .tabGroup, index: INDEX_BIND_LAST)
+        let first = TestWindow.new(id: 451, parent: stack)
+        let second = TestWindow.new(id: 452, parent: stack)
+        _ = TestWindow.new(id: 453, parent: workspace.rootTilingContainer)
+        XCTAssertTrue(workspacePreviewRelativeWindow(LiveFocus(windowOrNil: first, workspace: workspace), .wrapAroundTheWorkspace, .stackNext) === second)
+        XCTAssertTrue(workspacePreviewRelativeWindow(LiveFocus(windowOrNil: second, workspace: workspace), .wrapAroundTheWorkspace, .stackNext) === first)
+    }
+
     func testWorkspacePreviewSelectionSupportsEveryNumericShortcut() {
         XCTAssertEqual(workspacePreviewSelectionIndex(for: "alt-1"), 0)
         XCTAssertEqual(workspacePreviewSelectionIndex(for: "alt-4"), 3)

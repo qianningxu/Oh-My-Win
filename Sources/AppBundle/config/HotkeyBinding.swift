@@ -78,7 +78,17 @@ extension HotKey {
             Task { @MainActor in
                 if hotkeysSuspended { return }
                 noteTapBindingKeyDown()
-                triggerBinding(binding.descriptionWithKeyNotation, binding.commands)
+                if WorkspacePreviewPanel.shared.previewShortcut(commands: binding.commands, keyCode: UInt16(binding.keyCode.carbonKeyCode)) {
+                    if let activeMode {
+                        broadcastEvent(.bindingTriggered(mode: activeMode, binding: binding.descriptionWithKeyNotation))
+                    }
+                } else {
+                    triggerBinding(binding.descriptionWithKeyNotation, binding.commands)
+                }
+            }
+        }, keyUpHandler: {
+            Task { @MainActor in
+                WorkspacePreviewPanel.shared.shortcutKeyReleased(UInt16(binding.keyCode.carbonKeyCode))
             }
         })
     }
@@ -109,7 +119,6 @@ extension HotKey {
 
 @MainActor private func triggerBinding(_ binding: String, _ commands: [any Command]) {
     if hotkeysSuspended { return }
-    if handleWorkspacePreviewHotkey(binding) { return }
     if commands.count == 1, commands[0] is OpenSidebarCommand, let activeMode {
         broadcastEvent(.bindingTriggered(mode: activeMode, binding: binding))
         openWorkspaceSidebarFromCommand()

@@ -126,24 +126,17 @@ enum GlobalObserver {
         let modifierFlags = event.modifierFlags
         let keyCode = event.keyCode
         Task { @MainActor in
-            if modifierFlags.contains(.option),
-               !modifierFlags.contains(.shift),
-               optionWorkspaceIndex(for: keyCode) != nil
-            {
-                WorkspacePreviewPanel.shared.dismiss()
-                return
-            }
-            if modifierFlags.contains(.option), keyCode == 48 {
-                WorkspacePreviewPanel.shared.advance(
-                    direction: modifierFlags.contains(.shift) ? -1 : 1
-                )
-                return
-            }
+            if keyCode == 53 { WorkspacePreviewPanel.shared.dismiss() }
             noteTapBindingKeyDown()
             if modifierFlags.contains(.control), keyCode == 34 { // 'i' key
                 ExposePanel.shared.toggle()
             }
         }
+    }
+
+    private static func onKeyUp(_ event: NSEvent) {
+        let keyCode = event.keyCode
+        Task { @MainActor in WorkspacePreviewPanel.shared.shortcutKeyReleased(keyCode) }
     }
 
     private static func onFlagsChanged(_ event: NSEvent) {
@@ -162,7 +155,7 @@ enum GlobalObserver {
         if isPressed {
             WorkspacePreviewPanel.shared.present()
         } else {
-            WorkspacePreviewPanel.shared.commitIfActive()
+            WorkspacePreviewPanel.shared.optionReleased()
         }
     }
 
@@ -328,6 +321,12 @@ enum GlobalObserver {
         retainEventMonitor(NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged, handler: onFlagsChanged))
         retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
             onFlagsChanged(event)
+            return event
+        })
+
+        retainEventMonitor(NSEvent.addGlobalMonitorForEvents(matching: .keyUp, handler: onKeyUp))
+        retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .keyUp) { event in
+            onKeyUp(event)
             return event
         })
 
