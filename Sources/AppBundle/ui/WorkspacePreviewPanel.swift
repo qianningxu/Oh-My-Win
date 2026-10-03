@@ -8,10 +8,10 @@ let workspacePreviewWindowHeight = workspacePreviewWindowWidth
 let workspacePreviewColumns = 5
 let workspacePreviewMaximumRows = 3
 let workspacePreviewMaximumWindows = workspacePreviewColumns * workspacePreviewMaximumRows
-private let workspacePreviewCaptionSpacing = workspacePreviewFocusRingWidth + standardGap * 2
-private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 3.5
-private let workspacePreviewRowSpacing = workspacePreviewFocusRingWidth + standardGap * 3
-private let workspacePreviewStackSeparatorHeight = workspacePreviewFocusRingWidth + standardGap * 6 + standardGap * 0.125
+private let workspacePreviewCaptionSpacing = workspacePreviewFocusRingWidth + standardGap
+private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 5
+private let workspacePreviewRowSpacing = workspacePreviewFocusRingWidth + standardGap * 7
+private let workspacePreviewStackSeparatorHeight = workspacePreviewFocusRingWidth + standardGap * 9 + standardGap * 0.125
 private let workspacePreviewColumnSpacing = workspacePreviewFocusRingWidth * 2 + standardGap * 3
 private let workspacePreviewRingInset = workspacePreviewFocusRingWidth + standardGap
 private let workspacePreviewPanelPadding = WinMuxSpacing.page
@@ -718,7 +718,7 @@ private struct WorkspacePreviewView: View {
                     .fill(palette.workspacePreviewForeground(0.12))
                     .frame(width: standardGap * 0.125)
                     .padding(.horizontal, WinMuxSpacing.section)
-                VStack(spacing: standardGap) {
+                VStack(spacing: 0) {
                     sectionHeading(current.displayName, palette: palette)
                         .padding(.horizontal, workspacePreviewRingInset)
                         .padding(.top, workspacePreviewRingInset)
@@ -730,8 +730,8 @@ private struct WorkspacePreviewView: View {
                                         Rectangle()
                                             .fill(palette.workspacePreviewForeground(0.12))
                                             .frame(height: standardGap * 0.125)
-                                            .padding(.top, standardGap * 3)
-                                            .padding(.bottom, workspacePreviewFocusRingWidth + standardGap * 3)
+                                            .padding(.top, standardGap * 5)
+                                            .padding(.bottom, workspacePreviewFocusRingWidth + standardGap * 4)
                                     }
                                     HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
                                         ForEach(row) { window in
@@ -746,11 +746,11 @@ private struct WorkspacePreviewView: View {
                                                         }
                                                     }
                                                 Text(window.title)
-                                                    .font(.system(size: 11, weight: .medium))
+                                                    .font(.system(size: 13, weight: .medium))
                                                     .foregroundStyle(palette.workspacePreviewForeground(0.98))
                                                     .lineLimit(1)
                                                     .multilineTextAlignment(.center)
-                                                    .frame(width: workspacePreviewWindowWidth, height: standardGap * 3.5)
+                                                    .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
                                             }
                                             .frame(width: workspacePreviewWindowWidth, height: workspacePreviewTileHeight)
                                             .contentShape(Rectangle())
@@ -762,7 +762,7 @@ private struct WorkspacePreviewView: View {
                                 }
                             }
                             .padding(workspacePreviewRingInset)
-                            .frame(minWidth: gridWidth, minHeight: max(availableHeight - workspacePreviewRingInset - standardGap * 6, 1), alignment: .top)
+                            .frame(minWidth: gridWidth, minHeight: max(availableHeight - workspacePreviewRingInset - standardGap * 5, 1), alignment: .top)
                         }
                         .onChange(of: selectedWindowId) { id in
                             if let id {
