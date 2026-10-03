@@ -8,9 +8,11 @@ let workspacePreviewWindowHeight = workspacePreviewWindowWidth
 let workspacePreviewColumns = 5
 let workspacePreviewMaximumRows = 3
 let workspacePreviewMaximumWindows = workspacePreviewColumns * workspacePreviewMaximumRows
-private let workspacePreviewCaptionSpacing = standardGap * 4
+private let workspacePreviewCaptionSpacing = workspacePreviewFocusRingWidth + standardGap * 2
 private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 3.5
-private let workspacePreviewRowSpacing = standardGap * 8
+private let workspacePreviewRowSpacing = workspacePreviewFocusRingWidth + standardGap * 3
+private let workspacePreviewColumnSpacing = workspacePreviewFocusRingWidth * 2 + standardGap * 3
+private let workspacePreviewRingInset = workspacePreviewFocusRingWidth + standardGap
 private let workspacePreviewPanelPadding = WinMuxSpacing.page
 let workspacePreviewMaximumWidth = standardGap * 440
 let workspacePreviewCornerRadius = standardGap * 1.75
@@ -213,7 +215,18 @@ final class WorkspacePreviewPanel: NSPanelHud {
     }
 
     // Shortcut keys only select; releasing the held modifier commits once.
-    func previewShortcut(commands: [any Command], modifiers: NSEvent.ModifierFlags) -> Bool {
+    func previewShortcut(commands: [any Command], modifiers: NSEvent.ModifierFlags, keyCode: UInt16) -> Bool {
+        if keyCode == 48, modifiers.intersection([.option, .command, .control]) == .option {
+            present()
+            guard isPreviewActive else { return true }
+            pendingCommands = nil
+            selectedWindowId = workspacePreviewNextWindowId(items[currentIndex].windows, selectedWindowId: selectedWindowId,
+                                                           direction: modifiers.contains(.shift) ? -1 : 1)
+            selectedIndex = currentIndex
+            shortcutCycle.select(modifier: .option)
+            render()
+            return true
+        }
         guard commands.count == 1, modifiers.contains(.option) else { return false }
         let commitModifier: NSEvent.ModifierFlags = .option
         pendingCommands = nil
@@ -621,6 +634,15 @@ func workspacePreviewStackRows(_ windows: [WorkspacePreviewWindowItem]) -> [[Wor
     }
 }
 
+func workspacePreviewNextWindowId(_ windows: [WorkspacePreviewWindowItem], selectedWindowId: UInt32?, direction: Int) -> UInt32? {
+    let ordered = workspacePreviewStackRows(windows).flatMap { $0 }
+    guard !ordered.isEmpty else { return nil }
+    guard let index = ordered.firstIndex(where: { $0.id == selectedWindowId }) else {
+        return direction < 0 ? ordered.last?.id : ordered.first?.id
+    }
+    return ordered[(index + direction + ordered.count) % ordered.count].id
+}
+
 func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
     let ratio = aspectRatio.isFinite && aspectRatio > 0 ? aspectRatio : 1
     return ratio >= 1
@@ -629,17 +651,17 @@ func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
 }
 
 func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity, workspaceAspectRatio: CGFloat = 1.6) -> Int {
-    let sidebarWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width + workspacePreviewFocusRingWidth * 2 + WinMuxSpacing.section * 2 + standardGap * 0.125
-    let availableGridWidth = availableWidth - workspacePreviewPanelPadding * 2 - sidebarWidth - workspacePreviewFocusRingWidth * 2
-    let fittingColumns = availableWidth.isFinite ? max(Int((availableGridWidth + workspacePreviewRowSpacing) / (workspacePreviewWindowWidth + workspacePreviewRowSpacing)), 1) : workspacePreviewColumns
+    let sidebarWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width + workspacePreviewRingInset * 2 + WinMuxSpacing.section * 2 + standardGap * 0.125
+    let availableGridWidth = availableWidth - workspacePreviewPanelPadding * 2 - sidebarWidth - workspacePreviewRingInset * 2
+    let fittingColumns = availableWidth.isFinite ? max(Int((availableGridWidth + workspacePreviewColumnSpacing) / (workspacePreviewWindowWidth + workspacePreviewColumnSpacing)), 1) : workspacePreviewColumns
     return min(max(windowCount, 1), workspacePreviewColumns, fittingColumns)
 }
 
 func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewMaximumWindows, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
     let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
     let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
-    let contentWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width + workspacePreviewWindowWidth * CGFloat(columns) + workspacePreviewRowSpacing * CGFloat(columns - 1) +
-        WinMuxSpacing.section * 2 + standardGap * 0.125 + workspacePreviewPanelPadding * 2 + workspacePreviewFocusRingWidth * 4
+    let contentWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width + workspacePreviewWindowWidth * CGFloat(columns) + workspacePreviewColumnSpacing * CGFloat(columns - 1) +
+        WinMuxSpacing.section * 2 + standardGap * 0.125 + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 4
     return min(contentWidth, maximum)
 }
 
@@ -648,7 +670,7 @@ func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFlo
     let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewRowSpacing
     let visibleWorkspaces = min(max(workspaceCount, 1), 4)
     let workspaceHeight = CGFloat(visibleWorkspaces) * (workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5) + CGFloat(visibleWorkspaces - 1) * workspacePreviewRowSpacing
-    let contentHeight = workspacePreviewPanelPadding * 2 + standardGap * 8 + max(gridHeight, workspaceHeight) + workspacePreviewFocusRingWidth * 2
+    let contentHeight = workspacePreviewPanelPadding * 2 + standardGap * 10 + max(gridHeight, workspaceHeight) + workspacePreviewRingInset * 2
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
 
@@ -669,7 +691,7 @@ private struct WorkspacePreviewView: View {
         GeometryReader { geometry in
             let rows = workspacePreviewStackRows(current.windows)
             let availableHeight = max(geometry.size.height - workspacePreviewPanelPadding * 2, 1)
-            let sidebarWidth = workspaceSize.width + workspacePreviewFocusRingWidth * 2 + WinMuxSpacing.section * 2 + standardGap * 0.125
+            let sidebarWidth = workspaceSize.width + workspacePreviewRingInset * 2 + WinMuxSpacing.section * 2 + standardGap * 0.125
             let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2 - sidebarWidth, 1)
             HStack(alignment: .center, spacing: 0) {
                 ScrollViewReader { proxy in
@@ -683,25 +705,25 @@ private struct WorkspacePreviewView: View {
                             }
                         }
                         .frame(width: workspaceSize.width)
-                        .padding(workspacePreviewFocusRingWidth)
+                        .padding(workspacePreviewRingInset)
                         .frame(minHeight: availableHeight, alignment: .center)
                     }
                     .onChange(of: selectedIndex) { index in
                         withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
                     }
                 }
-                .frame(width: workspaceSize.width + workspacePreviewFocusRingWidth * 2, height: availableHeight)
+                .frame(width: workspaceSize.width + workspacePreviewRingInset * 2, height: availableHeight)
                 Rectangle()
                     .fill(palette.workspacePreviewForeground(0.12))
                     .frame(width: standardGap * 0.125)
                     .padding(.horizontal, WinMuxSpacing.section)
                 ScrollViewReader { proxy in
                     ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                        VStack(spacing: WinMuxSpacing.section) {
+                        VStack(spacing: workspacePreviewCaptionSpacing) {
                             sectionHeading(current.displayName, palette: palette)
                             VStack(alignment: .center, spacing: workspacePreviewRowSpacing) {
                                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                                    HStack(alignment: .center, spacing: workspacePreviewRowSpacing) {
+                                    HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
                                         ForEach(row) { window in
                                             VStack(spacing: workspacePreviewCaptionSpacing) {
                                                 WorkspacePreviewWindowTile(window: window)
@@ -730,7 +752,7 @@ private struct WorkspacePreviewView: View {
                                 }
                             }
                         }
-                        .padding(workspacePreviewFocusRingWidth)
+                        .padding(workspacePreviewRingInset)
                         .frame(minWidth: gridWidth, minHeight: availableHeight, alignment: .center)
                     }
                     .onChange(of: selectedWindowId) { id in

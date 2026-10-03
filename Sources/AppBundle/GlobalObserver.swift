@@ -311,8 +311,7 @@ enum GlobalObserver {
         retainEventMonitor(NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: onKeyDown))
         retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             onKeyDown(event)
-            if event.modifierFlags.contains(.option),
-               !event.modifierFlags.contains(.shift),
+            if event.modifierFlags.intersection([.option, .command, .control]) == .option,
                event.keyCode == 48
             {
                 return nil

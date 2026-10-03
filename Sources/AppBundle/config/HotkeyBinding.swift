@@ -78,7 +78,7 @@ extension HotKey {
             Task { @MainActor in
                 if hotkeysSuspended { return }
                 noteTapBindingKeyDown()
-                if WorkspacePreviewPanel.shared.previewShortcut(commands: binding.commands, modifiers: binding.modifiers) {
+                if WorkspacePreviewPanel.shared.previewShortcut(commands: binding.commands, modifiers: binding.modifiers, keyCode: UInt16(binding.keyCode.carbonKeyCode)) {
                     if let activeMode {
                         broadcastEvent(.bindingTriggered(mode: activeMode, binding: binding.descriptionWithKeyNotation))
                     }
