@@ -111,6 +111,13 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 16, availableHeight: 2_000), 670.5)
     }
 
+    func testPreviewWidthAdaptsToActualWindowsAndLegacyWorkspaces() {
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 2, availableWidth: 2_000, windowCount: 1), 228)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 2, availableWidth: 2_000, windowCount: 3), 612)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2_000, windowCount: 1), 996)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 2, availableWidth: 2_000, windowCount: 15), 996)
+    }
+
     func testWorkspacePanelWidthStaysWithinScreen() {
         XCTAssertEqual(
             workspacePreviewPanelWidth(itemCount: 3, availableWidth: 600),

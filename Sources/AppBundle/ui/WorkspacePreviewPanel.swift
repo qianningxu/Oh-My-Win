@@ -121,10 +121,11 @@ final class WorkspacePreviewPanel: NSPanelHud {
         selectedIndex = (currentIndex + direction + items.count) % items.count
         isPreviewActive = true
         let screenFrame = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
-        let width = workspacePreviewPanelWidth(itemCount: items.count, availableWidth: screenFrame.width)
+        let width = workspacePreviewPanelWidth(itemCount: items.count, availableWidth: screenFrame.width, windowCount: items[currentIndex].windows.count)
         let height = workspacePreviewPanelHeight(
             maximumWindowCount: items[currentIndex].windows.count,
-            availableHeight: screenFrame.height
+            availableHeight: screenFrame.height,
+            workspaceCount: items.count
         )
         setFrame(CGRect(
             x: screenFrame.midX - width / 2,
@@ -485,18 +486,23 @@ func workspacePreviewFrame(for normalizedFrame: CGRect, in canvasRect: CGRect) -
     )
 }
 
-func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat) -> CGFloat {
-    min(workspacePreviewWindowWidth * CGFloat(workspacePreviewColumns) +
-        workspacePreviewRowSpacing * CGFloat(workspacePreviewColumns - 1) + workspacePreviewPanelPadding * 2,
+func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int) -> Int {
+    min(max(windowCount, workspaceCount - 1, 1), workspacePreviewColumns)
+}
+
+func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewMaximumWindows) -> CGFloat {
+    let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount)
+    return min(workspacePreviewWindowWidth * CGFloat(columns) +
+        workspacePreviewRowSpacing * CGFloat(columns - 1) + workspacePreviewPanelPadding * 2,
         workspacePreviewMaximumWidth, availableWidth * 0.92)
 }
 
-func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat) -> CGFloat {
+func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2) -> CGFloat {
     let rows = min(max((max(maximumWindowCount, 0) + workspacePreviewColumns - 1) / workspacePreviewColumns, 1), workspacePreviewMaximumRows)
     let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewRowSpacing
     // Heading, grid, divider spacing, legacy row and balanced outer padding.
     let contentHeight = workspacePreviewPanelPadding * 2 + standardGap * 8 + gridHeight +
-        standardGap * 8 + standardGap * 0.125 + standardGap * 34.5
+        (workspaceCount > 1 ? standardGap * 8 + standardGap * 0.125 + standardGap * 34.5 : 0)
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
 
@@ -512,6 +518,7 @@ private struct WorkspacePreviewView: View {
     var body: some View {
         let current = items[currentIndex]
         let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
+        let columns = workspacePreviewColumnCount(windowCount: current.windows.count, workspaceCount: items.count)
         GeometryReader { geometry in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
@@ -522,7 +529,7 @@ private struct WorkspacePreviewView: View {
                         .frame(maxWidth: .infinity, minHeight: standardGap * 5)
                         .padding(.bottom, WinMuxSpacing.section)
                     ScrollView(.horizontal, showsIndicators: false) {
-                        LazyVGrid(columns: Array(repeating: GridItem(.fixed(workspacePreviewWindowWidth), spacing: workspacePreviewRowSpacing), count: workspacePreviewColumns), spacing: workspacePreviewRowSpacing) {
+                        LazyVGrid(columns: Array(repeating: GridItem(.fixed(workspacePreviewWindowWidth), spacing: workspacePreviewRowSpacing), count: columns), spacing: workspacePreviewRowSpacing) {
                             ForEach(Array(current.windows.prefix(workspacePreviewMaximumWindows))) { window in
                                 VStack(spacing: WinMuxSpacing.comfortable) {
                                     WorkspacePreviewWindowTile(window: window)
@@ -541,6 +548,7 @@ private struct WorkspacePreviewView: View {
                         }
                         .frame(minHeight: workspacePreviewTileHeight)
                     }
+                    if items.count > 1 {
                     Rectangle()
                         .fill(palette.workspacePreviewForeground(0.12))
                         .frame(height: standardGap * 0.125)
@@ -561,6 +569,7 @@ private struct WorkspacePreviewView: View {
                             withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(index, anchor: .center) }
                         }
                         .onAppear { proxy.scrollTo(selectedIndex, anchor: .center) }
+                    }
                     }
                 }
                 .padding(workspacePreviewPanelPadding)
