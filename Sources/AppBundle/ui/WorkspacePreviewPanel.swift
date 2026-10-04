@@ -22,6 +22,15 @@ let workspacePreviewMaximumHeight = standardGap * 250
 enum WorkspacePreviewKind {
     case workspaces
     case tabs
+
+    var modifier: NSEvent.ModifierFlags { self == .workspaces ? .option : .control }
+}
+
+func workspacePreviewKindOnModifierPress(previous: NSEvent.ModifierFlags, current: NSEvent.ModifierFlags) -> WorkspacePreviewKind? {
+    for kind in [WorkspacePreviewKind.workspaces, .tabs] {
+        if current.contains(kind.modifier) && !previous.contains(kind.modifier) { return kind }
+    }
+    return nil
 }
 
 private struct WorkspacePreviewItem: Identifiable {
@@ -67,7 +76,6 @@ final class WorkspacePreviewPanel: NSPanelHud {
     private var selectedWindowId: UInt32?
     private var shortcutCycle = WorkspacePreviewShortcutCycle()
     private var pendingCommands: [any Command]?
-    private var isOptionPressed = false
     private var pressedModifiers: NSEvent.ModifierFlags = []
     private var previewModifier: NSEvent.ModifierFlags = .option
     private var previewKind: WorkspacePreviewKind = .workspaces
@@ -206,13 +214,10 @@ final class WorkspacePreviewPanel: NSPanelHud {
                     self?.commitIfActive()
                 },
                 onWindowSelect: { [weak self] id in
-                    self?.dismiss()
-                    Task { @MainActor in
-                        guard let token: RunSessionGuard = .isServerEnabled else { return }
-                        try await runLightSession(.menuBarButton, token) {
-                            _ = Window.get(byId: id)?.focusWindow()
-                        }
-                    }
+                    guard let self else { return }
+                    selectedWindowId = id
+                    selectedIndex = currentIndex
+                    commitIfActive()
                 },
                 onDismiss: { [weak self] in self?.dismiss() },
             )
@@ -295,13 +300,12 @@ final class WorkspacePreviewPanel: NSPanelHud {
     }
 
     func modifierFlagsChanged(_ flags: NSEvent.ModifierFlags) {
-        let wasOptionPressed = isOptionPressed
+        let previous = pressedModifiers
         pressedModifiers = flags
-        isOptionPressed = flags.contains(.option)
         if shortcutCycle.updateModifiers(flags) {
             commitShortcutSelection()
-        } else if isOptionPressed && !wasOptionPressed {
-            present()
+        } else if let kind = workspacePreviewKindOnModifierPress(previous: previous, current: flags) {
+            present(kind: kind, modifier: kind.modifier)
         } else if !flags.contains(previewModifier) && shortcutCycle.pendingModifier == nil {
             dismiss()
         }
@@ -682,7 +686,7 @@ func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFlo
     let workspaceHeight = workspaceRows > 0
         ? CGFloat(workspaceRows) * workspaceTileHeight + CGFloat(workspaceRows - 1) * workspacePreviewColumnSpacing + workspacePreviewStackSeparatorHeight
         : 0
-    let contentHeight = workspacePreviewPanelPadding * 1.5 + gridHeight + workspacePreviewRingInset * 2 + workspaceHeight
+    let contentHeight = workspacePreviewPanelPadding * 1.25 + gridHeight + workspacePreviewRingInset * 1.5 + workspaceHeight
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
 
@@ -704,7 +708,7 @@ func workspacePreviewModeHeight(kind: WorkspacePreviewKind, workspaceCount: Int,
     let columns = workspacePreviewWorkspaceColumnCount(itemCount: workspaceCount, availableWidth: panelWidth, workspaceAspectRatio: workspaceAspectRatio)
     let rows = max((workspaceCount + columns - 1) / columns, 1)
     let tileHeight = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5
-    let height = workspacePreviewPanelPadding * 1.5 + CGFloat(rows) * tileHeight + CGFloat(rows - 1) * workspacePreviewColumnSpacing + workspacePreviewRingInset * 2
+    let height = workspacePreviewPanelPadding * 1.25 + CGFloat(rows) * tileHeight + CGFloat(rows - 1) * workspacePreviewColumnSpacing + workspacePreviewRingInset * 1.5
     return min(height, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
 
@@ -746,7 +750,8 @@ private struct WorkspacePreviewView: View {
                                     .frame(maxWidth: .infinity)
                                 }
                             }
-                            .padding(workspacePreviewRingInset)
+                            .padding([.top, .horizontal], workspacePreviewRingInset)
+                            .padding(.bottom, workspacePreviewRingInset / 2)
                         }
                         if kind == .tabs {
                             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
@@ -777,7 +782,8 @@ private struct WorkspacePreviewView: View {
                                         .id(window.id)
                                     }
                                 }
-                                .padding(workspacePreviewRingInset)
+                                .padding([.top, .horizontal], workspacePreviewRingInset)
+                                .padding(.bottom, index == rows.count - 1 ? workspacePreviewRingInset / 2 : workspacePreviewRingInset)
                                 .frame(maxWidth: .infinity)
                             }
                         }
@@ -796,7 +802,7 @@ private struct WorkspacePreviewView: View {
                 }
             }
             .padding([.top, .horizontal], workspacePreviewPanelPadding)
-            .padding(.bottom, workspacePreviewPanelPadding / 2)
+            .padding(.bottom, workspacePreviewPanelPadding / 4)
         }
         .background { WorkspacePreviewSwitcherSurface() }
         .clipShape(RoundedRectangle(cornerRadius: standardGap * 8, style: .continuous))
