@@ -234,15 +234,22 @@ final class WorkspacePreviewPanel: NSPanelHud {
             render()
             return true
         }
-        if keyCode == 48, modifiers.intersection([.option, .command, .control]) == .option {
-            present(kind: .tabs)
-            guard isPreviewActive else { return true }
+        let tabModifier = modifiers.intersection([.option, .command, .control])
+        if keyCode == 48, tabModifier == .option || tabModifier == .control {
+            let direction = modifiers.contains(.shift) ? -1 : 1
+            if tabModifier == .option {
+                present(kind: .workspaces)
+                guard isPreviewActive else { return true }
+                advance(direction: direction)
+            } else {
+                present(kind: .tabs, modifier: .control)
+                guard isPreviewActive else { return true }
+                selectedWindowId = workspacePreviewNextWindowId(items[currentIndex].windows, selectedWindowId: selectedWindowId, direction: direction)
+                selectedIndex = currentIndex
+                render()
+            }
             pendingCommands = nil
-            selectedWindowId = workspacePreviewNextWindowId(items[currentIndex].windows, selectedWindowId: selectedWindowId,
-                                                           direction: modifiers.contains(.shift) ? -1 : 1)
-            selectedIndex = currentIndex
-            shortcutCycle.select(modifier: .option)
-            render()
+            shortcutCycle.select(modifier: tabModifier)
             return true
         }
         guard commands.count == 1, modifiers.contains(.option) else { return false }
