@@ -670,7 +670,7 @@ func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFlo
     let workspaceHeight = workspaceRows > 0
         ? CGFloat(workspaceRows) * workspaceTileHeight + CGFloat(workspaceRows - 1) * workspacePreviewColumnSpacing + workspacePreviewStackSeparatorHeight
         : 0
-    let contentHeight = workspacePreviewPanelPadding * 2 + gridHeight + workspacePreviewRingInset * 2 + workspaceHeight
+    let contentHeight = workspacePreviewPanelPadding * 1.5 + gridHeight + workspacePreviewRingInset * 2 + workspaceHeight
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
 
@@ -759,7 +759,8 @@ private struct WorkspacePreviewView: View {
                     }
                 }
             }
-            .padding(workspacePreviewPanelPadding)
+            .padding([.top, .horizontal], workspacePreviewPanelPadding)
+            .padding(.bottom, workspacePreviewPanelPadding / 2)
         }
         .background { WorkspacePreviewSwitcherSurface() }
         .clipShape(RoundedRectangle(cornerRadius: standardGap * 8, style: .continuous))
