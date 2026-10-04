@@ -117,7 +117,6 @@ final class ExposePanel: NSPanelHud {
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 || event.keyCode == 36 { dismiss(); return }
-        if event.modifierFlags.contains(.control), event.keyCode == 34 { dismiss(); return }
         super.keyDown(with: event)
     }
     override var canBecomeKey: Bool { true }

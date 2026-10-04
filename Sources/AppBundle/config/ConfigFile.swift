@@ -54,81 +54,35 @@ func preferredEditableConfigUrl() -> URL {
 }
 
 func starterConfigText() -> String {
-    let starterBindings: [String: String] = [
-        ("alt-space", "layout horizontal vertical"),
-        ("ctrl-alt-j", "split 1:2"),
-        ("ctrl-alt-k", "split 1:1"),
-        ("ctrl-alt-l", "split 2:1"),
-        ("ctrl-f", "open-sidebar"),
-        ("alt-b", "open-sidebar"),
-        ("alt-h", "focus left"),
-        ("alt-j", "focus down"),
-        ("alt-k", "focus up"),
-        ("alt-l", "focus right"),
-        ("alt-n", "new-tab"),
-        ("alt-shift-n", "move-node-to-tab new"),
-        ("alt-p", "focus dfs-prev"),
-        ("alt-tab", "tab next"),
-        ("alt-shift-tab", "tab prev"),
-        ("alt-0", "tab 10"),
-        ("alt-1", "tab 1"),
-        ("alt-2", "tab 2"),
-        ("alt-3", "tab 3"),
-        ("alt-4", "tab 4"),
-        ("alt-5", "tab 5"),
-        ("alt-6", "tab 6"),
-        ("alt-7", "tab 7"),
-        ("alt-8", "tab 8"),
-        ("alt-9", "tab 9"),
-        ("alt-shift-h", "move left"),
-        ("alt-shift-j", "move down"),
-        ("alt-shift-k", "move up"),
-        ("alt-shift-l", "move right"),
-        ("cmd-shift-h", "join-with left"),
-        ("cmd-shift-j", "join-with down"),
-        ("cmd-shift-k", "join-with up"),
-        ("cmd-shift-l", "join-with right"),
-        ("cmd-shift-i", "balance-sizes"),
-        ("alt-cmd-j", "swap down"),
-        ("alt-cmd-k", "swap up"),
-        ("alt-shift-t", "layout floating tiling"),
-        ("alt-shift-m", "fullscreen"),
-        ("ctrl-q", "tab 11"),
-        ("ctrl-w", "tab 12"),
-        ("ctrl-e", "tab 13"),
-        ("ctrl-r", "tab 14"),
-        ("ctrl-t", "tab 15"),
-        ("ctrl-h", "tab prev"),
-        ("ctrl-l", "tab next"),
-        ("cmd-ctrl-h", "tab prev"),
-        ("cmd-ctrl-l", "tab next"),
-        ("alt-shift-0", "move-node-to-tab 10"),
-        ("alt-shift-1", "move-node-to-tab 1"),
-        ("alt-shift-2", "move-node-to-tab 2"),
-        ("alt-shift-3", "move-node-to-tab 3"),
-        ("alt-shift-4", "move-node-to-tab 4"),
-        ("alt-shift-5", "move-node-to-tab 5"),
-        ("alt-shift-6", "move-node-to-tab 6"),
-        ("alt-shift-7", "move-node-to-tab 7"),
-        ("alt-shift-8", "move-node-to-tab 8"),
-        ("alt-shift-9", "move-node-to-tab 9"),
-        ("ctrl-shift-h", "move-node-to-tab --focus-follows-window prev"),
-        ("ctrl-shift-l", "move-node-to-tab --focus-follows-window next"),
-    ].reduce(into: [:]) { result, pair in
-        result[pair.0] = pair.1
-    }
-    let defaultText = (try? String(contentsOf: defaultConfigUrl, encoding: .utf8)) ?? """
+    (try? String(contentsOf: defaultConfigUrl, encoding: .utf8)) ?? """
         config-version = 3
 
         [mode.main.binding]
+            alt-0 = 'tab 10'
+            alt-1 = 'tab 1'
+            alt-2 = 'tab 2'
+            alt-3 = 'tab 3'
+            alt-4 = 'tab 4'
+            alt-5 = 'tab 5'
+            alt-6 = 'tab 6'
+            alt-7 = 'tab 7'
+            alt-8 = 'tab 8'
+            alt-9 = 'tab 9'
+            ctrl-0 = []
+            ctrl-1 = []
+            ctrl-2 = []
+            ctrl-3 = []
+            ctrl-4 = []
+            ctrl-5 = []
+            ctrl-6 = []
+            ctrl-7 = []
+            ctrl-8 = []
+            ctrl-9 = []
+            alt-tab = []
+            alt-shift-tab = []
+            ctrl-tab = []
+            ctrl-shift-tab = []
         """
-    return updateModeBindingConfig(
-        in: defaultText,
-        modeName: mainModeId,
-        tableKey: "binding",
-        managedCommands: [],
-        assignments: starterBindings,
-    )
 }
 
 @MainActor

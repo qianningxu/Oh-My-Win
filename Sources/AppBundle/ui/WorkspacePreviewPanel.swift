@@ -3,7 +3,8 @@ import SwiftUI
 import Common
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
-let workspacePreviewWindowWidth = standardGap * 55
+private let workspacePreviewWorkspaceShortSide = standardGap * 55
+let workspacePreviewWindowWidth = workspacePreviewWorkspaceShortSide * 1.25
 let workspacePreviewWindowHeight = workspacePreviewWindowWidth
 let workspacePreviewColumns = 5
 let workspacePreviewMaximumRows = 3
@@ -649,8 +650,8 @@ func workspacePreviewNextWindowId(_ windows: [WorkspacePreviewWindowItem], selec
 func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
     let ratio = aspectRatio.isFinite && aspectRatio > 0 ? aspectRatio : 1
     return ratio >= 1
-        ? CGSize(width: workspacePreviewWindowWidth * ratio, height: workspacePreviewWindowWidth)
-        : CGSize(width: workspacePreviewWindowWidth, height: workspacePreviewWindowWidth / ratio)
+        ? CGSize(width: workspacePreviewWorkspaceShortSide * ratio, height: workspacePreviewWorkspaceShortSide)
+        : CGSize(width: workspacePreviewWorkspaceShortSide, height: workspacePreviewWorkspaceShortSide / ratio)
 }
 
 func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity, workspaceAspectRatio: CGFloat = 1.6) -> Int {
@@ -769,7 +770,7 @@ private struct WorkspacePreviewView: View {
                                                     }
                                                 }
                                             Text(window.title)
-                                                .font(.system(size: 13, weight: .medium))
+                                                .font(.system(size: 16, weight: window.id == selectedWindowId ? .semibold : .medium))
                                                 .foregroundStyle(palette.workspacePreviewForeground(0.98))
                                                 .lineLimit(1)
                                                 .multilineTextAlignment(.center)

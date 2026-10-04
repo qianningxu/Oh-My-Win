@@ -122,14 +122,10 @@ enum GlobalObserver {
     }
 
     private static func onKeyDown(_ event: NSEvent) {
-        let modifierFlags = event.modifierFlags
         let keyCode = event.keyCode
         Task { @MainActor in
             if keyCode == 53 { WorkspacePreviewPanel.shared.dismiss() }
             noteTapBindingKeyDown()
-            if modifierFlags.contains(.control), keyCode == 34 { // 'i' key
-                ExposePanel.shared.toggle()
-            }
         }
     }
 
@@ -324,9 +320,6 @@ enum GlobalObserver {
             if let prefix = Key(carbonKeyCode: UInt32(event.keyCode)),
                sequenceBindingsPrefixKeys.contains(prefix) {
                 noteSequencePrefixKeyPressed(prefix)
-            }
-            if event.modifierFlags.contains(.control), event.keyCode == 34 {
-                return nil // consume the event
             }
             return event
         })
