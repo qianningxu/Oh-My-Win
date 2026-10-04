@@ -7,8 +7,6 @@ private let workspacePreviewWorkspaceShortSide = standardGap * 55
 let workspacePreviewWindowWidth = workspacePreviewWorkspaceShortSide * 1.25
 let workspacePreviewWindowHeight = workspacePreviewWindowWidth
 let workspacePreviewColumns = 5
-let workspacePreviewMaximumRows = 3
-let workspacePreviewMaximumWindows = workspacePreviewColumns * workspacePreviewMaximumRows
 private let workspacePreviewCaptionSpacing = workspacePreviewFocusRingWidth + standardGap
 private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 5
 private let workspacePreviewStackSeparatorHeight = workspacePreviewFocusRingWidth + standardGap * 9 + standardGap * 0.125
@@ -232,7 +230,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
             present(kind: .tabs, modifier: .control)
             guard isPreviewActive else { return true }
             pendingCommands = nil
-            if let window = items[currentIndex].windows.prefix(workspacePreviewMaximumWindows).getOrNil(atIndex: index) {
+            if let window = items[currentIndex].windows.getOrNil(atIndex: index) {
                 selectedWindowId = window.id
                 selectedIndex = currentIndex
             }
@@ -630,12 +628,29 @@ func workspacePreviewFrame(for normalizedFrame: CGRect, in canvasRect: CGRect) -
     )
 }
 
-// Preserve window order across stacks, with at most five windows per row.
-func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem]) -> [[WorkspacePreviewWindowItem]] {
-    let displayed = Array(windows.prefix(workspacePreviewMaximumWindows))
-    return stride(from: 0, to: displayed.count, by: workspacePreviewColumns).map {
-        Array(displayed[$0..<min($0 + workspacePreviewColumns, displayed.count)])
+// Preserve order and distribute every item evenly across the required rows.
+func workspacePreviewBalancedRows<Item>(_ items: [Item], maximumColumns: Int) -> [[Item]] {
+    guard !items.isEmpty else { return [] }
+    let columns = max(maximumColumns, 1)
+    let rowCount = (items.count + columns - 1) / columns
+    let baseCount = items.count / rowCount
+    let remainder = items.count % rowCount
+    var offset = 0
+    return (0..<rowCount).map { row in
+        let count = baseCount + (row < remainder ? 1 : 0)
+        defer { offset += count }
+        return Array(items[offset..<offset + count])
     }
+}
+
+func workspacePreviewBalancedColumnCount(itemCount: Int, maximumColumns: Int) -> Int {
+    let count = max(itemCount, 1)
+    let rows = (count + maximumColumns - 1) / maximumColumns
+    return (count + rows - 1) / rows
+}
+
+func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem]) -> [[WorkspacePreviewWindowItem]] {
+    workspacePreviewBalancedRows(windows, maximumColumns: workspacePreviewColumns)
 }
 
 func workspacePreviewNextWindowId(_ windows: [WorkspacePreviewWindowItem], selectedWindowId: UInt32?, direction: Int) -> UInt32? {
@@ -657,17 +672,17 @@ func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
 func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity, workspaceAspectRatio: CGFloat = 1.6) -> Int {
     let availableGridWidth = availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2
     let fittingColumns = availableWidth.isFinite ? max(Int((availableGridWidth + workspacePreviewColumnSpacing) / (workspacePreviewWindowWidth + workspacePreviewColumnSpacing)), 1) : workspacePreviewColumns
-    return min(max(windowCount, 1), workspacePreviewColumns, fittingColumns)
+    return workspacePreviewBalancedColumnCount(itemCount: windowCount, maximumColumns: min(workspacePreviewColumns, fittingColumns))
 }
 
 func workspacePreviewWorkspaceColumnCount(itemCount: Int, availableWidth: CGFloat, workspaceAspectRatio: CGFloat = 1.6) -> Int {
     let tileWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width
     let contentWidth = availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2
     let fittingColumns = max(Int((contentWidth + workspacePreviewColumnSpacing) / (tileWidth + workspacePreviewColumnSpacing)), 1)
-    return min(max(itemCount, 1), 4, fittingColumns)
+    return workspacePreviewBalancedColumnCount(itemCount: itemCount, maximumColumns: min(4, fittingColumns))
 }
 
-func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewMaximumWindows, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
+func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewColumns, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
     let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
     let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
     let windowWidth = workspacePreviewWindowWidth * CGFloat(columns) + workspacePreviewColumnSpacing * CGFloat(columns - 1)
@@ -680,7 +695,7 @@ func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowC
 }
 
 func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil, workspaceColumns: Int = 4, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
-    let rows = min(max(stackRowCount ?? ((max(maximumWindowCount, 0) + columns - 1) / columns), 1), workspacePreviewMaximumRows)
+    let rows = max(stackRowCount ?? ((max(maximumWindowCount, 0) + columns - 1) / columns), 1)
     let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewStackSeparatorHeight
     let workspaceRows = workspaceCount > 1 ? (workspaceCount + workspaceColumns - 1) / workspaceColumns : 0
     let workspaceTileHeight = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5
@@ -730,10 +745,9 @@ private struct WorkspacePreviewView: View {
         GeometryReader { geometry in
             let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2, 1)
             let columns = workspacePreviewColumnCount(windowCount: current.windows.count, workspaceCount: items.count, availableWidth: geometry.size.width, workspaceAspectRatio: current.workspaceAspectRatio)
-            let displayed = Array(current.windows.prefix(workspacePreviewMaximumWindows))
-            let rows = stride(from: 0, to: displayed.count, by: columns).map { Array(displayed[$0..<min($0 + columns, displayed.count)]) }
+            let rows = workspacePreviewBalancedRows(current.windows, maximumColumns: columns)
             let workspaceColumns = workspacePreviewWorkspaceColumnCount(itemCount: items.count, availableWidth: geometry.size.width, workspaceAspectRatio: current.workspaceAspectRatio)
-            let workspaceRows = stride(from: 0, to: items.count, by: workspaceColumns).map { Array($0..<min($0 + workspaceColumns, items.count)) }
+            let workspaceRows = workspacePreviewBalancedRows(Array(items.indices), maximumColumns: workspaceColumns)
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 0) {
