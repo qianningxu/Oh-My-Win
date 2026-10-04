@@ -21,6 +21,22 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertFalse(cycle.updateModifiers([]))
     }
 
+    func testControlPreviewCommitsOnlyWhenControlIsReleased() {
+        var cycle = WorkspacePreviewShortcutCycle()
+        cycle.select(modifier: .control)
+        XCTAssertFalse(cycle.updateModifiers([.control, .option]))
+        XCTAssertFalse(cycle.updateModifiers([.control]))
+        XCTAssertTrue(cycle.updateModifiers([]))
+        XCTAssertFalse(cycle.updateModifiers([]))
+    }
+
+    func testSeparatePreviewSizing() {
+        XCTAssertEqual(workspacePreviewModeWidth(kind: .workspaces, workspaceCount: 5, windowCount: 15, availableWidth: 2000, workspaceAspectRatio: 1.6), 1596)
+        XCTAssertEqual(workspacePreviewModeHeight(kind: .workspaces, workspaceCount: 5, windowCount: 15, panelWidth: 1596, availableHeight: 2000, workspaceAspectRatio: 1.6), 616)
+        XCTAssertEqual(workspacePreviewModeWidth(kind: .tabs, workspaceCount: 5, windowCount: 1, availableWidth: 2000, workspaceAspectRatio: 1.6), 300)
+        XCTAssertEqual(workspacePreviewModeHeight(kind: .tabs, workspaceCount: 5, windowCount: 1, panelWidth: 300, availableHeight: 2000, workspaceAspectRatio: 1.6), 324)
+    }
+
     func testOptionTabCyclesWindowsInDisplayedRowOrder() {
         func item(_ id: UInt32, _ stack: UInt32?) -> WorkspacePreviewWindowItem {
             WorkspacePreviewWindowItem(id: id, title: "Window", appName: "App", appIcon: nil, thumbnail: nil, stackId: stack)

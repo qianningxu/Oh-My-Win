@@ -5,6 +5,7 @@ import CoreGraphics
 private let workspacePreviewKeyboardCallback: CGEventTapCallBack = { _, type, event, _ in
     var flags: NSEvent.ModifierFlags = []
     if event.flags.contains(.maskAlternate) { flags.insert(.option) }
+    if event.flags.contains(.maskControl) { flags.insert(.control) }
     if event.flags.contains(.maskCommand) { flags.insert(.command) }
     let modifierFlags = flags
     DispatchQueue.main.async {
