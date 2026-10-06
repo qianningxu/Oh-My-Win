@@ -9,16 +9,11 @@ extension WindowTabStripPanelController {
             return false
         }
 
-        // Keep the active tabs attached to the live resize without revealing passive stacks.
-        mouseInteractionChromeMode = nil
+        // Keep all tab bars hidden until the resize session restores normal chrome.
+        mouseInteractionChromeMode = .hidden
         transientResizeTabGroupId = transientStrip.id
         transientResizeTabGroupStrip = transientStrip
-        if hiddenPassiveTabGroupChromeIds.contains(transientStrip.id) {
-            orderOutPanels(id: transientStrip.id)
-            return true
-        }
-        visualPanel(for: transientStrip.id).update(with: transientStrip)
-        updateInteractivePanelForResizingStrip(transientStrip)
+        refresh()
         return true
     }
 

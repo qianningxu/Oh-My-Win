@@ -28,6 +28,7 @@ extension WindowMouseInteractionDriver {
         }
         resizeSession = session
         currentlyManipulatedWithMouseWindowId = windowId
+        WindowTabStripPanelController.shared.hideChromeDuringMouseInteraction(showFrameOnly: false)
         WindowMouseInteractionOpacityController.shared.beginResize(activeWindowId: windowId)
         configureResizeChrome(windowId: windowId)
         startDisplayLoop()
@@ -37,7 +38,7 @@ extension WindowMouseInteractionDriver {
     func configureResizeChrome(windowId: UInt32) {
         guard let window = Window.get(byId: windowId) else {
             logWindowDragLive("resize.configureChrome missing-window window=\(windowId)")
-            WindowTabStripPanelController.shared.hideChromeDuringMouseInteraction()
+            WindowTabStripPanelController.shared.hideChromeDuringMouseInteraction(showFrameOnly: false)
             return
         }
         if resizeGesture == nil {
