@@ -68,6 +68,17 @@ func starterConfigText() -> String {
             ctrl-7 = 'tab 7'
             ctrl-8 = 'tab 8'
             ctrl-9 = 'tab 9'
+            ctrl-shift-0 = 'move-node-to-tab 10'
+            ctrl-shift-1 = 'move-node-to-tab 1'
+            ctrl-shift-2 = 'move-node-to-tab 2'
+            ctrl-shift-3 = 'move-node-to-tab 3'
+            ctrl-shift-4 = 'move-node-to-tab 4'
+            ctrl-shift-5 = 'move-node-to-tab 5'
+            ctrl-shift-6 = 'move-node-to-tab 6'
+            ctrl-shift-7 = 'move-node-to-tab 7'
+            ctrl-shift-8 = 'move-node-to-tab 8'
+            ctrl-shift-9 = 'move-node-to-tab 9'
+            ctrl-shift-n = 'move-node-to-tab new'
             alt-0 = []
             alt-1 = []
             alt-2 = []
