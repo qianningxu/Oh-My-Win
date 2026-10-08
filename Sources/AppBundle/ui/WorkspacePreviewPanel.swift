@@ -18,7 +18,8 @@ private let workspacePreviewPanelPadding = WinMuxSpacing.page
 let workspacePreviewMaximumWidth = standardGap * 440
 let workspacePreviewCornerRadius = standardGap * 1.75
 let workspacePreviewFocusRingWidth = standardGap * 3
-let workspacePreviewMaximumHeight = standardGap * 250
+let workspacePreviewMaximumHeight = workspacePreviewTileHeight * 2 + workspacePreviewStackSeparatorHeight
+    + workspacePreviewPanelPadding * 1.25 + workspacePreviewRingInset * 1.5
 
 enum WorkspacePreviewKind {
     case workspaces
@@ -768,6 +769,10 @@ func workspacePreviewMaximumPanelWidth(availableWidth: CGFloat, workspaceAspectR
     return min(width, workspacePreviewMaximumWidth, availableWidth * 0.92)
 }
 
+func workspacePreviewHeightLimit(availableHeight: CGFloat) -> CGFloat {
+    min(workspacePreviewMaximumHeight, max(availableHeight - workspacePreviewPanelPadding * 2, 0))
+}
+
 func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity, workspaceAspectRatio: CGFloat = 1.6) -> Int {
     let availableGridWidth = availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2
     let fittingColumns = availableWidth.isFinite ? max(Int((availableGridWidth + workspacePreviewColumnSpacing) / (workspacePreviewWindowWidth + workspacePreviewColumnSpacing)), 1) : workspacePreviewColumns
@@ -802,7 +807,7 @@ func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFlo
         ? CGFloat(workspaceRows) * workspaceTileHeight + CGFloat(workspaceRows - 1) * workspacePreviewColumnSpacing + workspacePreviewStackSeparatorHeight
         : 0
     let contentHeight = workspacePreviewPanelPadding * 1.25 + gridHeight + workspacePreviewRingInset * 1.5 + workspaceHeight
-    return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
+    return min(contentHeight, workspacePreviewHeightLimit(availableHeight: availableHeight))
 }
 
 func workspacePreviewModeWidth(kind: WorkspacePreviewKind, workspaceCount: Int, windowCount: Int, availableWidth: CGFloat, workspaceAspectRatio: CGFloat, windows: [WorkspacePreviewWindowItem]? = nil) -> CGFloat {
@@ -833,7 +838,7 @@ func workspacePreviewModeHeight(kind: WorkspacePreviewKind, workspaceCount: Int,
     let rows = max((workspaceCount + columns - 1) / columns, 1)
     let tileHeight = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5
     let height = workspacePreviewPanelPadding * 1.25 + CGFloat(rows) * tileHeight + CGFloat(rows - 1) * workspacePreviewColumnSpacing + workspacePreviewRingInset * 1.5
-    return min(height, workspacePreviewMaximumHeight, availableHeight * 0.8)
+    return min(height, workspacePreviewHeightLimit(availableHeight: availableHeight))
 }
 
 private struct WorkspacePreviewView: View {
