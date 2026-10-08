@@ -737,11 +737,9 @@ private struct WorkspacePreviewView: View {
     let onSelect: (Int) -> Void
     let onWindowSelect: (UInt32) -> Void
     let onDismiss: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         let current = items[currentIndex]
-        let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         GeometryReader { geometry in
             let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2, 1)
             let columns = workspacePreviewColumnCount(windowCount: current.windows.count, workspaceCount: items.count, availableWidth: geometry.size.width, workspaceAspectRatio: current.workspaceAspectRatio)
@@ -770,7 +768,10 @@ private struct WorkspacePreviewView: View {
                         }
                         if kind == .tabs {
                             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                                if index > 0 { rowDivider(palette: palette) }
+                                if index > 0 {
+                                    Spacer(minLength: 0)
+                                        .frame(height: standardGap * 4.125)
+                                }
                                 HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
                                     ForEach(row) { window in
                                         VStack(spacing: workspacePreviewCaptionSpacing) {
@@ -823,15 +824,6 @@ private struct WorkspacePreviewView: View {
         .clipShape(RoundedRectangle(cornerRadius: standardGap * 8, style: .continuous))
         .onExitCommand(perform: onDismiss)
     }
-    private func rowDivider(palette: WinMuxOverlayPalette) -> some View {
-        Rectangle()
-            .fill(palette.workspacePreviewForeground(0.12))
-            .frame(height: standardGap * 0.125)
-            .padding(.horizontal, workspacePreviewRingInset)
-            .padding(.top, standardGap)
-            .padding(.bottom, standardGap * 3)
-    }
-
 }
 
 private struct WorkspacePreviewLegacyCard: View {
