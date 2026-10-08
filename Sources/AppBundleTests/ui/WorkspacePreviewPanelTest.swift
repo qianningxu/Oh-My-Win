@@ -3,6 +3,18 @@ import XCTest
 import AppKit
 
 final class WorkspacePreviewPanelTest: XCTestCase {
+    @MainActor
+    func testSinglePaneWorkspaceAndWindowPreviewWidthsMatch() {
+        setUpWorkspacesForTests()
+        let workspace = focus.workspace
+        let window = TestWindow.new(id: 461, parent: workspace.rootTilingContainer)
+        window.lastKnownActualRect = Rect(topLeftX: 6, topLeftY: 80, width: 1716, height: 1031)
+        let windows = workspacePreviewWindowItems(for: workspace)
+        let ratio = workspacePreviewCanvasAspectRatio(for: workspace, windows: windows, legacyWindows: windows)
+        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: ratio), workspacePreviewWindowSize(windows[0]))
+        XCTAssertEqual(ratio, 1716.0 / 1031.0)
+    }
+
     func testOptionPreviewUsesActualAspectRatiosAtFixedHeightAndWrapsRows() {
         let wide = WorkspacePreviewWindowItem(id: 1, title: "Wide", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 2)
         let tall = WorkspacePreviewWindowItem(id: 2, title: "Tall", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 0.5)

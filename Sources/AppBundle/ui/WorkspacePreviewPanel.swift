@@ -172,13 +172,16 @@ final class WorkspacePreviewPanel: NSPanelHud {
         let candidates = workspacePreviewCandidateWorkspaces(current: current)
         guard !candidates.isEmpty else { return }
         items = candidates.map { workspace in
+            let workspaceRect = workspacePreviewRect(for: workspace)
+            let windows = workspacePreviewWindowItems(for: workspace)
+            let legacyWindows = workspacePreviewWindowItems(for: workspace, workspaceRect: workspaceRect)
             return WorkspacePreviewItem(
                 id: workspace.name,
                 workspace: workspace,
                 displayName: workspaceDisplayName(workspace.name),
-                windows: workspacePreviewWindowItems(for: workspace),
-                legacyWindows: workspacePreviewWindowItems(for: workspace, workspaceRect: workspacePreviewRect(for: workspace)),
-                workspaceAspectRatio: workspacePreviewAspectRatio(for: workspace.workspaceMonitor.rect),
+                windows: windows,
+                legacyWindows: legacyWindows,
+                workspaceAspectRatio: workspacePreviewCanvasAspectRatio(for: workspace, windows: windows, legacyWindows: legacyWindows),
             )
         }
         currentIndex = items.firstIndex { $0.workspace == current } ?? 0
@@ -353,7 +356,7 @@ func workspacePreviewWindowItems(for workspace: Workspace) -> [WorkspacePreviewW
                 appIcon: appIconImage(bundleIdentifier: window.app.rawAppBundleId, bundlePath: window.app.bundlePath),
                 thumbnail: cachedExposeThumbnail(window.windowId).map { NSImage(cgImage: $0, size: .zero) },
                 stackId: window.nearestWindowTabGroup?.allLeafWindowsRecursive.first?.windowId,
-                aspectRatio: workspacePreviewAspectRatio(for: window.lastKnownActualRect ?? window.lastAppliedLayoutPhysicalRect ?? window.lastAppliedLayoutVirtualRect ?? Rect(topLeftX: 0, topLeftY: 0, width: 1, height: 1)),
+                aspectRatio: workspacePreviewAspectRatio(for: window.lastKnownActualRect ?? window.lastAppliedLayoutPhysicalRect ?? window.lastAppliedLayoutVirtualRect ?? workspacePreviewRect(for: workspace)),
             )
         }
 }
@@ -368,6 +371,18 @@ func workspacePreviewRect(for workspace: Workspace) -> Rect {
 func workspacePreviewAspectRatio(for rect: Rect) -> CGFloat {
     guard rect.width > 0, rect.height > 0 else { return 1 }
     return rect.width / rect.height
+}
+
+@MainActor
+func workspacePreviewCanvasAspectRatio(for workspace: Workspace, windows: [WorkspacePreviewWindowItem], legacyWindows: [WorkspacePreviewWindowItem]) -> CGFloat {
+    // A single pane fills the canvas; use its app area, excluding the tab bar.
+    if legacyWindows.count == 1,
+       let id = legacyWindows.first?.id,
+       workspace.rootTilingContainer.allLeafWindowsRecursive.contains(where: { $0.windowId == id }),
+       let window = windows.first(where: { $0.id == id }) {
+        return window.aspectRatio
+    }
+    return workspacePreviewAspectRatio(for: workspacePreviewRect(for: workspace))
 }
 
 @MainActor
