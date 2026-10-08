@@ -13,6 +13,30 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(workspacePreviewWindowRows([wide], availableWidth: 300).flatMap { $0 }.map(\.id), [1])
     }
 
+    func testOptionPreviewWrapsByWidthWithoutAWindowCountLimit() {
+        let windows = (1...8).map {
+            WorkspacePreviewWindowItem(id: UInt32($0), title: "Tall", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 0.5)
+        }
+        let width = workspacePreviewModeWidth(kind: .tabs, workspaceCount: 1, windowCount: windows.count, availableWidth: 2000, workspaceAspectRatio: 1.6, windows: windows)
+        XCTAssertEqual(workspacePreviewWindowRows(windows, availableWidth: width).map(\.count), [8])
+        XCTAssertLessThanOrEqual(width, workspacePreviewMaximumWidth)
+        let narrowWidth = workspacePreviewModeWidth(kind: .tabs, workspaceCount: 1, windowCount: windows.count, availableWidth: 1000, workspaceAspectRatio: 1.6, windows: windows)
+        XCTAssertLessThanOrEqual(narrowWidth, 920)
+        XCTAssertEqual(workspacePreviewWindowRows(windows, availableWidth: narrowWidth).map(\.count), [4, 4])
+    }
+
+    func testPreviewKindsShareMaximumWidthForThreeWorkspaces() {
+        let maximum = workspacePreviewMaximumPanelWidth(availableWidth: 2000, workspaceAspectRatio: 1.6)
+        XCTAssertEqual(maximum, 1592)
+        XCTAssertEqual(workspacePreviewWorkspaceColumnCount(itemCount: 6, availableWidth: maximum, workspaceAspectRatio: 1.6), 3)
+        XCTAssertEqual(workspacePreviewWorkspaceColumnCount(itemCount: 12, availableWidth: 10000, workspaceAspectRatio: 1.6), 3)
+        let windows = (1...4).map {
+            WorkspacePreviewWindowItem(id: UInt32($0), title: "Window", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 1.6)
+        }
+        XCTAssertEqual(workspacePreviewWindowRows(windows, availableWidth: maximum).map(\.count), [3, 1])
+        XCTAssertEqual(workspacePreviewMaximumPanelWidth(availableWidth: 1000, workspaceAspectRatio: 1.6), 920)
+    }
+
     func testPreviewWaitsForOptionReleaseAndCommitsOnlyOnce() {
         var cycle = WorkspacePreviewShortcutCycle()
         cycle.select(modifier: .option)
@@ -176,7 +200,7 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(optionWorkspaceIndex(for: 82), 9)
     }
 
-    func testPreviewRowsFlowAcrossStacksAndLimitEachRowToFive() {
+    func testPreviewRowsFlowAcrossStacksAndWrapAtMaximumWidth() {
         func item(_ id: UInt32, _ stack: UInt32?) -> WorkspacePreviewWindowItem {
             WorkspacePreviewWindowItem(id: id, title: "Window", appName: "App", appIcon: nil, thumbnail: nil, stackId: stack)
         }

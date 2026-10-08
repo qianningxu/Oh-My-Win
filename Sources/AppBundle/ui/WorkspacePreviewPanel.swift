@@ -6,6 +6,7 @@ private let workspacePreviewPanelId = "WinMux.workspacePreview"
 let workspacePreviewWindowHeight = standardGap * 75
 let workspacePreviewWindowWidth = workspacePreviewWindowHeight
 let workspacePreviewColumns = 5
+let workspacePreviewWorkspaceColumns = 3
 private let workspacePreviewCaptionSpacing = workspacePreviewFocusRingWidth + standardGap
 private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 5
 private let workspacePreviewStackSeparatorHeight = workspacePreviewFocusRingWidth + standardGap * 9 + standardGap * 0.125
@@ -650,16 +651,12 @@ func workspacePreviewBalancedColumnCount(itemCount: Int, maximumColumns: Int) ->
     return (count + rows - 1) / rows
 }
 
-func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem]) -> [[WorkspacePreviewWindowItem]] {
-    workspacePreviewBalancedRows(windows, maximumColumns: workspacePreviewColumns)
-}
-
 func workspacePreviewWindowSize(_ window: WorkspacePreviewWindowItem) -> CGSize {
     let ratio = window.aspectRatio.isFinite && window.aspectRatio > 0 ? window.aspectRatio : 1
     return CGSize(width: workspacePreviewWindowHeight * ratio, height: workspacePreviewWindowHeight)
 }
 
-func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem], availableWidth: CGFloat) -> [[WorkspacePreviewWindowItem]] {
+func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem], availableWidth: CGFloat = workspacePreviewMaximumWidth) -> [[WorkspacePreviewWindowItem]] {
     let contentWidth = max(availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2, 1)
     var rows: [[WorkspacePreviewWindowItem]] = []
     var row: [WorkspacePreviewWindowItem] = []
@@ -667,7 +664,7 @@ func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem], availab
     for window in windows {
         let width = workspacePreviewWindowSize(window).width
         let spacing = row.isEmpty ? 0 : workspacePreviewColumnSpacing
-        if !row.isEmpty && (row.count == workspacePreviewColumns || rowWidth + spacing + width > contentWidth) {
+        if !row.isEmpty && rowWidth + spacing + width > contentWidth {
             rows.append(row)
             row = []
             rowWidth = 0
@@ -684,7 +681,7 @@ private func workspacePreviewWindowRowWidth(_ row: [WorkspacePreviewWindowItem])
 }
 
 func workspacePreviewNextWindowId(_ windows: [WorkspacePreviewWindowItem], selectedWindowId: UInt32?, direction: Int) -> UInt32? {
-    let ordered = workspacePreviewWindowRows(windows).flatMap { $0 }
+    let ordered = windows
     guard !ordered.isEmpty else { return nil }
     guard let index = ordered.firstIndex(where: { $0.id == selectedWindowId }) else {
         return direction < 0 ? ordered.last?.id : ordered.first?.id
@@ -697,6 +694,14 @@ func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
     return CGSize(width: workspacePreviewWindowHeight * ratio, height: workspacePreviewWindowHeight)
 }
 
+func workspacePreviewMaximumPanelWidth(availableWidth: CGFloat, workspaceAspectRatio: CGFloat) -> CGFloat {
+    let workspaceWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width
+    let width = workspaceWidth * CGFloat(workspacePreviewWorkspaceColumns)
+        + workspacePreviewColumnSpacing * CGFloat(workspacePreviewWorkspaceColumns - 1)
+        + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2
+    return min(width, workspacePreviewMaximumWidth, availableWidth * 0.92)
+}
+
 func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity, workspaceAspectRatio: CGFloat = 1.6) -> Int {
     let availableGridWidth = availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2
     let fittingColumns = availableWidth.isFinite ? max(Int((availableGridWidth + workspacePreviewColumnSpacing) / (workspacePreviewWindowWidth + workspacePreviewColumnSpacing)), 1) : workspacePreviewColumns
@@ -707,7 +712,7 @@ func workspacePreviewWorkspaceColumnCount(itemCount: Int, availableWidth: CGFloa
     let tileWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width
     let contentWidth = availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2
     let fittingColumns = max(Int((contentWidth + workspacePreviewColumnSpacing) / (tileWidth + workspacePreviewColumnSpacing)), 1)
-    return workspacePreviewBalancedColumnCount(itemCount: itemCount, maximumColumns: min(4, fittingColumns))
+    return workspacePreviewBalancedColumnCount(itemCount: itemCount, maximumColumns: min(workspacePreviewWorkspaceColumns, fittingColumns))
 }
 
 func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewColumns, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
@@ -722,7 +727,7 @@ func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowC
     return min(contentWidth, maximum)
 }
 
-func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil, workspaceColumns: Int = 4, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
+func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil, workspaceColumns: Int = workspacePreviewWorkspaceColumns, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
     let rows = max(stackRowCount ?? ((max(maximumWindowCount, 0) + columns - 1) / columns), 1)
     let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewStackSeparatorHeight
     let workspaceRows = workspaceCount > 1 ? (workspaceCount + workspaceColumns - 1) / workspaceColumns : 0
@@ -735,16 +740,15 @@ func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFlo
 }
 
 func workspacePreviewModeWidth(kind: WorkspacePreviewKind, workspaceCount: Int, windowCount: Int, availableWidth: CGFloat, workspaceAspectRatio: CGFloat, windows: [WorkspacePreviewWindowItem]? = nil) -> CGFloat {
+    let maximum = workspacePreviewMaximumPanelWidth(availableWidth: availableWidth, workspaceAspectRatio: workspaceAspectRatio)
     if kind == .tabs {
         if let windows, !windows.isEmpty {
-            let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
             let rows = workspacePreviewWindowRows(windows, availableWidth: maximum)
             let width = rows.map(workspacePreviewWindowRowWidth).max() ?? workspacePreviewWindowWidth
             return min(width + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2, maximum)
         }
-        return workspacePreviewPanelWidth(itemCount: 1, availableWidth: availableWidth, windowCount: windowCount)
+        return min(workspacePreviewPanelWidth(itemCount: 1, availableWidth: availableWidth, windowCount: windowCount), maximum)
     }
-    let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
     let columns = workspacePreviewWorkspaceColumnCount(itemCount: workspaceCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
     let width = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width * CGFloat(columns) + workspacePreviewColumnSpacing * CGFloat(columns - 1)
     return min(width + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2, maximum)
