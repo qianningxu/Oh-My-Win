@@ -7,8 +7,8 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         let wide = WorkspacePreviewWindowItem(id: 1, title: "Wide", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 2)
         let tall = WorkspacePreviewWindowItem(id: 2, title: "Tall", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 0.5)
         let last = WorkspacePreviewWindowItem(id: 3, title: "Wide", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 2)
-        XCTAssertEqual(workspacePreviewWindowSize(wide), CGSize(width: 550, height: 275))
-        XCTAssertEqual(workspacePreviewWindowSize(tall), CGSize(width: 137.5, height: 275))
+        XCTAssertEqual(workspacePreviewWindowSize(wide), CGSize(width: 600, height: 300))
+        XCTAssertEqual(workspacePreviewWindowSize(tall), CGSize(width: 150, height: 300))
         XCTAssertEqual(workspacePreviewWindowRows([wide, tall, last], availableWidth: 1000).map { $0.map(\.id) }, [[1, 2], [3]])
         XCTAssertEqual(workspacePreviewWindowRows([wide], availableWidth: 300).flatMap { $0 }.map(\.id), [1])
     }
@@ -56,10 +56,10 @@ final class WorkspacePreviewPanelTest: XCTestCase {
     }
 
     func testSeparatePreviewSizing() {
-        XCTAssertEqual(workspacePreviewModeWidth(kind: .workspaces, workspaceCount: 5, windowCount: 15, availableWidth: 2000, workspaceAspectRatio: 1.6), 1208)
-        XCTAssertEqual(workspacePreviewModeHeight(kind: .workspaces, workspaceCount: 5, windowCount: 15, panelWidth: 1208, availableHeight: 2000, workspaceAspectRatio: 1.6), 602)
-        XCTAssertEqual(workspacePreviewModeWidth(kind: .tabs, workspaceCount: 5, windowCount: 1, availableWidth: 2000, workspaceAspectRatio: 1.6), 355)
-        XCTAssertEqual(workspacePreviewModeHeight(kind: .tabs, workspaceCount: 5, windowCount: 1, panelWidth: 355, availableHeight: 2000, workspaceAspectRatio: 1.6), 365)
+        XCTAssertEqual(workspacePreviewModeWidth(kind: .workspaces, workspaceCount: 5, windowCount: 15, availableWidth: 2000, workspaceAspectRatio: 1.6), 1592)
+        XCTAssertEqual(workspacePreviewModeHeight(kind: .workspaces, workspaceCount: 5, windowCount: 15, panelWidth: 1592, availableHeight: 2000, workspaceAspectRatio: 1.6), 762)
+        XCTAssertEqual(workspacePreviewModeWidth(kind: .tabs, workspaceCount: 5, windowCount: 1, availableWidth: 2000, workspaceAspectRatio: 1.6), 380)
+        XCTAssertEqual(workspacePreviewModeHeight(kind: .tabs, workspaceCount: 5, windowCount: 1, panelWidth: 380, availableHeight: 2000, workspaceAspectRatio: 1.6), 390)
     }
 
     func testOptionTabCyclesWindowsInDisplayedRowOrder() {
@@ -210,29 +210,29 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(placed[0].frame, CGRect(origin: .zero, size: size))
     }
 
-    func testWorkspaceScreenRatioAndSquareWindowsShareScale() {
+    func testBothPreviewKindsUseFixedHeightAndPreserveAspectRatio() {
         XCTAssertEqual(workspacePreviewWindowWidth, workspacePreviewWindowHeight)
-        XCTAssertEqual(workspacePreviewWindowWidth, 275)
-        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 1.6), CGSize(width: 352, height: 220))
-        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 0.625), CGSize(width: 220, height: 352))
-        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 0), CGSize(width: 220, height: 220))
+        XCTAssertEqual(workspacePreviewWindowWidth, 300)
+        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 1.6), CGSize(width: 480, height: 300))
+        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 0.625), CGSize(width: 187.5, height: 300))
+        XCTAssertEqual(workspacePreviewWorkspaceSize(aspectRatio: 0), CGSize(width: 300, height: 300))
     }
 
     func testPreviewWidthFitsWindowRowsAndOptionalWorkspaceRow() {
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 1, availableWidth: 2000, windowCount: 1), 355)
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 1, availableWidth: 2000, windowCount: 5), 1599)
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 2, availableWidth: 2000, windowCount: 1), 820)
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 3), 1208)
-        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 15), 1599)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 1, availableWidth: 2000, windowCount: 1), 380)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 1, availableWidth: 2000, windowCount: 5), 1724)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 2, availableWidth: 2000, windowCount: 1), 1076)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 3), 1592)
+        XCTAssertEqual(workspacePreviewPanelWidth(itemCount: 6, availableWidth: 2000, windowCount: 15), 1724)
         XCTAssertEqual(workspacePreviewColumnCount(windowCount: 15, workspaceCount: 6, availableWidth: 1220.5), 3)
         XCTAssertEqual(workspacePreviewWorkspaceColumnCount(itemCount: 5, availableWidth: 1596), 3)
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 5), 961.5)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 5), 1000)
         XCTAssertLessThanOrEqual(workspacePreviewPanelWidth(itemCount: 100, availableWidth: 600), 552)
     }
 
     func testPreviewHeightFitsWindowRowsAndOptionalWorkspaceRow() {
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 0), 365)
-        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 2), 669.5)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 0), 390)
+        XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 1, availableHeight: 2000, workspaceCount: 2), 774.5)
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 2), 1000)
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 15, availableHeight: 2000, workspaceCount: 6), 1000)
         XCTAssertEqual(workspacePreviewPanelHeight(maximumWindowCount: 100, availableHeight: 600, workspaceCount: 100), 480)

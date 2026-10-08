@@ -3,9 +3,8 @@ import SwiftUI
 import Common
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
-private let workspacePreviewWorkspaceShortSide = standardGap * 55
-let workspacePreviewWindowWidth = workspacePreviewWorkspaceShortSide * 1.25
-let workspacePreviewWindowHeight = workspacePreviewWindowWidth
+let workspacePreviewWindowHeight = standardGap * 75
+let workspacePreviewWindowWidth = workspacePreviewWindowHeight
 let workspacePreviewColumns = 5
 private let workspacePreviewCaptionSpacing = workspacePreviewFocusRingWidth + standardGap
 private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 5
@@ -695,9 +694,7 @@ func workspacePreviewNextWindowId(_ windows: [WorkspacePreviewWindowItem], selec
 
 func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
     let ratio = aspectRatio.isFinite && aspectRatio > 0 ? aspectRatio : 1
-    return ratio >= 1
-        ? CGSize(width: workspacePreviewWorkspaceShortSide * ratio, height: workspacePreviewWorkspaceShortSide)
-        : CGSize(width: workspacePreviewWorkspaceShortSide, height: workspacePreviewWorkspaceShortSide / ratio)
+    return CGSize(width: workspacePreviewWindowHeight * ratio, height: workspacePreviewWindowHeight)
 }
 
 func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity, workspaceAspectRatio: CGFloat = 1.6) -> Int {
