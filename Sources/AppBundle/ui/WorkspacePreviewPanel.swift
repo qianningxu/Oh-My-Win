@@ -49,6 +49,7 @@ struct WorkspacePreviewWindowItem: Identifiable {
     let thumbnail: NSImage?
     var layoutFrame: CGRect = .zero
     var stackId: UInt32? = nil
+    var aspectRatio: CGFloat = 1
 }
 
 struct WorkspacePreviewShortcutCycle {
@@ -187,8 +188,8 @@ final class WorkspacePreviewPanel: NSPanelHud {
         let screenFrame = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
         let windows = items[currentIndex].windows
         let aspectRatio = items[currentIndex].workspaceAspectRatio
-        let width = workspacePreviewModeWidth(kind: kind, workspaceCount: items.count, windowCount: windows.count, availableWidth: screenFrame.width, workspaceAspectRatio: aspectRatio)
-        let height = workspacePreviewModeHeight(kind: kind, workspaceCount: items.count, windowCount: windows.count, panelWidth: width, availableHeight: screenFrame.height, workspaceAspectRatio: aspectRatio)
+        let width = workspacePreviewModeWidth(kind: kind, workspaceCount: items.count, windowCount: windows.count, availableWidth: screenFrame.width, workspaceAspectRatio: aspectRatio, windows: windows)
+        let height = workspacePreviewModeHeight(kind: kind, workspaceCount: items.count, windowCount: windows.count, panelWidth: width, availableHeight: screenFrame.height, workspaceAspectRatio: aspectRatio, windows: windows)
         setFrame(CGRect(
             x: screenFrame.midX - width / 2,
             y: screenFrame.midY - height / 2,
@@ -352,6 +353,7 @@ func workspacePreviewWindowItems(for workspace: Workspace) -> [WorkspacePreviewW
                 appIcon: appIconImage(bundleIdentifier: window.app.rawAppBundleId, bundlePath: window.app.bundlePath),
                 thumbnail: cachedExposeThumbnail(window.windowId).map { NSImage(cgImage: $0, size: .zero) },
                 stackId: window.nearestWindowTabGroup?.allLeafWindowsRecursive.first?.windowId,
+                aspectRatio: workspacePreviewAspectRatio(for: window.lastKnownActualRect ?? window.lastAppliedLayoutPhysicalRect ?? window.lastAppliedLayoutVirtualRect ?? Rect(topLeftX: 0, topLeftY: 0, width: 1, height: 1)),
             )
         }
 }
@@ -653,6 +655,35 @@ func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem]) -> [[Wo
     workspacePreviewBalancedRows(windows, maximumColumns: workspacePreviewColumns)
 }
 
+func workspacePreviewWindowSize(_ window: WorkspacePreviewWindowItem) -> CGSize {
+    let ratio = window.aspectRatio.isFinite && window.aspectRatio > 0 ? window.aspectRatio : 1
+    return CGSize(width: workspacePreviewWindowHeight * ratio, height: workspacePreviewWindowHeight)
+}
+
+func workspacePreviewWindowRows(_ windows: [WorkspacePreviewWindowItem], availableWidth: CGFloat) -> [[WorkspacePreviewWindowItem]] {
+    let contentWidth = max(availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2, 1)
+    var rows: [[WorkspacePreviewWindowItem]] = []
+    var row: [WorkspacePreviewWindowItem] = []
+    var rowWidth: CGFloat = 0
+    for window in windows {
+        let width = workspacePreviewWindowSize(window).width
+        let spacing = row.isEmpty ? 0 : workspacePreviewColumnSpacing
+        if !row.isEmpty && (row.count == workspacePreviewColumns || rowWidth + spacing + width > contentWidth) {
+            rows.append(row)
+            row = []
+            rowWidth = 0
+        }
+        rowWidth += (row.isEmpty ? 0 : workspacePreviewColumnSpacing) + width
+        row.append(window)
+    }
+    if !row.isEmpty { rows.append(row) }
+    return rows
+}
+
+private func workspacePreviewWindowRowWidth(_ row: [WorkspacePreviewWindowItem]) -> CGFloat {
+    row.reduce(0) { $0 + workspacePreviewWindowSize($1).width } + CGFloat(max(row.count - 1, 0)) * workspacePreviewColumnSpacing
+}
+
 func workspacePreviewNextWindowId(_ windows: [WorkspacePreviewWindowItem], selectedWindowId: UInt32?, direction: Int) -> UInt32? {
     let ordered = workspacePreviewWindowRows(windows).flatMap { $0 }
     guard !ordered.isEmpty else { return nil }
@@ -706,8 +737,14 @@ func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFlo
     return min(contentHeight, workspacePreviewMaximumHeight, availableHeight * 0.8)
 }
 
-func workspacePreviewModeWidth(kind: WorkspacePreviewKind, workspaceCount: Int, windowCount: Int, availableWidth: CGFloat, workspaceAspectRatio: CGFloat) -> CGFloat {
+func workspacePreviewModeWidth(kind: WorkspacePreviewKind, workspaceCount: Int, windowCount: Int, availableWidth: CGFloat, workspaceAspectRatio: CGFloat, windows: [WorkspacePreviewWindowItem]? = nil) -> CGFloat {
     if kind == .tabs {
+        if let windows, !windows.isEmpty {
+            let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
+            let rows = workspacePreviewWindowRows(windows, availableWidth: maximum)
+            let width = rows.map(workspacePreviewWindowRowWidth).max() ?? workspacePreviewWindowWidth
+            return min(width + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2, maximum)
+        }
         return workspacePreviewPanelWidth(itemCount: 1, availableWidth: availableWidth, windowCount: windowCount)
     }
     let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
@@ -716,8 +753,12 @@ func workspacePreviewModeWidth(kind: WorkspacePreviewKind, workspaceCount: Int, 
     return min(width + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2, maximum)
 }
 
-func workspacePreviewModeHeight(kind: WorkspacePreviewKind, workspaceCount: Int, windowCount: Int, panelWidth: CGFloat, availableHeight: CGFloat, workspaceAspectRatio: CGFloat) -> CGFloat {
+func workspacePreviewModeHeight(kind: WorkspacePreviewKind, workspaceCount: Int, windowCount: Int, panelWidth: CGFloat, availableHeight: CGFloat, workspaceAspectRatio: CGFloat, windows: [WorkspacePreviewWindowItem]? = nil) -> CGFloat {
     if kind == .tabs {
+        if let windows {
+            let rows = workspacePreviewWindowRows(windows, availableWidth: panelWidth)
+            return workspacePreviewPanelHeight(maximumWindowCount: windowCount, availableHeight: availableHeight, workspaceCount: 0, stackRowCount: max(rows.count, 1))
+        }
         let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: 1, availableWidth: panelWidth)
         return workspacePreviewPanelHeight(maximumWindowCount: windowCount, availableHeight: availableHeight, workspaceCount: 0, columns: columns)
     }
@@ -737,17 +778,18 @@ private struct WorkspacePreviewView: View {
     let onSelect: (Int) -> Void
     let onWindowSelect: (UInt32) -> Void
     let onDismiss: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         let current = items[currentIndex]
+        let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
         GeometryReader { geometry in
             let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2, 1)
-            let columns = workspacePreviewColumnCount(windowCount: current.windows.count, workspaceCount: items.count, availableWidth: geometry.size.width, workspaceAspectRatio: current.workspaceAspectRatio)
-            let rows = workspacePreviewBalancedRows(current.windows, maximumColumns: columns)
+            let rows = workspacePreviewWindowRows(current.windows, availableWidth: geometry.size.width)
             let workspaceColumns = workspacePreviewWorkspaceColumnCount(itemCount: items.count, availableWidth: geometry.size.width, workspaceAspectRatio: current.workspaceAspectRatio)
             let workspaceRows = workspacePreviewBalancedRows(Array(items.indices), maximumColumns: workspaceColumns)
             ScrollViewReader { proxy in
-                ScrollView(.vertical, showsIndicators: false) {
+                ScrollView(kind == .tabs ? [.horizontal, .vertical] : .vertical, showsIndicators: false) {
                     VStack(spacing: 0) {
                         if kind == .workspaces {
                             VStack(spacing: workspacePreviewColumnSpacing) {
@@ -776,7 +818,7 @@ private struct WorkspacePreviewView: View {
                                     ForEach(row) { window in
                                         VStack(spacing: workspacePreviewCaptionSpacing) {
                                             WorkspacePreviewWindowTile(window: window)
-                                                .frame(width: workspacePreviewWindowWidth, height: workspacePreviewWindowHeight)
+                                                .frame(width: workspacePreviewWindowSize(window).width, height: workspacePreviewWindowHeight)
                                                 .overlay {
                                                     if window.id == selectedWindowId {
                                                         RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
@@ -789,9 +831,9 @@ private struct WorkspacePreviewView: View {
                                                 .foregroundStyle(palette.workspacePreviewForeground(0.98))
                                                 .lineLimit(1)
                                                 .multilineTextAlignment(.center)
-                                                .frame(width: workspacePreviewWindowWidth, height: standardGap * 5)
+                                                .frame(width: workspacePreviewWindowSize(window).width, height: standardGap * 5)
                                         }
-                                        .frame(width: workspacePreviewWindowWidth, height: workspacePreviewTileHeight)
+                                        .frame(width: workspacePreviewWindowSize(window).width, height: workspacePreviewTileHeight)
                                         .contentShape(Rectangle())
                                         .onTapGesture { onWindowSelect(window.id) }
                                         .help(window.title)
@@ -804,7 +846,7 @@ private struct WorkspacePreviewView: View {
                             }
                         }
                     }
-                    .frame(width: gridWidth)
+                    .frame(width: kind == .tabs ? max(gridWidth, (rows.map(workspacePreviewWindowRowWidth).max() ?? 0) + workspacePreviewRingInset * 2) : gridWidth)
                 }
                 .onChange(of: selectedIndex) { index in
                     if selectedWindowId == nil {

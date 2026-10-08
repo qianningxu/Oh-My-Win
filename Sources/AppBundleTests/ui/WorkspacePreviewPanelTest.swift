@@ -3,6 +3,16 @@ import XCTest
 import AppKit
 
 final class WorkspacePreviewPanelTest: XCTestCase {
+    func testOptionPreviewUsesActualAspectRatiosAtFixedHeightAndWrapsRows() {
+        let wide = WorkspacePreviewWindowItem(id: 1, title: "Wide", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 2)
+        let tall = WorkspacePreviewWindowItem(id: 2, title: "Tall", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 0.5)
+        let last = WorkspacePreviewWindowItem(id: 3, title: "Wide", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 2)
+        XCTAssertEqual(workspacePreviewWindowSize(wide), CGSize(width: 550, height: 275))
+        XCTAssertEqual(workspacePreviewWindowSize(tall), CGSize(width: 137.5, height: 275))
+        XCTAssertEqual(workspacePreviewWindowRows([wide, tall, last], availableWidth: 1000).map { $0.map(\.id) }, [[1, 2], [3]])
+        XCTAssertEqual(workspacePreviewWindowRows([wide], availableWidth: 300).flatMap { $0 }.map(\.id), [1])
+    }
+
     func testPreviewWaitsForOptionReleaseAndCommitsOnlyOnce() {
         var cycle = WorkspacePreviewShortcutCycle()
         cycle.select(modifier: .option)
