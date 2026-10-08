@@ -129,6 +129,11 @@ enum GlobalObserver {
         }
     }
 
+    private static func onKeyUp(_ event: NSEvent) {
+        guard event.keyCode == 48 else { return }
+        Task { @MainActor in WorkspacePreviewPanel.shared.tabKeyReleased() }
+    }
+
     private static func onFlagsChanged(_ event: NSEvent) {
         let keyCode = event.keyCode
         let modifierFlags = event.modifierFlags
@@ -305,6 +310,11 @@ enum GlobalObserver {
         })
 
         retainEventMonitor(NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: onKeyDown))
+        retainEventMonitor(NSEvent.addGlobalMonitorForEvents(matching: .keyUp, handler: onKeyUp))
+        retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .keyUp) { event in
+            onKeyUp(event)
+            return event
+        })
         retainEventMonitor(NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             onKeyDown(event)
             if event.modifierFlags.intersection([.option, .command, .control]) == .option,

@@ -66,6 +66,36 @@ struct WorkspacePreviewShortcutCycle {
 }
 
 @MainActor
+final class WorkspacePreviewTabRepeat {
+    private var task: Task<Void, Never>?
+    private(set) var modifier: NSEvent.ModifierFlags?
+
+    func start(modifier: NSEvent.ModifierFlags, step: @escaping @MainActor () -> Void) {
+        guard task == nil else { return }
+        self.modifier = modifier
+        task = Task { @MainActor in
+            do {
+                try await Task.sleep(for: .milliseconds(350))
+                while !Task.isCancelled {
+                    step()
+                    try await Task.sleep(for: .milliseconds(200))
+                }
+            } catch {}
+        }
+    }
+
+    func updateModifiers(_ flags: NSEvent.ModifierFlags) {
+        if let modifier, flags.intersection([.option, .control, .command]) != modifier { cancel() }
+    }
+
+    func cancel() {
+        task?.cancel()
+        task = nil
+        modifier = nil
+    }
+}
+
+@MainActor
 final class WorkspacePreviewPanel: NSPanelHud {
     static let shared = WorkspacePreviewPanel()
 
@@ -75,6 +105,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
     private var selectedIndex: Int = 0
     private var selectedWindowId: UInt32?
     private var shortcutCycle = WorkspacePreviewShortcutCycle()
+    private let tabRepeat = WorkspacePreviewTabRepeat()
     private var pendingCommands: [any Command]?
     private var pressedModifiers: NSEvent.ModifierFlags = []
     private var previewModifier: NSEvent.ModifierFlags = .control
@@ -154,6 +185,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
     }
 
     func dismiss() {
+        tabRepeat.cancel()
         guard isPreviewActive else { return }
         isPreviewActive = false
         items = []
@@ -229,6 +261,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
 
     // Shortcut keys only select; releasing the held modifier commits once.
     func previewShortcut(commands: [any Command], modifiers: NSEvent.ModifierFlags, keyCode: UInt16) -> Bool {
+        if keyCode != 48 { tabRepeat.cancel() }
         if modifiers.intersection([.option, .command, .control]) == WorkspacePreviewKind.tabs.modifier,
            let index = optionWorkspaceIndex(for: keyCode) {
             present(kind: .tabs, modifier: WorkspacePreviewKind.tabs.modifier)
@@ -244,6 +277,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         }
         let tabModifier = modifiers.intersection([.option, .command, .control])
         if keyCode == 48, tabModifier == .option || tabModifier == .control {
+            if tabRepeat.modifier == tabModifier { return true }
             let direction = modifiers.contains(.shift) ? -1 : 1
             if tabModifier == WorkspacePreviewKind.workspaces.modifier {
                 present(kind: .workspaces)
@@ -258,6 +292,17 @@ final class WorkspacePreviewPanel: NSPanelHud {
             }
             pendingCommands = nil
             shortcutCycle.select(modifier: tabModifier)
+            tabRepeat.start(modifier: tabModifier) { [weak self] in
+                guard let self, isPreviewActive else { return }
+                let direction = pressedModifiers.contains(.shift) ? -1 : 1
+                if previewKind == .workspaces {
+                    advance(direction: direction)
+                } else {
+                    selectedWindowId = workspacePreviewNextWindowId(items[currentIndex].windows, selectedWindowId: selectedWindowId, direction: direction)
+                    selectedIndex = currentIndex
+                    render()
+                }
+            }
             return true
         }
         guard commands.count == 1, modifiers.contains(WorkspacePreviewKind.workspaces.modifier) else { return false }
@@ -305,6 +350,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
     func modifierFlagsChanged(_ flags: NSEvent.ModifierFlags) {
         let previous = pressedModifiers
         pressedModifiers = flags
+        tabRepeat.updateModifiers(flags)
         if shortcutCycle.updateModifiers(flags) {
             commitShortcutSelection()
         } else if let kind = workspacePreviewKindOnModifierPress(previous: previous, current: flags) {
@@ -313,6 +359,8 @@ final class WorkspacePreviewPanel: NSPanelHud {
             dismiss()
         }
     }
+
+    func tabKeyReleased() { tabRepeat.cancel() }
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { dismiss(); return }

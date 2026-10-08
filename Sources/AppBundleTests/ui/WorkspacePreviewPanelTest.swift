@@ -4,6 +4,27 @@ import AppKit
 
 final class WorkspacePreviewPanelTest: XCTestCase {
     @MainActor
+    func testHeldTabRepeatsOncePerTickAndStopsOnRelease() async throws {
+        let repeater = WorkspacePreviewTabRepeat()
+        var count = 0
+        repeater.start(modifier: .option) { count += 1 }
+        repeater.start(modifier: .option) { XCTFail("A repeated keyDown must not start another timer") }
+        let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+        while count == 0 && ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(25))
+        }
+        XCTAssertGreaterThan(count, 0)
+        repeater.cancel()
+        let stoppedCount = count
+        try await Task.sleep(for: .milliseconds(250))
+        XCTAssertEqual(count, stoppedCount)
+        repeater.start(modifier: .control) { XCTFail("Releasing Control must cancel the hold delay") }
+        repeater.updateModifiers([])
+        try await Task.sleep(for: .milliseconds(400))
+        XCTAssertNil(repeater.modifier)
+    }
+
+    @MainActor
     func testSinglePaneWorkspaceAndWindowPreviewWidthsMatch() {
         setUpWorkspacesForTests()
         let workspace = focus.workspace
