@@ -3,7 +3,7 @@ import SwiftUI
 import Common
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
-let workspacePreviewWindowHeight = standardGap * 75
+let workspacePreviewWindowHeight = standardGap * 70
 let workspacePreviewWindowWidth = workspacePreviewWindowHeight
 let workspacePreviewColumns = 5
 let workspacePreviewWorkspaceColumns = 3
