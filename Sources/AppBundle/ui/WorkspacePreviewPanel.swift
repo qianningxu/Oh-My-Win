@@ -80,7 +80,7 @@ final class WorkspacePreviewTabRepeat {
                 try await Task.sleep(for: .milliseconds(350))
                 while !Task.isCancelled {
                     step()
-                    try await Task.sleep(for: .milliseconds(200))
+                    try await Task.sleep(for: .milliseconds(400))
                 }
             } catch {}
         }
