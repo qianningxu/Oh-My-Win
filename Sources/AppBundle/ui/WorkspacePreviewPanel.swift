@@ -840,6 +840,7 @@ private struct WorkspacePreviewView: View {
     let onSelect: (Int) -> Void
     let onWindowSelect: (UInt32) -> Void
     let onDismiss: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         let selected = items[selectedIndex]
@@ -867,6 +868,16 @@ private struct WorkspacePreviewView: View {
                     }
                 }
                 .frame(width: sidebarWidth)
+                .overlay(alignment: .trailing) {
+                    if selected.windows.count > 1 {
+                        Rectangle()
+                            .fill(WinMuxOverlayPalette(colorScheme: colorScheme).workspacePreviewForeground(0.2))
+                            .frame(width: standardGap * 0.25)
+                            .offset(x: workspacePreviewColumnSpacing / 2)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
 
                 if selected.windows.count > 1 {
                     WorkspacePreviewTabsView(
