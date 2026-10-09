@@ -4,12 +4,11 @@ import Common
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
 let workspacePreviewWindowHeight = standardGap * 50
-let workspacePreviewWorkspaceHeight = standardGap * 75
+let workspacePreviewWorkspaceHeight = standardGap * 62.5
 // Preserve the existing width budget independently of thumbnail height.
 private let workspacePreviewWidthReferenceHeight = standardGap * 70
 let workspacePreviewWindowWidth = workspacePreviewWindowHeight
-let workspacePreviewColumns = 5
-let workspacePreviewWorkspaceColumns = 3
+private let workspacePreviewWidthReferenceColumns = 3
 private let workspacePreviewCaptionSpacing = workspacePreviewFocusRingWidth + standardGap
 private let workspacePreviewTileHeight = workspacePreviewWindowHeight + workspacePreviewCaptionSpacing + standardGap * 5
 private let workspacePreviewStackSeparatorHeight = workspacePreviewFocusRingWidth + standardGap * 9 + standardGap * 0.125
@@ -226,10 +225,12 @@ final class WorkspacePreviewPanel: NSPanelHud {
         selectedWindowId = kind == .tabs && direction == 0 ? focus.windowOrNil?.windowId : nil
         isPreviewActive = true
         let screenFrame = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
-        let windows = items[currentIndex].windows
         let aspectRatio = items[currentIndex].workspaceAspectRatio
-        let width = workspacePreviewModeWidth(kind: kind, workspaceCount: items.count, windowCount: windows.count, availableWidth: screenFrame.width, workspaceAspectRatio: aspectRatio, windows: windows)
-        let height = workspacePreviewModeHeight(kind: kind, workspaceCount: items.count, windowCount: windows.count, panelWidth: width, availableHeight: screenFrame.height, workspaceAspectRatio: aspectRatio, windows: windows)
+        let width = workspacePreviewMaximumPanelWidth(availableWidth: screenFrame.width, workspaceAspectRatio: aspectRatio)
+        let sidebarWidth = workspacePreviewSidebarWidth(aspectRatios: items.map(\.workspaceAspectRatio), panelWidth: width)
+        let tabAreaWidth = workspacePreviewTabAreaWidth(panelWidth: width, sidebarWidth: sidebarWidth)
+        let maximumTabRows = items.map { workspacePreviewCombinedWindowRows($0.windows, tabAreaWidth: tabAreaWidth).count }.max() ?? 1
+        let height = workspacePreviewCombinedPanelHeight(workspaceCount: items.count, tabRowCount: maximumTabRows, availableHeight: screenFrame.height)
         setFrame(CGRect(
             x: screenFrame.midX - width / 2,
             y: screenFrame.midY - height / 2,
@@ -244,8 +245,6 @@ final class WorkspacePreviewPanel: NSPanelHud {
         hostingView.rootView = AnyView(
             WorkspacePreviewView(
                 items: items,
-                kind: previewKind,
-                currentIndex: currentIndex,
                 selectedIndex: selectedIndex,
                 selectedWindowId: selectedWindowId,
                 onSelect: { [weak self] index in
@@ -256,7 +255,6 @@ final class WorkspacePreviewPanel: NSPanelHud {
                 onWindowSelect: { [weak self] id in
                     guard let self else { return }
                     selectedWindowId = id
-                    selectedIndex = currentIndex
                     commitIfActive()
                 },
                 onDismiss: { [weak self] in self?.dismiss() },
@@ -765,8 +763,8 @@ func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
 func workspacePreviewMaximumPanelWidth(availableWidth: CGFloat, workspaceAspectRatio: CGFloat) -> CGFloat {
     let ratio = workspaceAspectRatio.isFinite && workspaceAspectRatio > 0 ? workspaceAspectRatio : 1
     let workspaceWidth = workspacePreviewWidthReferenceHeight * ratio
-    let width = workspaceWidth * CGFloat(workspacePreviewWorkspaceColumns)
-        + workspacePreviewColumnSpacing * CGFloat(workspacePreviewWorkspaceColumns - 1)
+    let width = workspaceWidth * CGFloat(workspacePreviewWidthReferenceColumns)
+        + workspacePreviewColumnSpacing * CGFloat(workspacePreviewWidthReferenceColumns - 1)
         + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2
     return min(width, workspacePreviewMaximumWidth, availableWidth * 0.92)
 }
@@ -775,163 +773,76 @@ func workspacePreviewHeightLimit(availableHeight: CGFloat) -> CGFloat {
     min(workspacePreviewMaximumHeight, max(availableHeight - workspacePreviewPanelPadding * 2, 0))
 }
 
-func workspacePreviewColumnCount(windowCount: Int, workspaceCount: Int, availableWidth: CGFloat = .infinity, workspaceAspectRatio: CGFloat = 1.6) -> Int {
-    let availableGridWidth = availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2
-    let fittingColumns = availableWidth.isFinite ? max(Int((availableGridWidth + workspacePreviewColumnSpacing) / (workspacePreviewWindowWidth + workspacePreviewColumnSpacing)), 1) : workspacePreviewColumns
-    return workspacePreviewBalancedColumnCount(itemCount: windowCount, maximumColumns: min(workspacePreviewColumns, fittingColumns))
+func workspacePreviewSidebarWidth(aspectRatios: [CGFloat], panelWidth: CGFloat) -> CGFloat {
+    let cardWidth = aspectRatios.map { workspacePreviewWorkspaceSize(aspectRatio: $0).width }.max() ?? workspacePreviewWorkspaceHeight
+    let contentWidth = max(panelWidth - workspacePreviewPanelPadding * 2 - workspacePreviewColumnSpacing, 1)
+    return min(cardWidth + workspacePreviewRingInset * 2, contentWidth * 0.4)
 }
 
-func workspacePreviewWorkspaceColumnCount(itemCount: Int, availableWidth: CGFloat, workspaceAspectRatio: CGFloat = 1.6) -> Int {
-    let tileWidth = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width
-    let contentWidth = availableWidth - workspacePreviewPanelPadding * 2 - workspacePreviewRingInset * 2
-    let fittingColumns = max(Int((contentWidth + workspacePreviewColumnSpacing) / (tileWidth + workspacePreviewColumnSpacing)), 1)
-    return workspacePreviewBalancedColumnCount(itemCount: itemCount, maximumColumns: min(workspacePreviewWorkspaceColumns, fittingColumns))
+func workspacePreviewTabAreaWidth(panelWidth: CGFloat, sidebarWidth: CGFloat) -> CGFloat {
+    max(panelWidth - workspacePreviewPanelPadding * 2 - workspacePreviewColumnSpacing - sidebarWidth, 1)
 }
 
-func workspacePreviewPanelWidth(itemCount: Int, availableWidth: CGFloat, windowCount: Int = workspacePreviewColumns, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
-    let maximum = min(workspacePreviewMaximumWidth, availableWidth * 0.92)
-    let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: itemCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
-    let windowWidth = workspacePreviewWindowWidth * CGFloat(columns) + workspacePreviewColumnSpacing * CGFloat(columns - 1)
-    let workspaceColumns = workspacePreviewWorkspaceColumnCount(itemCount: itemCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
-    let workspaceWidth = itemCount > 1
-        ? workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width * CGFloat(workspaceColumns) + workspacePreviewColumnSpacing * CGFloat(workspaceColumns - 1)
-        : 0
-    let contentWidth = max(windowWidth, workspaceWidth) + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2
-    return min(contentWidth, maximum)
+func workspacePreviewCombinedWindowRows(_ windows: [WorkspacePreviewWindowItem], tabAreaWidth: CGFloat) -> [[WorkspacePreviewWindowItem]] {
+    workspacePreviewWindowRows(windows, availableWidth: tabAreaWidth + workspacePreviewPanelPadding * 2)
 }
 
-func workspacePreviewPanelHeight(maximumWindowCount: Int, availableHeight: CGFloat, workspaceCount: Int = 2, columns: Int = workspacePreviewColumns, stackRowCount: Int? = nil, workspaceColumns: Int = workspacePreviewWorkspaceColumns, workspaceAspectRatio: CGFloat = 1.6) -> CGFloat {
-    let rows = max(stackRowCount ?? ((max(maximumWindowCount, 0) + columns - 1) / columns), 1)
-    let gridHeight = CGFloat(rows) * workspacePreviewTileHeight + CGFloat(rows - 1) * workspacePreviewStackSeparatorHeight
-    let workspaceRows = workspaceCount > 1 ? (workspaceCount + workspaceColumns - 1) / workspaceColumns : 0
-    let workspaceTileHeight = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5
-    let workspaceHeight = workspaceRows > 0
-        ? CGFloat(workspaceRows) * workspaceTileHeight + CGFloat(workspaceRows - 1) * workspacePreviewColumnSpacing + workspacePreviewStackSeparatorHeight
-        : 0
-    let contentHeight = workspacePreviewPanelPadding * 1.25 + gridHeight + workspacePreviewRingInset * 1.5 + workspaceHeight
-    return min(contentHeight, workspacePreviewHeightLimit(availableHeight: availableHeight))
-}
-
-func workspacePreviewModeWidth(kind: WorkspacePreviewKind, workspaceCount: Int, windowCount: Int, availableWidth: CGFloat, workspaceAspectRatio: CGFloat, windows: [WorkspacePreviewWindowItem]? = nil) -> CGFloat {
-    let maximum = workspacePreviewMaximumPanelWidth(availableWidth: availableWidth, workspaceAspectRatio: workspaceAspectRatio)
-    if kind == .tabs {
-        if let windows, !windows.isEmpty {
-            let rows = workspacePreviewWindowRows(windows, availableWidth: maximum)
-            let width = rows.map(workspacePreviewWindowRowWidth).max() ?? workspacePreviewWindowWidth
-            return min(width + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2, maximum)
-        }
-        return min(workspacePreviewPanelWidth(itemCount: 1, availableWidth: availableWidth, windowCount: windowCount), maximum)
-    }
-    let columns = workspacePreviewWorkspaceColumnCount(itemCount: workspaceCount, availableWidth: maximum, workspaceAspectRatio: workspaceAspectRatio)
-    let width = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).width * CGFloat(columns) + workspacePreviewColumnSpacing * CGFloat(columns - 1)
-    return min(width + workspacePreviewPanelPadding * 2 + workspacePreviewRingInset * 2, maximum)
-}
-
-func workspacePreviewModeHeight(kind: WorkspacePreviewKind, workspaceCount: Int, windowCount: Int, panelWidth: CGFloat, availableHeight: CGFloat, workspaceAspectRatio: CGFloat, windows: [WorkspacePreviewWindowItem]? = nil) -> CGFloat {
-    if kind == .tabs {
-        if let windows {
-            let rows = workspacePreviewWindowRows(windows, availableWidth: panelWidth)
-            return workspacePreviewPanelHeight(maximumWindowCount: windowCount, availableHeight: availableHeight, workspaceCount: 0, stackRowCount: max(rows.count, 1))
-        }
-        let columns = workspacePreviewColumnCount(windowCount: windowCount, workspaceCount: 1, availableWidth: panelWidth)
-        return workspacePreviewPanelHeight(maximumWindowCount: windowCount, availableHeight: availableHeight, workspaceCount: 0, columns: columns)
-    }
-    let columns = workspacePreviewWorkspaceColumnCount(itemCount: workspaceCount, availableWidth: panelWidth, workspaceAspectRatio: workspaceAspectRatio)
-    let rows = max((workspaceCount + columns - 1) / columns, 1)
-    let tileHeight = workspacePreviewWorkspaceSize(aspectRatio: workspaceAspectRatio).height + workspacePreviewCaptionSpacing + standardGap * 5
-    let height = workspacePreviewPanelPadding * 1.25 + CGFloat(rows) * tileHeight + CGFloat(rows - 1) * workspacePreviewColumnSpacing + workspacePreviewRingInset * 1.5
+func workspacePreviewCombinedPanelHeight(workspaceCount: Int, tabRowCount: Int, availableHeight: CGFloat) -> CGFloat {
+    let workspaceRows = max(workspaceCount, 1)
+    let tabRows = max(tabRowCount, 1)
+    let sidebarHeight = CGFloat(workspaceRows) * (workspacePreviewWorkspaceHeight + workspacePreviewCaptionSpacing + standardGap * 5)
+        + CGFloat(workspaceRows - 1) * workspacePreviewColumnSpacing
+    let tabsHeight = CGFloat(tabRows) * workspacePreviewTileHeight
+        + CGFloat(tabRows - 1) * workspacePreviewStackSeparatorHeight
+    let height = max(sidebarHeight, tabsHeight) + workspacePreviewPanelPadding * 1.25 + workspacePreviewRingInset * 1.5
     return min(height, workspacePreviewHeightLimit(availableHeight: availableHeight))
 }
 
 private struct WorkspacePreviewView: View {
     let items: [WorkspacePreviewItem]
-    var kind: WorkspacePreviewKind = .workspaces
-    let currentIndex: Int
     let selectedIndex: Int
     let selectedWindowId: UInt32?
     let onSelect: (Int) -> Void
     let onWindowSelect: (UInt32) -> Void
     let onDismiss: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        let current = items[currentIndex]
-        let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
+        let selected = items[selectedIndex]
         GeometryReader { geometry in
-            let gridWidth = max(geometry.size.width - workspacePreviewPanelPadding * 2, 1)
-            let rows = workspacePreviewWindowRows(current.windows, availableWidth: geometry.size.width)
-            let workspaceColumns = workspacePreviewWorkspaceColumnCount(itemCount: items.count, availableWidth: geometry.size.width, workspaceAspectRatio: current.workspaceAspectRatio)
-            let workspaceRows = workspacePreviewBalancedRows(Array(items.indices), maximumColumns: workspaceColumns)
-            ScrollViewReader { proxy in
-                ScrollView(kind == .tabs ? [.horizontal, .vertical] : .vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        if kind == .workspaces {
-                            VStack(spacing: workspacePreviewColumnSpacing) {
-                                ForEach(Array(workspaceRows.enumerated()), id: \.offset) { _, row in
-                                    HStack(spacing: workspacePreviewColumnSpacing) {
-                                        ForEach(row, id: \.self) { index in
-                                            WorkspacePreviewLegacyCard(item: items[index], isSelected: index == selectedIndex)
-                                                .id("workspace-\(index)")
-                                                .contentShape(Rectangle())
-                                                .onTapGesture { onSelect(index) }
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                }
-                            }
-                            .padding([.top, .horizontal], workspacePreviewRingInset)
-                            .padding(.bottom, workspacePreviewRingInset / 2)
-                        }
-                        if kind == .tabs {
-                            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                                if index > 0 {
-                                    Spacer(minLength: 0)
-                                        .frame(height: standardGap * 4.125)
-                                }
-                                HStack(alignment: .center, spacing: workspacePreviewColumnSpacing) {
-                                    ForEach(row) { window in
-                                        VStack(spacing: workspacePreviewCaptionSpacing) {
-                                            WorkspacePreviewWindowTile(window: window)
-                                                .frame(width: workspacePreviewWindowSize(window).width, height: workspacePreviewWindowHeight)
-                                                .overlay {
-                                                    if window.id == selectedWindowId {
-                                                        RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
-                                                            .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
-                                                            .padding(-workspacePreviewFocusRingWidth)
-                                                    }
-                                                }
-                                            Text(window.title)
-                                                .font(.system(size: 16, weight: window.id == selectedWindowId ? .semibold : .medium))
-                                                .foregroundStyle(palette.workspacePreviewForeground(0.98))
-                                                .lineLimit(1)
-                                                .multilineTextAlignment(.center)
-                                                .frame(width: workspacePreviewWindowSize(window).width, height: standardGap * 5)
-                                        }
-                                        .frame(width: workspacePreviewWindowSize(window).width, height: workspacePreviewTileHeight)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { onWindowSelect(window.id) }
-                                        .help(window.title)
-                                        .id(window.id)
-                                    }
-                                }
-                                .padding([.top, .horizontal], workspacePreviewRingInset)
-                                .padding(.bottom, index == rows.count - 1 ? workspacePreviewRingInset / 2 : workspacePreviewRingInset)
-                                .frame(maxWidth: .infinity)
+            let sidebarWidth = workspacePreviewSidebarWidth(aspectRatios: items.map(\.workspaceAspectRatio), panelWidth: geometry.size.width)
+            let tabAreaWidth = workspacePreviewTabAreaWidth(panelWidth: geometry.size.width, sidebarWidth: sidebarWidth)
+            HStack(alignment: .top, spacing: workspacePreviewColumnSpacing) {
+                ScrollViewReader { proxy in
+                    ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                        VStack(spacing: workspacePreviewColumnSpacing) {
+                            ForEach(Array(items.indices), id: \.self) { index in
+                                WorkspacePreviewLegacyCard(item: items[index], isSelected: index == selectedIndex)
+                                    .id("workspace-\(index)")
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { onSelect(index) }
                             }
                         }
+                        .padding([.top, .horizontal], workspacePreviewRingInset)
+                        .padding(.bottom, workspacePreviewRingInset / 2)
+                        .frame(minWidth: sidebarWidth)
                     }
-                    .frame(width: kind == .tabs ? max(gridWidth, (rows.map(workspacePreviewWindowRowWidth).max() ?? 0) + workspacePreviewRingInset * 2) : gridWidth)
-                }
-                .onChange(of: selectedIndex) { index in
-                    if selectedWindowId == nil {
-                        withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo("workspace-\(index)", anchor: .center) }
-                    }
-                }
-                .onChange(of: selectedWindowId) { id in
-                    if let id {
-                        withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(id, anchor: .center) }
+                    .onAppear { proxy.scrollTo("workspace-\(selectedIndex)", anchor: .center) }
+                    .onChange(of: selectedIndex) { index in
+                        withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) {
+                            proxy.scrollTo("workspace-\(index)", anchor: .center)
+                        }
                     }
                 }
+                .frame(width: sidebarWidth)
+
+                WorkspacePreviewTabsView(
+                    windows: selected.windows,
+                    selectedWindowId: selectedWindowId,
+                    availableWidth: tabAreaWidth,
+                    onWindowSelect: onWindowSelect
+                )
+                .id(selected.id)
+                .frame(width: tabAreaWidth)
             }
             .padding([.top, .horizontal], workspacePreviewPanelPadding)
             .padding(.bottom, workspacePreviewPanelPadding / 4)
@@ -939,6 +850,65 @@ private struct WorkspacePreviewView: View {
         .background { WorkspacePreviewSwitcherSurface() }
         .clipShape(RoundedRectangle(cornerRadius: standardGap * 8, style: .continuous))
         .onExitCommand(perform: onDismiss)
+    }
+}
+
+private struct WorkspacePreviewTabsView: View {
+    let windows: [WorkspacePreviewWindowItem]
+    let selectedWindowId: UInt32?
+    let availableWidth: CGFloat
+    let onWindowSelect: (UInt32) -> Void
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let palette = WinMuxOverlayPalette(colorScheme: colorScheme)
+        let rows = workspacePreviewCombinedWindowRows(windows, tabAreaWidth: availableWidth)
+        ScrollViewReader { proxy in
+            ScrollView([.horizontal, .vertical], showsIndicators: false) {
+                VStack(spacing: standardGap * 4.125) {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                        HStack(spacing: workspacePreviewColumnSpacing) {
+                            ForEach(row) { window in
+                                VStack(spacing: workspacePreviewCaptionSpacing) {
+                                    WorkspacePreviewWindowTile(window: window)
+                                        .frame(width: workspacePreviewWindowSize(window).width, height: workspacePreviewWindowHeight)
+                                        .overlay {
+                                            if window.id == selectedWindowId {
+                                                RoundedRectangle(cornerRadius: workspacePreviewCornerRadius + workspacePreviewFocusRingWidth, style: .continuous)
+                                                    .strokeBorder(palette.workspacePreviewFocusRing, lineWidth: workspacePreviewFocusRingWidth)
+                                                    .padding(-workspacePreviewFocusRingWidth)
+                                            }
+                                        }
+                                    Text(window.title)
+                                        .font(.system(size: 16, weight: window.id == selectedWindowId ? .semibold : .medium))
+                                        .foregroundStyle(palette.workspacePreviewForeground(0.98))
+                                        .lineLimit(1)
+                                        .multilineTextAlignment(.center)
+                                        .frame(width: workspacePreviewWindowSize(window).width, height: standardGap * 5)
+                                }
+                                .frame(width: workspacePreviewWindowSize(window).width, height: workspacePreviewTileHeight)
+                                .contentShape(Rectangle())
+                                .onTapGesture { onWindowSelect(window.id) }
+                                .help(window.title)
+                                .id(window.id)
+                            }
+                        }
+                        .padding([.top, .horizontal], workspacePreviewRingInset)
+                        .padding(.bottom, index == rows.count - 1 ? workspacePreviewRingInset / 2 : workspacePreviewRingInset)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .frame(width: max(availableWidth, (rows.map(workspacePreviewWindowRowWidth).max() ?? 0) + workspacePreviewRingInset * 2))
+            }
+            .onAppear {
+                if let selectedWindowId { proxy.scrollTo(selectedWindowId, anchor: .center) }
+            }
+            .onChange(of: selectedWindowId) { id in
+                if let id {
+                    withAnimation(.spring(response: 0.22, dampingFraction: 0.86)) { proxy.scrollTo(id, anchor: .center) }
+                }
+            }
+        }
     }
 }
 
