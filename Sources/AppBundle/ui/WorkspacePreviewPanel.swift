@@ -824,7 +824,7 @@ private struct WorkspacePreviewView: View {
                         }
                         .padding([.top, .horizontal], workspacePreviewRingInset)
                         .padding(.bottom, workspacePreviewRingInset / 2)
-                        .frame(minWidth: sidebarWidth)
+                        .frame(minWidth: sidebarWidth, minHeight: max(geometry.size.height - workspacePreviewPanelPadding * 1.25, 1), alignment: .topLeading)
                     }
                     .onAppear { proxy.scrollTo("workspace-\(selectedIndex)", anchor: .center) }
                     .onChange(of: selectedIndex) { index in
@@ -839,6 +839,7 @@ private struct WorkspacePreviewView: View {
                     windows: selected.windows,
                     selectedWindowId: selectedWindowId,
                     availableWidth: tabAreaWidth,
+                    availableHeight: max(geometry.size.height - workspacePreviewPanelPadding * 1.25, 1),
                     onWindowSelect: onWindowSelect
                 )
                 .id(selected.id)
@@ -857,6 +858,7 @@ private struct WorkspacePreviewTabsView: View {
     let windows: [WorkspacePreviewWindowItem]
     let selectedWindowId: UInt32?
     let availableWidth: CGFloat
+    let availableHeight: CGFloat
     let onWindowSelect: (UInt32) -> Void
     @Environment(\.colorScheme) private var colorScheme
 
@@ -899,6 +901,7 @@ private struct WorkspacePreviewTabsView: View {
                     }
                 }
                 .frame(width: max(availableWidth, (rows.map(workspacePreviewWindowRowWidth).max() ?? 0) + workspacePreviewRingInset * 2))
+                .frame(minHeight: availableHeight, alignment: .topLeading)
             }
             .onAppear {
                 if let selectedWindowId { proxy.scrollTo(selectedWindowId, anchor: .center) }
