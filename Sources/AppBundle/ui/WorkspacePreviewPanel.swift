@@ -3,7 +3,8 @@ import SwiftUI
 import Common
 
 private let workspacePreviewPanelId = "WinMux.workspacePreview"
-let workspacePreviewWindowHeight = standardGap * 100
+let workspacePreviewWindowHeight = standardGap * 50
+let workspacePreviewWorkspaceHeight = standardGap * 75
 // Preserve the existing width budget independently of thumbnail height.
 private let workspacePreviewWidthReferenceHeight = standardGap * 70
 let workspacePreviewWindowWidth = workspacePreviewWindowHeight
@@ -18,7 +19,8 @@ private let workspacePreviewPanelPadding = WinMuxSpacing.page
 let workspacePreviewMaximumWidth = standardGap * 440
 let workspacePreviewCornerRadius = standardGap * 1.75
 let workspacePreviewFocusRingWidth = standardGap * 3
-let workspacePreviewMaximumHeight = workspacePreviewTileHeight * 2 + workspacePreviewStackSeparatorHeight
+// Keep the existing panel height budget while sizing each preview kind separately.
+let workspacePreviewMaximumHeight = (standardGap * 100 + workspacePreviewCaptionSpacing + standardGap * 5) * 2 + workspacePreviewStackSeparatorHeight
     + workspacePreviewPanelPadding * 1.25 + workspacePreviewRingInset * 1.5
 
 enum WorkspacePreviewKind {
@@ -757,7 +759,7 @@ func workspacePreviewNextWindowId(_ windows: [WorkspacePreviewWindowItem], selec
 
 func workspacePreviewWorkspaceSize(aspectRatio: CGFloat) -> CGSize {
     let ratio = aspectRatio.isFinite && aspectRatio > 0 ? aspectRatio : 1
-    return CGSize(width: workspacePreviewWindowHeight * ratio, height: workspacePreviewWindowHeight)
+    return CGSize(width: workspacePreviewWorkspaceHeight * ratio, height: workspacePreviewWorkspaceHeight)
 }
 
 func workspacePreviewMaximumPanelWidth(availableWidth: CGFloat, workspaceAspectRatio: CGFloat) -> CGFloat {
