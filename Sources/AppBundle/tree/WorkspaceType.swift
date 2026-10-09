@@ -163,7 +163,9 @@ extension Workspace {
     }
 
     var usesAutomaticDisplayName: Bool {
-        namingStyle == .automatic
+        // Legacy numeric slots are default names too, including restored slots
+        // saved before automatic naming was recorded explicitly.
+        namingStyle == .automatic || parsePositiveWorkspaceDisplayIndex(name) != nil
     }
 
     @MainActor
