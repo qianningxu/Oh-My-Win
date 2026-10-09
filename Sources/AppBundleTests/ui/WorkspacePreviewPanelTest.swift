@@ -74,6 +74,35 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertEqual(workspacePreviewCombinedWindowRows([], tabAreaWidth: tabArea).count, 0)
     }
 
+    func testSingleTabHidesRightColumnAndFitsWorkspaceCards() {
+        let only = WorkspacePreviewWindowItem(id: 1, title: "Only", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 2)
+        for windows in [[], [only]] {
+            let layout = workspacePreviewCombinedLayout(aspectRatios: [1.6, 2], windows: windows, availableWidth: 2000, workspaceAspectRatio: 1.6)
+            XCTAssertEqual(layout.panelWidth, 580)
+            XCTAssertEqual(layout.sidebarWidth, 532)
+            XCTAssertEqual(layout.tabAreaWidth, 0)
+        }
+    }
+
+    func testMultipleTabsFitContentAndKeepWrappingWithinWidthLimit() {
+        let windows = (1...8).map {
+            WorkspacePreviewWindowItem(id: UInt32($0), title: "Tab", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 0.5)
+        }
+        let twoTabs = workspacePreviewCombinedLayout(aspectRatios: [1.6, 2], windows: Array(windows.prefix(2)), availableWidth: 2000, workspaceAspectRatio: 1.6)
+        XCTAssertEqual(twoTabs.panelWidth, 884)
+        XCTAssertEqual(twoTabs.sidebarWidth, 532)
+        XCTAssertEqual(twoTabs.tabAreaWidth, 268)
+        let narrow = workspacePreviewCombinedLayout(aspectRatios: [1.6], windows: windows, availableWidth: 1000, workspaceAspectRatio: 1.6)
+        XCTAssertLessThanOrEqual(narrow.panelWidth, 920)
+        let rows = workspacePreviewCombinedWindowRows(windows, tabAreaWidth: narrow.tabAreaWidth)
+        XCTAssertEqual(rows.map(\.count), [3, 3, 2])
+        XCTAssertEqual(rows.flatMap { $0 }.map(\.id), windows.map(\.id))
+        let wide = WorkspacePreviewWindowItem(id: 9, title: "Wide", appName: "App", appIcon: nil, thumbnail: nil, aspectRatio: 8)
+        let overflow = workspacePreviewCombinedLayout(aspectRatios: [1.6], windows: [wide, wide], availableWidth: 2000, workspaceAspectRatio: 1.6)
+        XCTAssertEqual(overflow.panelWidth, 1496)
+        XCTAssertEqual(workspacePreviewCombinedWindowRows([wide, wide], tabAreaWidth: overflow.tabAreaWidth).map(\.count), [1, 1])
+    }
+
     func testCombinedPreviewPreservesWidthBudgetAndReservesBothColumns() {
         let width = workspacePreviewMaximumPanelWidth(availableWidth: 2000, workspaceAspectRatio: 1.6)
         XCTAssertEqual(width, 1496)

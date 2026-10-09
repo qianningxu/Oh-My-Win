@@ -224,29 +224,36 @@ final class WorkspacePreviewPanel: NSPanelHud {
         selectedIndex = (currentIndex + direction + items.count) % items.count
         selectedWindowId = kind == .tabs && direction == 0 ? focus.windowOrNil?.windowId : nil
         isPreviewActive = true
-        let screenFrame = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
-        let aspectRatio = items[currentIndex].workspaceAspectRatio
-        let width = workspacePreviewMaximumPanelWidth(availableWidth: screenFrame.width, workspaceAspectRatio: aspectRatio)
-        let sidebarWidth = workspacePreviewSidebarWidth(aspectRatios: items.map(\.workspaceAspectRatio), panelWidth: width)
-        let tabAreaWidth = workspacePreviewTabAreaWidth(panelWidth: width, sidebarWidth: sidebarWidth)
-        let maximumTabRows = items.map { workspacePreviewCombinedWindowRows($0.windows, tabAreaWidth: tabAreaWidth).count }.max() ?? 1
-        let height = workspacePreviewCombinedPanelHeight(workspaceCount: items.count, tabRowCount: maximumTabRows, availableHeight: screenFrame.height)
-        setFrame(CGRect(
-            x: screenFrame.midX - width / 2,
-            y: screenFrame.midY - height / 2,
-            width: width,
-            height: height
-        ), display: true, animate: false)
         render()
         orderFrontRegardless()
     }
 
     private func render() {
+        guard items.indices.contains(selectedIndex) else { return }
+        let screenFrame = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1920, height: 1080)
+        let selected = items[selectedIndex]
+        let layout = workspacePreviewCombinedLayout(
+            aspectRatios: items.map(\.workspaceAspectRatio),
+            windows: selected.windows,
+            availableWidth: screenFrame.width,
+            workspaceAspectRatio: items[currentIndex].workspaceAspectRatio
+        )
+        let tabRows = selected.windows.count > 1
+            ? workspacePreviewCombinedWindowRows(selected.windows, tabAreaWidth: layout.tabAreaWidth).count : 0
+        let height = workspacePreviewCombinedPanelHeight(workspaceCount: items.count, tabRowCount: tabRows, availableHeight: screenFrame.height)
+        setFrame(CGRect(
+            x: screenFrame.midX - layout.panelWidth / 2,
+            y: screenFrame.midY - height / 2,
+            width: layout.panelWidth,
+            height: height
+        ), display: true, animate: false)
         hostingView.rootView = AnyView(
             WorkspacePreviewView(
                 items: items,
                 selectedIndex: selectedIndex,
                 selectedWindowId: selectedWindowId,
+                sidebarWidth: layout.sidebarWidth,
+                tabAreaWidth: layout.tabAreaWidth,
                 onSelect: { [weak self] index in
                     self?.selectedWindowId = nil
                     self?.selectedIndex = index
@@ -787,6 +794,32 @@ func workspacePreviewCombinedWindowRows(_ windows: [WorkspacePreviewWindowItem],
     workspacePreviewWindowRows(windows, availableWidth: tabAreaWidth + workspacePreviewPanelPadding * 2)
 }
 
+struct WorkspacePreviewCombinedLayout {
+    let panelWidth: CGFloat
+    let sidebarWidth: CGFloat
+    let tabAreaWidth: CGFloat
+}
+
+func workspacePreviewCombinedLayout(aspectRatios: [CGFloat], windows: [WorkspacePreviewWindowItem], availableWidth: CGFloat, workspaceAspectRatio: CGFloat) -> WorkspacePreviewCombinedLayout {
+    let maximum = workspacePreviewMaximumPanelWidth(availableWidth: availableWidth, workspaceAspectRatio: workspaceAspectRatio)
+    let padding = workspacePreviewPanelPadding * 2
+    if windows.count <= 1 {
+        let cardWidth = aspectRatios.map { workspacePreviewWorkspaceSize(aspectRatio: $0).width }.max() ?? workspacePreviewWorkspaceHeight
+        let sidebarWidth = min(cardWidth + workspacePreviewRingInset * 2, max(maximum - padding, 1))
+        return WorkspacePreviewCombinedLayout(panelWidth: min(sidebarWidth + padding, maximum), sidebarWidth: sidebarWidth, tabAreaWidth: 0)
+    }
+    let sidebarWidth = workspacePreviewSidebarWidth(aspectRatios: aspectRatios, panelWidth: maximum)
+    let maximumTabWidth = workspacePreviewTabAreaWidth(panelWidth: maximum, sidebarWidth: sidebarWidth)
+    let rows = workspacePreviewCombinedWindowRows(windows, tabAreaWidth: maximumTabWidth)
+    let tabWidth = ceil((rows.map(workspacePreviewWindowRowWidth).max() ?? 0) + workspacePreviewRingInset * 2)
+    let panelWidth = min(padding + sidebarWidth + workspacePreviewColumnSpacing + tabWidth, maximum)
+    return WorkspacePreviewCombinedLayout(
+        panelWidth: panelWidth,
+        sidebarWidth: sidebarWidth,
+        tabAreaWidth: workspacePreviewTabAreaWidth(panelWidth: panelWidth, sidebarWidth: sidebarWidth)
+    )
+}
+
 func workspacePreviewCombinedPanelHeight(workspaceCount: Int, tabRowCount: Int, availableHeight: CGFloat) -> CGFloat {
     let workspaceRows = max(workspaceCount, 1)
     let tabRows = max(tabRowCount, 1)
@@ -802,6 +835,8 @@ private struct WorkspacePreviewView: View {
     let items: [WorkspacePreviewItem]
     let selectedIndex: Int
     let selectedWindowId: UInt32?
+    let sidebarWidth: CGFloat
+    let tabAreaWidth: CGFloat
     let onSelect: (Int) -> Void
     let onWindowSelect: (UInt32) -> Void
     let onDismiss: () -> Void
@@ -809,8 +844,6 @@ private struct WorkspacePreviewView: View {
     var body: some View {
         let selected = items[selectedIndex]
         GeometryReader { geometry in
-            let sidebarWidth = workspacePreviewSidebarWidth(aspectRatios: items.map(\.workspaceAspectRatio), panelWidth: geometry.size.width)
-            let tabAreaWidth = workspacePreviewTabAreaWidth(panelWidth: geometry.size.width, sidebarWidth: sidebarWidth)
             HStack(alignment: .top, spacing: workspacePreviewColumnSpacing) {
                 ScrollViewReader { proxy in
                     ScrollView([.horizontal, .vertical], showsIndicators: false) {
@@ -835,15 +868,17 @@ private struct WorkspacePreviewView: View {
                 }
                 .frame(width: sidebarWidth)
 
-                WorkspacePreviewTabsView(
-                    windows: selected.windows,
-                    selectedWindowId: selectedWindowId,
-                    availableWidth: tabAreaWidth,
-                    availableHeight: max(geometry.size.height - workspacePreviewPanelPadding * 1.25, 1),
-                    onWindowSelect: onWindowSelect
-                )
-                .id(selected.id)
-                .frame(width: tabAreaWidth)
+                if selected.windows.count > 1 {
+                    WorkspacePreviewTabsView(
+                        windows: selected.windows,
+                        selectedWindowId: selectedWindowId,
+                        availableWidth: tabAreaWidth,
+                        availableHeight: max(geometry.size.height - workspacePreviewPanelPadding * 1.25, 1),
+                        onWindowSelect: onWindowSelect
+                    )
+                    .id(selected.id)
+                    .frame(width: tabAreaWidth)
+                }
             }
             .padding([.top, .horizontal], workspacePreviewPanelPadding)
             .padding(.bottom, workspacePreviewPanelPadding / 4)
