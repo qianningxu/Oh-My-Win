@@ -157,7 +157,7 @@ let resize_help_generated = """
     USAGE: resize [-h|--help] [--window-id <window-id>] (smart|smart-opposite|width|height) [+|-]<number>
     """
 let split_help_generated = """
-    USAGE: split [-h|--help] [--window-id <window-id>] (horizontal|vertical|opposite|1:2|1:1|2:1)
+    USAGE: split [-h|--help] [--window-id <window-id>] [--single-pane-direction (left|right)] (horizontal|vertical|opposite|1:2|1:1|2:1)
     """
 let stack_with_help_generated = """
     USAGE: stack-with [-h|--help] [--window-id <window-id>] (left|down|up|right|other)

@@ -8,9 +8,13 @@ struct SplitCommand: Command {
     func run(_ env: CmdEnv, _ io: CmdIo) -> Bool {
         if let leftFraction = args.arg.val.leftFraction {
             guard let target = args.resolveTargetOrReportError(env, io) else { return false }
-            guard let window = target.windowOrNil,
-                  let root = twoPaneHorizontalSplit(for: window)
-            else { return true }
+            guard let window = target.windowOrNil else { return true }
+            guard let root = twoPaneHorizontalSplit(for: window) else {
+                if let direction = args.singlePaneDirection {
+                    splitFocusedTabFromSinglePane(window, direction: direction)
+                }
+                return true
+            }
             let total = root.children.reduce(CGFloat.zero) { $0 + $1.getWeight(.h) }
             root.children[0].setWeight(.h, total * leftFraction)
             root.children[1].setWeight(.h, total * (1 - leftFraction))
@@ -68,4 +72,27 @@ func twoPaneHorizontalSplit(for window: Window) -> TilingContainer? {
           })
     else { return nil }
     return root
+}
+
+@MainActor
+func splitFocusedTabFromSinglePane(_ window: Window, direction: CardinalDirection) {
+    guard let workspace = window.nodeWorkspace else { return }
+    let oldRoot = workspace.rootTilingContainer
+    var pane = oldRoot
+    while pane.layout == .tiles, pane.children.count == 1,
+          let child = pane.children.first as? TilingContainer {
+        pane = child
+    }
+    guard pane.layout == .tabGroup, pane.children.count > 1,
+          pane.children.allSatisfy({ $0 is Window }), window.parent === pane
+    else { return }
+
+    window.unbindFromParent()
+    oldRoot.unbindFromParent()
+    let newRoot = TilingContainer(parent: workspace, adaptiveWeight: WEIGHT_AUTO, .h, .tiles, index: 0)
+    let remaining: TreeNode = pane.children.count == 1 ? pane.children[0] : pane
+    remaining.bind(to: newRoot, adaptiveWeight: 1, index: 0)
+    window.bind(to: newRoot, adaptiveWeight: 1, index: direction == .left ? 0 : INDEX_BIND_LAST)
+    window.markAsMostRecentChild()
+    _ = window.focusWindow()
 }

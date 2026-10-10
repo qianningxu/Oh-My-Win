@@ -7,11 +7,13 @@ public struct SplitCmdArgs: CmdArgs {
         help: split_help_generated,
         flags: [
             "--window-id": optionalWindowIdFlag(),
+            "--single-pane-direction": ArgParser(\.singlePaneDirection, upcastArgParserFun(parseSinglePaneDirection)),
         ],
         posArgs: [newMandatoryPosArgParser(\.arg, parseSplitArg, placeholder: SplitArg.unionLiteral)],
     )
 
     public var arg: Lateinit<SplitArg> = .uninitialized
+    public var singlePaneDirection: CardinalDirection? = nil
 
     public init(rawArgs: [String], _ arg: SplitArg) {
         self.commonState = .init(rawArgs.slice)
@@ -41,4 +43,11 @@ func parseSplitCmdArgs(_ args: StrArrSlice) -> ParsedCmd<SplitCmdArgs> {
 
 private func parseSplitArg(i: PosArgParserInput) -> ParsedCliArgs<SplitCmdArgs.SplitArg> {
     .init(parseEnum(i.arg, SplitCmdArgs.SplitArg.self), advanceBy: 1)
+}
+
+private func parseSinglePaneDirection(i: SubArgParserInput) -> ParsedCliArgs<CardinalDirection> {
+    guard let raw = i.nonFlagArgOrNil(), let direction = CardinalDirection(rawValue: raw),
+          direction == .left || direction == .right
+    else { return .fail("Single-pane direction must be left or right", advanceBy: 0) }
+    return .succ(direction, advanceBy: 1)
 }
