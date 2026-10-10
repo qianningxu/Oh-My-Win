@@ -10,7 +10,17 @@ struct StackWithCommand: Command {
         guard let currentWindow = target.windowOrNil else {
             return io.err(noWindowIsFocused)
         }
-        let direction = args.direction.val
+        if args.direction.val == .other {
+            guard let split = twoPaneHorizontalSplit(for: currentWindow),
+            let sourceIndex = split.children.firstIndex(where: { child in
+                currentWindow.parentsWithSelf.contains(where: { $0 === child })
+            }),
+            let otherWindow = split.children[1 - sourceIndex].mostRecentWindowRecursive
+            else { return true }
+            createOrAppendWindowTabStack(sourceWindow: currentWindow, onto: otherWindow)
+            return true
+        }
+        guard let direction = args.direction.val.cardinalDirection else { return false }
 
         if let parent = currentWindow.parent as? TilingContainer, parent.layout == .tabGroup {
             guard removeWindowFromTabStack(currentWindow) else {

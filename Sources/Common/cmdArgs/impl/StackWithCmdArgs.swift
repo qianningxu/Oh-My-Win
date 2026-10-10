@@ -8,13 +8,23 @@ public struct StackWithCmdArgs: CmdArgs {
         flags: [
             "--window-id": optionalWindowIdFlag(),
         ],
-        posArgs: [newMandatoryPosArgParser(\.direction, parseCardinalDirectionArg, placeholder: CardinalDirection.unionLiteral)],
+        posArgs: [newMandatoryPosArgParser(\.direction, parseStackDirection, placeholder: StackDirection.unionLiteral)],
     )
 
-    public var direction: Lateinit<CardinalDirection> = .uninitialized
+    public var direction: Lateinit<StackDirection> = .uninitialized
 
     public init(rawArgs: [String], direction: CardinalDirection) {
         self.commonState = .init(rawArgs.slice)
-        self.direction = .initialized(direction)
+        self.direction = .initialized(StackDirection(rawValue: direction.rawValue)!)
     }
+}
+
+public enum StackDirection: String, CaseIterable, Sendable {
+    case left, down, up, right, other
+
+    public var cardinalDirection: CardinalDirection? { CardinalDirection(rawValue: rawValue) }
+}
+
+private func parseStackDirection(i: PosArgParserInput) -> ParsedCliArgs<StackDirection> {
+    .init(parseEnum(i.arg, StackDirection.self), advanceBy: 1)
 }

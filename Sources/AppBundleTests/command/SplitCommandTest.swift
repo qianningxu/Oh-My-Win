@@ -35,6 +35,19 @@ final class SplitCommandTest: XCTestCase {
         XCTAssertEqual(root.children.map { $0.getWeight(.h) }, before)
     }
 
+    func testRatiosIgnoreNestedThirdPane() async throws {
+        let root = Workspace.get(byName: name).rootTilingContainer
+        let nested = TilingContainer.newVTiles(parent: root, adaptiveWeight: 300)
+        let focused = TestWindow.new(id: 1, parent: nested)
+        TestWindow.new(id: 2, parent: nested)
+        TestWindow.new(id: 3, parent: root, adaptiveWeight: 300)
+        _ = focused.focusWindow()
+        XCTAssertNil(twoPaneHorizontalSplit(for: focused))
+        let before = root.children.map { $0.hWeight }
+        _ = try await parseCommand("split 1:2").cmdOrDie.run(.defaultEnv, .emptyStdin)
+        XCTAssertEqual(root.children.map { $0.hWeight }, before)
+    }
+
     func testSplit() async throws {
         let root = Workspace.get(byName: name).rootTilingContainer.apply {
             assertEquals(TestWindow.new(id: 1, parent: $0).focusWindow(), true)

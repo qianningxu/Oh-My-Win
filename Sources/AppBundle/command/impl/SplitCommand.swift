@@ -8,10 +8,8 @@ struct SplitCommand: Command {
     func run(_ env: CmdEnv, _ io: CmdIo) -> Bool {
         if let leftFraction = args.arg.val.leftFraction {
             guard let target = args.resolveTargetOrReportError(env, io) else { return false }
-            let root = target.workspace.rootTilingContainer
-            guard root.layout == .tiles, root.orientation == .h, root.children.count == 2,
-                  let window = target.windowOrNil,
-                  window.parentsWithSelf.contains(where: { $0 === root })
+            guard let window = target.windowOrNil,
+                  let root = twoPaneHorizontalSplit(for: window)
             else { return true }
             let total = root.children.reduce(CGFloat.zero) { $0 + $1.getWeight(.h) }
             root.children[0].setWeight(.h, total * leftFraction)
@@ -57,4 +55,17 @@ struct SplitCommand: Command {
                 return false // Impossible
         }
     }
+}
+
+// A stacked window counts as one pane; a nested tile split contains extra panes.
+@MainActor
+func twoPaneHorizontalSplit(for window: Window) -> TilingContainer? {
+    guard let root = window.nodeWorkspace?.rootTilingContainer,
+          root.layout == .tiles, root.orientation == .h, root.children.count == 2,
+          window.parentsWithSelf.contains(where: { $0 === root }),
+          root.children.allSatisfy({ child in
+              child is Window || (child as? TilingContainer)?.layout == .tabGroup
+          })
+    else { return nil }
+    return root
 }

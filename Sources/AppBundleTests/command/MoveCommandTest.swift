@@ -6,6 +6,24 @@ import XCTest
 final class MoveCommandTest: XCTestCase {
     override func setUp() async throws { setUpWorkspacesForTests() }
 
+    func testMoveWindowOnlyLeavesOtherTabsInPlace() async throws {
+        let root = Workspace.get(byName: name).rootTilingContainer
+        let stack = TilingContainer(parent: root, adaptiveWeight: 1, .v, .tabGroup, index: INDEX_BIND_LAST)
+        let staying = TestWindow.new(id: 1, parent: stack)
+        let moving = TestWindow.new(id: 2, parent: stack)
+        let other = TestWindow.new(id: 3, parent: root)
+        _ = moving.focusWindow()
+        let parsed = try parseCommand("move --window-only right").cmdOrDie
+        let command = try XCTUnwrap(parsed as? MoveCommand)
+        XCTAssertTrue(command.args.windowOnly)
+        let result = try await command.run(.defaultEnv, .emptyStdin)
+        XCTAssertEqual(result.exitCode, 0)
+        XCTAssertTrue(staying.parent === stack)
+        XCTAssertTrue(moving.parent === root)
+        XCTAssertTrue(other.parent === root)
+        XCTAssertTrue(root.children[1] === moving)
+    }
+
     func testMove_swapWindows() async throws {
         let root = Workspace.get(byName: name).rootTilingContainer.apply {
             assertEquals(TestWindow.new(id: 1, parent: $0).focusWindow(), true)

@@ -11,7 +11,7 @@ struct MoveCommand: Command {
         guard let currentWindow = target.windowOrNil else {
             return io.err(noWindowIsFocused)
         }
-        let currentNode = currentWindow.moveNode
+        let currentNode: TreeNode = args.windowOnly ? currentWindow : currentWindow.moveNode
         guard let parent = currentNode.parent else { return false }
         switch parent.cases {
             case .tilingContainer(let parent):

@@ -136,7 +136,7 @@ let move_workspace_to_monitor_help_generated = """
        OR: move-tab-to-monitor [-h|--help] [--tab <tab>] <monitor-pattern>...
     """
 let move_help_generated = """
-    USAGE: move [-h|--help] [--window-id <window-id>] [--boundaries <boundary>] [--boundaries-action <boundary-action>] (left|down|up|right)
+    USAGE: move [-h|--help] [--window-id <window-id>] [--window-only] [--boundaries <boundary>] [--boundaries-action <boundary-action>] (left|down|up|right)
 
     Boundary values: tab, all-monitors-outer-frame. Legacy value: workspace.
     """
@@ -160,7 +160,7 @@ let split_help_generated = """
     USAGE: split [-h|--help] [--window-id <window-id>] (horizontal|vertical|opposite|1:2|1:1|2:1)
     """
 let stack_with_help_generated = """
-    USAGE: stack-with [-h|--help] [--window-id <window-id>] (left|down|up|right)
+    USAGE: stack-with [-h|--help] [--window-id <window-id>] (left|down|up|right|other)
     """
 let subscribe_help_generated = """
     USAGE: subscribe [-h|--help] [--all] [--no-send-initial] [<event>...]
