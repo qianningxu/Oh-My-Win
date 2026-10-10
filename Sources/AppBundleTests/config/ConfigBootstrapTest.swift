@@ -14,8 +14,8 @@ final class ConfigBootstrapTest: XCTestCase {
         } ?? []
         let bindingMap: [String: String] = Dictionary(uniqueKeysWithValues: bindings)
 
-        let expectedKeys = Set(["alt-tab", "alt-shift-tab", "ctrl-tab", "ctrl-shift-tab"] +
-            (0...9).flatMap { ["alt-\($0)", "ctrl-\($0)"] })
+        let expectedKeys = Set(["alt-tab", "alt-shift-tab", "alt-shift-n"] +
+            (0...9).flatMap { ["alt-\($0)", "alt-shift-\($0)"] })
         XCTAssertEqual(Set(bindingMap.keys), expectedKeys)
         for number in 0...9 {
             XCTAssertEqual(bindingMap["alt-\(number)"], "tab \(number == 0 ? 10 : number)")

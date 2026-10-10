@@ -26,13 +26,12 @@ enum WorkspacePreviewKind {
     case workspaces
     case tabs
 
-    var modifier: NSEvent.ModifierFlags { self == .workspaces ? .control : .option }
+    var modifier: NSEvent.ModifierFlags { .option }
 }
 
 func workspacePreviewKindOnModifierPress(previous: NSEvent.ModifierFlags, current: NSEvent.ModifierFlags) -> WorkspacePreviewKind? {
-    for kind in [WorkspacePreviewKind.workspaces, .tabs] {
-        if current.contains(kind.modifier) && !previous.contains(kind.modifier) { return kind }
-    }
+    let modifiers = current.intersection([.option, .control, .command])
+    if modifiers == .option && !previous.contains(.option) { return .workspaces }
     return nil
 }
 
@@ -112,7 +111,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
     private let tabRepeat = WorkspacePreviewTabRepeat()
     private var pendingCommands: [any Command]?
     private var pressedModifiers: NSEvent.ModifierFlags = []
-    private var previewModifier: NSEvent.ModifierFlags = .control
+    private var previewModifier: NSEvent.ModifierFlags = .option
     private var previewKind: WorkspacePreviewKind = .workspaces
     private(set) var isPreviewActive = false
 
@@ -131,7 +130,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         hostingView.autoresizingMask = [.width, .height]
     }
 
-    func present(kind: WorkspacePreviewKind = .workspaces, modifier: NSEvent.ModifierFlags = .control) {
+    func present(kind: WorkspacePreviewKind = .workspaces, modifier: NSEvent.ModifierFlags = .option) {
         if isPreviewActive && previewKind == kind && previewModifier == modifier { return }
         dismiss()
         begin(direction: 0, kind: kind, modifier: modifier)
@@ -201,7 +200,7 @@ final class WorkspacePreviewPanel: NSPanelHud {
         hostingView.rootView = AnyView(EmptyView())
     }
 
-    private func begin(direction: Int, kind: WorkspacePreviewKind = .workspaces, modifier: NSEvent.ModifierFlags = .control) {
+    private func begin(direction: Int, kind: WorkspacePreviewKind = .workspaces, modifier: NSEvent.ModifierFlags = .option) {
         previewKind = kind
         previewModifier = modifier
         let current = focus.workspace
@@ -272,34 +271,15 @@ final class WorkspacePreviewPanel: NSPanelHud {
     // Shortcut keys only select; releasing the held modifier commits once.
     func previewShortcut(commands: [any Command], modifiers: NSEvent.ModifierFlags, keyCode: UInt16) -> Bool {
         if keyCode != 48 { tabRepeat.cancel() }
-        if modifiers.intersection([.option, .command, .control]) == WorkspacePreviewKind.tabs.modifier,
-           let index = optionWorkspaceIndex(for: keyCode) {
-            present(kind: .tabs, modifier: WorkspacePreviewKind.tabs.modifier)
-            guard isPreviewActive else { return true }
-            pendingCommands = nil
-            if let window = items[currentIndex].windows.getOrNil(atIndex: index) {
-                selectedWindowId = window.id
-                selectedIndex = currentIndex
-            }
-            shortcutCycle.select(modifier: WorkspacePreviewKind.tabs.modifier)
-            render()
-            return true
-        }
         let tabModifier = modifiers.intersection([.option, .command, .control])
-        if keyCode == 48, tabModifier == .option || tabModifier == .control {
+        if keyCode == 48, tabModifier == .option {
             if tabRepeat.modifier == tabModifier { return true }
             let direction = modifiers.contains(.shift) ? -1 : 1
-            if tabModifier == WorkspacePreviewKind.workspaces.modifier {
-                present(kind: .workspaces)
-                guard isPreviewActive else { return true }
-                advance(direction: direction)
-            } else {
-                present(kind: .tabs, modifier: WorkspacePreviewKind.tabs.modifier)
-                guard isPreviewActive else { return true }
-                selectedWindowId = workspacePreviewNextWindowId(items[currentIndex].windows, selectedWindowId: selectedWindowId, direction: direction)
-                selectedIndex = currentIndex
-                render()
-            }
+            present(kind: .tabs, modifier: .option)
+            guard isPreviewActive else { return true }
+            selectedWindowId = workspacePreviewNextWindowId(items[currentIndex].windows, selectedWindowId: selectedWindowId, direction: direction)
+            selectedIndex = currentIndex
+            render()
             pendingCommands = nil
             shortcutCycle.select(modifier: tabModifier)
             tabRepeat.start(modifier: tabModifier) { [weak self] in
@@ -391,8 +371,8 @@ func workspacePreviewCandidateWorkspaces(current: Workspace) -> [Workspace] {
 }
 
 func workspacePreviewSelectionIndex(for binding: String) -> Int? {
-    guard binding.hasPrefix("ctrl-"),
-          let number = Int(binding.dropFirst("ctrl-".count)),
+    guard binding.hasPrefix("alt-"),
+          let number = Int(binding.dropFirst("alt-".count)),
           (0 ... 9).contains(number)
     else {
         return nil

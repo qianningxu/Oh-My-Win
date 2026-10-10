@@ -88,8 +88,8 @@ private func shortcutAction(
     )
 }
 
-let defaultWorkspaceSwitchModifiers: NSEvent.ModifierFlags = [.control]
-let defaultWorkspaceMoveModifiers: NSEvent.ModifierFlags = [.control, .shift]
+let defaultWorkspaceSwitchModifiers: NSEvent.ModifierFlags = [.option]
+let defaultWorkspaceMoveModifiers: NSEvent.ModifierFlags = [.option, .shift]
 
 struct WorkspaceShortcutState: Equatable {
     let switchModifiers: NSEvent.ModifierFlags

@@ -58,41 +58,29 @@ func starterConfigText() -> String {
         config-version = 3
 
         [mode.main.binding]
-            ctrl-0 = 'tab 10'
-            ctrl-1 = 'tab 1'
-            ctrl-2 = 'tab 2'
-            ctrl-3 = 'tab 3'
-            ctrl-4 = 'tab 4'
-            ctrl-5 = 'tab 5'
-            ctrl-6 = 'tab 6'
-            ctrl-7 = 'tab 7'
-            ctrl-8 = 'tab 8'
-            ctrl-9 = 'tab 9'
-            ctrl-shift-0 = 'move-node-to-tab 10'
-            ctrl-shift-1 = 'move-node-to-tab 1'
-            ctrl-shift-2 = 'move-node-to-tab 2'
-            ctrl-shift-3 = 'move-node-to-tab 3'
-            ctrl-shift-4 = 'move-node-to-tab 4'
-            ctrl-shift-5 = 'move-node-to-tab 5'
-            ctrl-shift-6 = 'move-node-to-tab 6'
-            ctrl-shift-7 = 'move-node-to-tab 7'
-            ctrl-shift-8 = 'move-node-to-tab 8'
-            ctrl-shift-9 = 'move-node-to-tab 9'
-            ctrl-shift-n = 'move-node-to-tab new'
-            alt-0 = []
-            alt-1 = []
-            alt-2 = []
-            alt-3 = []
-            alt-4 = []
-            alt-5 = []
-            alt-6 = []
-            alt-7 = []
-            alt-8 = []
-            alt-9 = []
+            alt-0 = 'tab 10'
+            alt-1 = 'tab 1'
+            alt-2 = 'tab 2'
+            alt-3 = 'tab 3'
+            alt-4 = 'tab 4'
+            alt-5 = 'tab 5'
+            alt-6 = 'tab 6'
+            alt-7 = 'tab 7'
+            alt-8 = 'tab 8'
+            alt-9 = 'tab 9'
+            alt-shift-0 = 'move-node-to-tab 10'
+            alt-shift-1 = 'move-node-to-tab 1'
+            alt-shift-2 = 'move-node-to-tab 2'
+            alt-shift-3 = 'move-node-to-tab 3'
+            alt-shift-4 = 'move-node-to-tab 4'
+            alt-shift-5 = 'move-node-to-tab 5'
+            alt-shift-6 = 'move-node-to-tab 6'
+            alt-shift-7 = 'move-node-to-tab 7'
+            alt-shift-8 = 'move-node-to-tab 8'
+            alt-shift-9 = 'move-node-to-tab 9'
+            alt-shift-n = 'move-node-to-tab new'
             alt-tab = []
             alt-shift-tab = []
-            ctrl-tab = []
-            ctrl-shift-tab = []
         """
 }
 

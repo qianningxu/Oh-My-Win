@@ -133,19 +133,11 @@ final class WorkspacePreviewPanelTest: XCTestCase {
         XCTAssertFalse(cycle.updateModifiers([]))
     }
 
-    func testModifierPressOpensBothPreviewKindsSymmetrically() {
-        XCTAssertEqual(workspacePreviewKindOnModifierPress(previous: [], current: .option), .tabs)
-        XCTAssertEqual(workspacePreviewKindOnModifierPress(previous: [], current: .control), .workspaces)
-        for kind in [WorkspacePreviewKind.workspaces, .tabs] {
-            XCTAssertEqual(workspacePreviewKindOnModifierPress(previous: [], current: kind.modifier), kind)
-            XCTAssertNil(workspacePreviewKindOnModifierPress(previous: kind.modifier, current: kind.modifier))
-            XCTAssertNil(workspacePreviewKindOnModifierPress(previous: kind.modifier, current: []))
-            var cycle = WorkspacePreviewShortcutCycle()
-            cycle.select(modifier: kind.modifier)
-            XCTAssertFalse(cycle.updateModifiers(kind.modifier))
-            XCTAssertTrue(cycle.updateModifiers([]))
-            XCTAssertFalse(cycle.updateModifiers([]))
-        }
+    func testOptionOpensWorkspacePreviewAndControlDoesNot() {
+        XCTAssertEqual(workspacePreviewKindOnModifierPress(previous: [], current: .option), .workspaces)
+        XCTAssertNil(workspacePreviewKindOnModifierPress(previous: [], current: .control))
+        XCTAssertNil(workspacePreviewKindOnModifierPress(previous: .option, current: .option))
+        XCTAssertNil(workspacePreviewKindOnModifierPress(previous: [], current: [.option, .command]))
     }
 
     func testControlPreviewCommitsOnlyWhenControlIsReleased() {
@@ -257,11 +249,11 @@ final class WorkspacePreviewPanelTest: XCTestCase {
     }
 
     func testWorkspacePreviewSelectionSupportsEveryNumericShortcut() {
-        XCTAssertEqual(workspacePreviewSelectionIndex(for: "ctrl-1"), 0)
-        XCTAssertEqual(workspacePreviewSelectionIndex(for: "ctrl-4"), 3)
-        XCTAssertEqual(workspacePreviewSelectionIndex(for: "ctrl-9"), 8)
-        XCTAssertEqual(workspacePreviewSelectionIndex(for: "ctrl-0"), 9)
-        XCTAssertNil(workspacePreviewSelectionIndex(for: "ctrl-shift-4"))
+        XCTAssertEqual(workspacePreviewSelectionIndex(for: "alt-1"), 0)
+        XCTAssertEqual(workspacePreviewSelectionIndex(for: "alt-4"), 3)
+        XCTAssertEqual(workspacePreviewSelectionIndex(for: "alt-9"), 8)
+        XCTAssertEqual(workspacePreviewSelectionIndex(for: "alt-0"), 9)
+        XCTAssertNil(workspacePreviewSelectionIndex(for: "alt-shift-4"))
     }
 
     func testOptionWorkspaceIndexSupportsNumberRowAndKeypad() {
