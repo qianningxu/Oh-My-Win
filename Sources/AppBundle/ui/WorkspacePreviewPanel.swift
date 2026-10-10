@@ -927,7 +927,7 @@ private struct WorkspacePreviewTabsView: View {
                     }
                 }
                 .frame(width: max(availableWidth, (rows.map(workspacePreviewWindowRowWidth).max() ?? 0) + workspacePreviewRingInset * 2))
-                .frame(minHeight: availableHeight, alignment: .topLeading)
+                .frame(minHeight: availableHeight, alignment: rows.count == 1 ? .leading : .topLeading)
             }
             .onAppear {
                 if let selectedWindowId { proxy.scrollTo(selectedWindowId, anchor: .center) }

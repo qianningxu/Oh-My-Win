@@ -79,6 +79,11 @@ func starterConfigText() -> String {
             alt-shift-8 = 'move-node-to-tab 8'
             alt-shift-9 = 'move-node-to-tab 9'
             alt-shift-n = 'move-node-to-tab new'
+            alt-j = 'move left'
+            alt-l = 'move right'
+            alt-shift-j = 'split 1:2'
+            alt-shift-k = 'split 1:1'
+            alt-shift-l = 'split 2:1'
             alt-tab = []
             alt-shift-tab = []
         """
